@@ -5,7 +5,9 @@ describe("dokumen undangan fase 2", () => {
   it("membuat kanvas kosong dengan struktur versi 1", () => {
     const document = createBlankInvitationDocument("Pernikahan Dina & Raka");
     expect(document.schemaVersion).toBe(1);
-    expect(document.pages?.[0]?.sections?.[0]?.children?.[0]?.props?.text).toBe("Pernikahan Dina & Raka");
+    expect(document.pages?.[0]?.sections?.[0]?.children?.[0]?.props?.text).toBe(
+      "Pernikahan Dina & Raka",
+    );
   });
 
   it("menolak dokumen dengan skema yang tidak didukung", () => {

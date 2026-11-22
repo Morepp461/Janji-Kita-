@@ -59,6 +59,8 @@ export function createBlankInvitationDocument(title: string): InvitationDocument
 export function isInvitationDocument(value: unknown): value is InvitationDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const candidate = value as Record<string, unknown>;
-  return candidate.schemaVersion === 1 &&
-    (Array.isArray(candidate.pages) || Array.isArray(candidate.sections));
+  return (
+    candidate.schemaVersion === 1 &&
+    (Array.isArray(candidate.pages) || Array.isArray(candidate.sections))
+  );
 }
