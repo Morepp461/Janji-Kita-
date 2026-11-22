@@ -124,6 +124,10 @@ grant select on public.templates, public.template_versions, public.media_assets 
 grant insert, update, select on public.templates, public.template_versions to authenticated;
 grant insert, update on public.media_assets to authenticated;
 grant select, insert, update on public.invitations, public.invitation_versions to authenticated;
+grant select (slug, title, locale, timezone, status, active_from, active_until, deleted_at, published_version_id)
+  on public.invitations to anon;
+grant select (id, invitation_id, document, state)
+  on public.invitation_versions to anon;
 
 create policy templates_read_public on public.templates
   for select to anon using (status = 'published');
@@ -190,6 +194,29 @@ create policy invitation_versions_owner_read on public.invitation_versions
     select 1 from public.invitations i
     where i.id = invitation_id and i.owner_user_id = (select auth.uid())
   ));
+create policy invitations_public_active_read on public.invitations
+  for select to anon
+  using (
+    status = 'active'
+    and active_from <= now()
+    and active_until > now()
+    and deleted_at is null
+    and published_version_id is not null
+  );
+create policy invitation_versions_public_published_read on public.invitation_versions
+  for select to anon
+  using (
+    state = 'published'
+    and exists (
+      select 1 from public.invitations i
+      where i.id = invitation_id
+        and i.status = 'active'
+        and i.active_from <= now()
+        and i.active_until > now()
+        and i.deleted_at is null
+        and i.published_version_id = id
+    )
+  );
 create policy invitation_versions_owner_insert on public.invitation_versions
   for insert to authenticated
   with check (exists (
@@ -432,45 +459,25 @@ $$;
 revoke all on function public.admin_create_template_version(uuid, jsonb, text) from public, anon;
 grant execute on function public.admin_create_template_version(uuid, jsonb, text) to authenticated;
 
-create or replace function app_private.get_public_invitation(p_slug text)
-returns jsonb
-language sql
-stable
-security definer
-set search_path = public, pg_temp
-as $$
-  select jsonb_build_object(
-    'id', i.id,
-    'slug', i.slug,
-    'title', i.title,
-    'locale', i.locale,
-    'timezone', i.timezone,
-    'document', v.document
-  )
-  from public.invitations i
-  join public.invitation_versions v on v.id = i.published_version_id
-  where i.slug = p_slug
-    and i.status = 'active'
-    and i.active_from <= now()
-    and i.active_until > now()
-    and v.state = 'published'
-  limit 1;
-$$;
-revoke all on function app_private.get_public_invitation(text) from public, anon, authenticated;
-grant usage on schema app_private to anon;
-grant execute on function app_private.get_public_invitation(text) to anon, authenticated;
+create or replace view public.published_invitations
+with (security_invoker = true, security_barrier = true)
+as
+select
+  i.slug,
+  i.title,
+  i.locale,
+  i.timezone,
+  v.document
+from public.invitations i
+join public.invitation_versions v on v.id = i.published_version_id
+where i.status = 'active'
+  and i.active_from <= now()
+  and i.active_until > now()
+  and i.deleted_at is null
+  and v.state = 'published';
 
-create or replace function public.get_public_invitation(p_slug text)
-returns jsonb
-language sql
-stable
-security invoker
-set search_path = public, app_private, pg_temp
-as $$
-  select app_private.get_public_invitation(p_slug);
-$$;
-revoke all on function public.get_public_invitation(text) from public;
-grant execute on function public.get_public_invitation(text) to anon, authenticated;
+revoke all on public.published_invitations from public, anon, authenticated;
+grant select on public.published_invitations to anon, authenticated;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
