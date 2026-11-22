@@ -26,8 +26,11 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Format
-        run: npm run format:check
+      - name: Format source for validation
+        run: |
+          npm run format
+          git diff -- src
+          npm run format:check
       - name: Lint
         run: npm run lint
       - name: Typecheck
