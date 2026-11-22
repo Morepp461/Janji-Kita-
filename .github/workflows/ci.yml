@@ -45,7 +45,7 @@ jobs:
       - name: Ambil kode sumber
         uses: actions/checkout@v4
       - name: Siapkan Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
           version: latest
       - name: Periksa perintah CLI
