@@ -314,24 +314,17 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       const nextAsset: Asset = { id: asset.id, name: uploadFile.name, url: signed.signedUrl, type: mediaType };
       setAssets((items) => [nextAsset, ...items]);
       const component = mediaType === "image" ? "Image" : mediaType === "video" ? "Video" : "Audio";
-      const node = {
+      const node: InvitationNode = {
         id: crypto.randomUUID(),
         type: component,
         props: mediaType === "image" ? { assetId: asset.id, alt: file.name } : { assetId: asset.id },
         style: {},
       };
-      commit(addNode(document, component, selected?.id && ["Section", "Container", "Columns"].includes(selected.type) ? selected.id : undefined));
-      const updated = docRef.current;
-      if (updated) {
-        const last = getSections(updated).slice(-1)[0];
-        if (last?.type === component) {
-          const next = updateNode(updated, last.id, () => node);
-          docRef.current = next;
-          setDocument(next);
-          revision.current += 1;
-          setSaveState("dirty");
-        }
-      }
+      const added = addNode(document, component);
+      const last = getSections(added).slice(-1)[0];
+      const nextDocument = last ? updateNode(added, last.id, () => node) : added;
+      commit(nextDocument);
+      setSelectedId(node.id);
       setMessage("Aset berhasil diunggah dan dioptimalkan untuk penggunaan di undangan.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unggahan gagal.");
