@@ -1,5 +1,5 @@
 begin;
-select plan(22);
+select plan(26);
 
 select has_table('public', 'profiles', 'tabel profil tersedia');
 select has_table('public', 'user_roles', 'tabel peran tersedia');
@@ -25,5 +25,23 @@ select ok(not has_function_privilege('anon', 'public.has_permission(text)', 'exe
 select ok(not has_function_privilege('anon', 'public.handle_new_auth_user()', 'execute'), 'trigger pembuatan profil tidak dapat dipanggil publik');
 select ok(not has_function_privilege('authenticated', 'public.write_admin_audit_log()', 'execute'), 'trigger audit tidak dapat dipanggil sebagai RPC');
 select ok(has_function_privilege('authenticated', 'public.admin_set_user_role(uuid,text,text)', 'execute'), 'RPC pengelolaan peran tersedia untuk autentikasi');
+insert into auth.users (
+  id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values
+  ('00000000-0000-0000-0000-000000000101', 'authenticated', 'authenticated',
+   'phase1-user-a@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+  ('00000000-0000-0000-0000-000000000102', 'authenticated', 'authenticated',
+   'phase1-user-b@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now());
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000101', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000101","role":"authenticated"}', true);
+select is((select count(*) from public.profiles), 1::bigint, 'pengguna hanya membaca profil sendiri');
+select is((select count(*) from public.user_roles), 1::bigint, 'pengguna hanya membaca peran sendiri');
+select is(app_private.has_permission('admin.access'), false, 'akun biasa tidak memiliki izin admin');
+select is((select count(*) from public.audit_logs), 0::bigint, 'pengguna biasa tidak dapat membaca audit log');
+reset role;
+
 select * from finish();
 rollback;
