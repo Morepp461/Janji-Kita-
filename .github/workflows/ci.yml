@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Pemeriksaan kualitas web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode sumber
+        uses: actions/checkout@v4
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pasang dependensi
+        run: npm ci --no-audit --no-fund
+      - name: Periksa format
+        run: npm run format:check
+      - name: Periksa lint
+        run: npm run lint
+      - name: Periksa tipe
+        run: npm run typecheck
+      - name: Jalankan pengujian unit
+        run: npm run test:run
+      - name: Build production
+        run: npm run build
+
+  database:
+    name: Pengujian migrasi dan RLS Supabase
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Ambil kode sumber
+        uses: actions/checkout@v4
+      - name: Siapkan Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Periksa perintah CLI
+        run: |
+          supabase --help
+          supabase migration --help
+          supabase db --help
+      - name: Validasi konfigurasi Supabase
+        run: supabase config validate
+      - name: Jalankan basis data lokal
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+      - name: Terapkan seluruh migrasi
+        run: supabase db reset
+      - name: Periksa basis data
+        run: supabase db lint --local --fail-on error
+      - name: Jalankan pengujian basis data
+        run: supabase test db
