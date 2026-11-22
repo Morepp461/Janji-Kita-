@@ -49,7 +49,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 - Unggahan aset privat memvalidasi MIME/signature dan ukuran, membaca metadata media, serta mengoptimalkan gambar menjadi WebP sebelum disimpan. Metadata aset dibatasi pada folder pemilik.
 - Dua migrasi Fase 3 diterapkan pada staging. RLS tetap aktif, akses simpan hanya untuk pengguna terautentikasi, dan Security Advisor tidak menemukan temuan.
 - Pemeriksaan staging mengonfirmasi RPC, bucket privat, RLS, dan satu kebijakan INSERT aset tanpa tumpang tindih. Performance Advisor tidak lagi melaporkan kebijakan INSERT ganda; temuan indeks FK dan unused index yang sudah ada tetap dicatat sebagai pekerjaan optimasi terpisah.
-- CI Fase 3 lulus: format, lint, typecheck, unit test, build production, migrasi lokal, lint basis data, dan pgTAP. [Lihat CI Fase 3](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062742820).
+- CI Fase 3 lulus: format, lint, typecheck, unit test, build production, migrasi lokal, lint basis data, dan pgTAP. [Lihat CI Fase 3](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062979222).
 
 **Batas rilis production:** kode Fase 3 masih berada di [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14). Migrasi production dan penggabungan ke `main` belum dilakukan. Backup production tidak tersedia melalui paket/akses Supabase saat ini; pengecualian backup yang disetujui untuk Fase 2 tidak otomatis berlaku untuk Fase 3. Deployment preview tetap nonaktif.
 
