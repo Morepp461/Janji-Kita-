@@ -1,5 +1,5 @@
 begin;
-select plan(19);
+select plan(23);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
@@ -15,7 +15,11 @@ select ok((select relrowsecurity from pg_class where oid = 'public.invitation_ve
 
 select ok(not has_table_privilege('anon', 'public.invitations', 'select'), 'pengunjung publik tidak dapat membaca tabel undangan');
 select ok(not has_table_privilege('anon', 'public.invitation_versions', 'select'), 'pengunjung publik tidak dapat membaca versi draft');
-select ok(has_function_privilege('anon', 'public.get_public_invitation(text)', 'execute'), 'RPC renderer publik tersedia');
+select has_view('public', 'published_invitations', 'view renderer publik tersedia');
+select ok(has_table_privilege('anon', 'public.published_invitations', 'select'), 'pengunjung publik dapat membaca view renderer');
+select ok(has_column_privilege('anon', 'public.invitations', 'slug', 'select'), 'pengunjung publik dapat membaca slug undangan aktif');
+select ok(not has_column_privilege('anon', 'public.invitations', 'owner_user_id', 'select'), 'pengunjung publik tidak dapat membaca pemilik undangan');
+select ok(has_column_privilege('anon', 'public.invitation_versions', 'document', 'select'), 'pengunjung publik dapat membaca dokumen versi terbit');
 select ok(has_function_privilege('authenticated', 'public.create_invitation_draft(text,uuid,uuid)', 'execute'), 'RPC pembuatan draft tersedia');
 select ok(not has_function_privilege('anon', 'public.create_invitation_draft(text,uuid,uuid)', 'execute'), 'pengunjung publik tidak dapat membuat draft');
 select ok(has_function_privilege('authenticated', 'public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid)', 'execute'), 'RPC pembuatan template tersedia');
