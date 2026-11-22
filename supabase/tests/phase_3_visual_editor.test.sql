@@ -25,7 +25,7 @@ select ok(not has_table_privilege('anon', 'public.invitations', 'update'), 'anon
 select ok(not has_table_privilege('anon', 'public.invitation_versions', 'update'), 'anon tidak dapat mengubah versi undangan');
 select ok(not has_table_privilege('anon', 'public.media_assets', 'insert'), 'anon tidak dapat mendaftarkan aset');
 select ok(has_table_privilege('authenticated', 'public.media_assets', 'insert'), 'pengguna memiliki grant insert metadata aset');
-select ok(not has_function_privilege('public', 'public.save_invitation_draft(uuid,timestamp with time zone,text,jsonb)', 'execute'), 'hak eksekusi publik dicabut');
+select ok(not exists (select 1 from aclexplode(coalesce((select proacl from pg_proc where oid = 'public.save_invitation_draft(uuid,timestamp with time zone,text,jsonb)'::regprocedure), '{}'::aclitem[])) acl where grantee = 0 and privilege_type = 'EXECUTE'), 'hak eksekusi PUBLIC dicabut');
 select ok(exists (
   select 1 from pg_trigger
   where tgname = 'invitation_versions_immutable'
