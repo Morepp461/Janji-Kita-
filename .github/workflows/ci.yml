@@ -21,7 +21,7 @@ jobs:
       - name: Ambil kode sumber
         uses: actions/checkout@v4
       - name: Siapkan Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Pasang dependensi
