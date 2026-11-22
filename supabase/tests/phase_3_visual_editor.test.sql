@@ -1,5 +1,5 @@
 begin;
-select plan(17);
+select plan(18);
 
 select ok(has_function_privilege('authenticated', 'public.save_invitation_draft(uuid,timestamp with time zone,text,jsonb)', 'execute'), 'pengguna terautentikasi dapat menyimpan draft melalui RPC');
 select ok(not has_function_privilege('anon', 'public.save_invitation_draft(uuid,timestamp with time zone,text,jsonb)', 'execute'), 'pengunjung publik tidak dapat menyimpan draft');
@@ -14,6 +14,11 @@ select ok(exists (
   where schemaname = 'public' and tablename = 'media_assets'
     and policyname = 'media_assets_owner_insert'
 ), 'unggahan metadata aset dibatasi untuk pemilik');
+select ok(not exists (
+  select 1 from pg_policies
+  where schemaname = 'public' and tablename = 'media_assets'
+    and policyname = 'media_assets_admin_insert'
+), 'kebijakan insert aset tidak tumpang tindih');
 select ok(exists (
   select 1 from pg_policies
   where schemaname = 'storage' and tablename = 'objects'
