@@ -65,7 +65,7 @@ npm run build
 npm run check
 ```
 
-GitHub Actions menjalankan pemeriksaan aplikasi web dan basis data. Semua pemeriksaan wajib lulus sebelum perubahan digabungkan ke `main`.
+GitHub Actions menjalankan pemeriksaan aplikasi web dan basis data. Wajibkan pemeriksaan `Pemeriksaan kualitas web` serta `Pengujian migrasi dan RLS Supabase` pada aturan perlindungan cabang `main` agar perubahan tidak dapat digabungkan sebelum keduanya lulus.
 
 ## Kebijakan deployment: production saja
 
@@ -93,7 +93,7 @@ Gunakan project yang berbeda untuk setiap lingkungan:
 - Staging: project Supabase staging khusus.
 - Production: project Supabase production khusus.
 
-Jangan pernah mengarahkan staging ke basis data production. URL dan publishable key boleh digunakan oleh browser. Service-role key hanya boleh berada pada lingkungan server tepercaya.
+PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Jangan pernah mengarahkan staging ke basis data production. URL dan publishable key boleh digunakan oleh browser. Service-role key hanya boleh berada pada lingkungan server tepercaya.
 
 ## Keamanan
 
