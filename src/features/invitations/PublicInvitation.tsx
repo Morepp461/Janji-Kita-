@@ -30,11 +30,9 @@ export default function PublicInvitation({
         setLoading(false);
         return;
       }
-      const { data, error: queryError } = await client
-        .from("published_invitations")
-        .select("slug,title,locale,timezone,document")
-        .eq("slug", slug)
-        .maybeSingle();
+      const { data, error: queryError } = await client.rpc("get_public_invitation", {
+        p_slug: slug,
+      });
       if (!active) return;
       if (queryError) setError("Undangan belum dapat ditampilkan.");
       else if (
