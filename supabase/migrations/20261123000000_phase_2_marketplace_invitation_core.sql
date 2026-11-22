@@ -126,7 +126,7 @@ grant insert, update on public.media_assets to authenticated;
 grant select, insert, update on public.invitations, public.invitation_versions to authenticated;
 grant select (slug, title, locale, timezone, status, active_from, active_until, deleted_at, published_version_id)
   on public.invitations to anon;
-grant select (id, invitation_id, document, state)
+grant select (id, document, state)
   on public.invitation_versions to anon;
 
 create policy templates_read_public on public.templates
@@ -209,7 +209,7 @@ create policy invitation_versions_public_published_read on public.invitation_ver
     state = 'published'
     and exists (
       select 1 from public.invitations i
-      where i.id = invitation_id
+      where i.published_version_id = id
         and i.status = 'active'
         and i.active_from <= now()
         and i.active_until > now()
