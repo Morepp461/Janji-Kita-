@@ -50,6 +50,8 @@ select lives_ok(
   )$phase2$,
   'pengguna dapat membuat draft dari kanvas kosong'
 );
+reset role;
+
 insert into public.templates (
   id, slug, title, category_id, style_id, description, base_price, status, created_by
 ) values (
