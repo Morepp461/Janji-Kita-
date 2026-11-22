@@ -559,12 +559,20 @@ export default function Marketplace({
                       Terakhir diperbarui {new Date(draft.updated_at).toLocaleString("id-ID")}
                     </p>
                   </div>
-                  <button
-                    className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold"
-                    onClick={() => void openDraft(draft.id)}
-                  >
-                    Buka & pratinjau
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={`/editor/${draft.id}`}
+                      className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white"
+                    >
+                      Buka editor
+                    </a>
+                    <button
+                      className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold"
+                      onClick={() => void openDraft(draft.id)}
+                    >
+                      Pratinjau
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

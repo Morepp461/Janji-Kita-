@@ -3,6 +3,9 @@ export type InvitationNode = {
   type: string;
   props?: Record<string, unknown>;
   style?: Record<string, unknown>;
+  responsive?: { mobile?: { hidden?: boolean }; desktop?: { hidden?: boolean } };
+  locked?: boolean;
+  hidden?: boolean;
   children?: InvitationNode[];
 };
 

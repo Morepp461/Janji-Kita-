@@ -54,17 +54,24 @@
 - Data Auth/profil pemilik tetap utuh (1 akun Auth, 1 profil); Storage objects tetap 0.
 **Done when:** draft dapat dibuat, dibuka kembali, dan dipratinjau; rute publik tidak dapat menampilkan draft yang belum diterbitkan; perubahan versi template tidak mengubah snapshot undangan lama. Kriteria staging, production, dan deployment terpenuhi.
 **Peringatan yang diketahui:** Security Advisor production menampilkan satu peringatan yang sudah ada, `Leaked Password Protection Disabled`; tidak diubah dalam cakupan Fase 2. Performance Advisor melaporkan indeks FK yang belum digunakan/terindeks; bukan kegagalan keamanan atau build dan dicatat untuk optimasi terpisah.
-**Keputusan rilis:** Pemilik proyek secara eksplisit menyetujui pengecualian backup/restore untuk rilis Fase 2 pada 23 November 2026. Risiko kehilangan data diterima; inventaris production sebelum migrasi adalah 1 akun Auth, 1 profil, dan 0 objek Storage. Migrasi Fase 2 bersifat aditif dan recovery dilakukan dengan corrective/forward migration bila diperlukan. Pengecualian hanya berlaku untuk rilis ini. Deployment preview tetap nonaktif.
+**Keputusan backup global — disetujui pemilik proyek, 23 November 2026:** pemilik secara eksplisit menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek, bukan hanya Fase 2 atau Fase 3, karena paket Supabase Free dan akses integrasi yang tersedia tidak menyediakan jalur backup manual. Pemilik menerima risiko kehilangan data dan mengizinkan pekerjaan fase berikutnya berlanjut tanpa backup. Restore tidak diklaim telah diuji; recovery mengandalkan corrective/forward migration. Persetujuan ini tidak mengubah kewajiban untuk mencatat risiko, memeriksa sifat migrasi, dan menyiapkan rencana recovery pada setiap rilis.
 
 ## 5. Phase 3 — Visual Editor
+**Status: IMPLEMENTASI, QA, DAN MIGRASI PRODUCTION SELESAI — 23 November 2026.**
+**Checkpoint:** [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15). **CI:** [Run #45063740422 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
 **Dependencies:** Phase 2 and stable schema.
-- Component registry and property inspector.
-- Section/layer operations.
-- Content/style/layout controls.
-- Responsive preview and validation.
-- Autosave, conflict handling, undo/redo.
-- Asset upload and processing.
-**Done when:** core editing operations pass tests; refresh/network loss does not silently lose saved work; editor usable on Android; renderer preview parity verified.
+- Component registry and property inspector untuk tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
+- Section/layer operations: add, select, reorder, duplicate, lock/unlock, hide/show, delete, undo, and redo.
+- Content/style/layout controls serta visibilitas responsif desktop/mobile.
+- Responsive preview dan validasi struktur, konten wajib, aset, dan tautan.
+- Autosave melalui RPC dengan optimistic concurrency, konflik eksplisit, dan pemulihan lokal ketika offline/refresh.
+- Asset upload privat dengan validasi MIME/signature/ukuran, ekstraksi metadata, optimasi gambar WebP, dan pembatasan path berdasarkan pemilik.
+- Preview editor dan public renderer menggunakan komponen renderer yang sama.
+- Dua migrasi Fase 3 diterapkan pada Supabase staging dan production. Production mencatat versi `20261122234541` dan `20261122234549`; pemeriksaan RPC, hak eksekusi, RLS, bucket privat, dan satu kebijakan INSERT aset lulus.
+- Security Advisor production masih menampilkan satu peringatan Auth yang sudah ada, `Leaked Password Protection Disabled`; tidak diubah dalam cakupan Fase 3.
+**Done when:** core editing operations pass tests; refresh/network loss does not silently lose saved work; responsive mobile layout is implemented; renderer preview parity verified. Seluruh kriteria implementasi dan QA staging telah dipenuhi.
+
+**Production release:** migrasi production telah diterapkan dan diverifikasi. PR #15 memuat implementasi editor visual. Deployment preview tetap nonaktif.
 
 ## 6. Phase 4 — Commerce and Publication
 **Dependencies:** Phase 2, Phase 3 basic editor, Phase 1 security.
@@ -118,7 +125,7 @@ RLS tests, authorization tests, secret scan, upload validation, rate limiting, w
 ### Data
 Backup/restore test atau pengecualian tertulis yang disetujui pemilik proyek; migration recovery plan, version immutability, no cross-environment data leakage.
 
-**Pengecualian rilis Fase 2 — disetujui pemilik proyek, 23 November 2026:** backup production dilewati karena paket Supabase Free dan akses integrasi yang tersedia tidak menyediakan jalur backup manual. Pemilik secara eksplisit menerima risiko tersebut dan memerintahkan kelanjutan tanpa backup. Inventaris sebelum migrasi: 1 akun Auth, 1 profil, dan 0 objek Storage. Tiga migrasi Fase 2 bersifat aditif (tabel, indeks, fungsi, policy, bucket, dan grant baru); tidak menghapus atau mengubah data akun/profil yang ada. Pemulihan mengandalkan corrective/forward migration, bukan klaim bahwa restore telah diuji. Pengecualian ini hanya berlaku untuk rilis Fase 2 ini dan tidak menghapus kewajiban backup untuk perubahan destruktif atau rilis berikutnya.
+**Pengecualian backup global — disetujui pemilik proyek, 23 November 2026:** backup production dilewati pada seluruh fase karena paket Supabase Free dan akses integrasi yang tersedia tidak menyediakan jalur backup manual. Pemilik secara eksplisit menerima risiko kehilangan data dan mengizinkan semua fase proyek berlanjut tanpa backup. Inventaris sebelum migrasi Fase 2: 1 akun Auth, 1 profil, dan 0 objek Storage. Migrasi Fase 2 dan Fase 3 yang diterapkan bersifat aditif; pemulihan mengandalkan corrective/forward migration, bukan klaim bahwa restore telah diuji. Setiap fase tetap harus mencatat inventaris data, meninjau sifat migrasi, dan menyiapkan recovery plan.
 
 ### Payment
 Sandbox E2E, duplicate/out-of-order webhook, reconciliation, pricing snapshot, refund handling, finance audit.

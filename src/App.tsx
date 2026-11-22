@@ -4,6 +4,7 @@ import AdminDashboard from "./features/admin/AdminDashboard";
 import AuthPage from "./features/auth/AuthPage";
 import Marketplace from "./features/marketplace/Marketplace";
 import PublicInvitation from "./features/invitations/PublicInvitation";
+import InvitationEditor from "./features/editor/InvitationEditor";
 import { getSupabaseClient } from "./lib/supabase";
 
 type Profile = {
@@ -230,6 +231,13 @@ export default function App() {
           </button>
         </section>
       </main>
+    );
+  }
+
+  const editorMatch = pathname.match(/^\/editor\/([0-9a-f-]+)\/?$/i);
+  if (editorMatch) {
+    return (
+      <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />
     );
   }
 
