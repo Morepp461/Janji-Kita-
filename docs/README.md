@@ -193,7 +193,7 @@ Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan pa
 
 - Editor visual, registry komponen, panel properti, operasi lapisan, undo/redo, pratinjau responsif, validasi, autosave dengan deteksi konflik, pemulihan lokal, dan unggahan aset privat telah tersedia.
 - Dua migrasi Fase 3 telah diterapkan pada Supabase staging. Pemeriksaan RLS, RPC, bucket privat, dan Security Advisor lulus.
-- CI Fase 3 lulus seluruh pemeriksaan: [run #45062742820](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062742820).
+- CI Fase 3 lulus seluruh pemeriksaan: [run #45062979222](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062979222).
 - Implementasi berada pada [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14).
 
 Migrasi production dan merge ke `main` menunggu persetujuan tertulis pemilik untuk pengecualian backup/restore khusus Fase 3. Pengecualian Fase 2 tidak otomatis berlaku untuk fase berikutnya.
