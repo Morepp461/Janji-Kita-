@@ -1,5 +1,5 @@
 begin;
-select plan(27);
+select plan(30);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
@@ -15,6 +15,9 @@ select ok((select relrowsecurity from pg_class where oid = 'public.invitation_ve
 
 select ok(not has_table_privilege('anon', 'public.invitations', 'select'), 'pengunjung publik tidak dapat membaca tabel undangan');
 select ok(not has_table_privilege('anon', 'public.invitation_versions', 'select'), 'pengunjung publik tidak dapat membaca versi draft');
+select ok(not has_table_privilege('anon', 'public.media_assets', 'select'), 'pengunjung publik tidak dapat membaca seluruh metadata aset');
+select ok(has_column_privilege('anon', 'public.media_assets', 'object_path', 'select'), 'pengunjung publik hanya membaca lokasi aset yang diizinkan');
+select ok(not has_column_privilege('anon', 'public.media_assets', 'owner_user_id', 'select'), 'pengunjung publik tidak dapat membaca pemilik aset');
 select has_view('public', 'published_invitations', 'view renderer publik tersedia');
 select ok(has_table_privilege('anon', 'public.published_invitations', 'select'), 'pengunjung publik dapat membaca view renderer');
 select ok(has_column_privilege('anon', 'public.invitations', 'slug', 'select'), 'pengunjung publik dapat membaca slug undangan aktif');
