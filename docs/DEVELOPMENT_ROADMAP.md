@@ -9,13 +9,18 @@
 - No production payment until gateway and operational release gates pass.
 
 ## 2. Phase 0 — Repository and Foundation
+**Status: SELESAI SEPENUHNYA — 22 November 2026.**
+**Checkpoint commit:** `83c6891ba446b3ad341e4cf20c49190d063ebd22`.
 **Dependencies:** none.
 - Create repository structure, lint/format/test/CI.
 - Configure local, staging, production environments.
 - Setup Supabase projects, migrations, Auth, RLS baseline.
 - Konfigurasikan deployment Vercel production-only dari cabang `main`; deployment preview dinonaktifkan sesuai keputusan pemilik proyek.
 - Add `.env.example`, secrets policy, error logging.
-**Done when:** instalasi bersih, build, dan seluruh pengujian lulus; project staging dan production terpisah; tidak ada rahasia yang dikomit; pipeline migrasi dapat dijalankan ulang; deployment Vercel hanya berasal dari `main` dan deployment preview tetap nonaktif.
+- README utama dan panduan pengembang ditulis dalam bahasa Indonesia.
+- PostgreSQL lokal, staging, dan production diselaraskan ke versi utama 17.
+- Riwayat migrasi staging dan production diselaraskan dengan versi migrasi di repository.
+**Done when:** instalasi bersih, build, dan seluruh pengujian lulus; project staging dan production terpisah; tidak ada rahasia yang dikomit; pipeline migrasi dapat dijalankan ulang; deployment Vercel hanya berasal dari `main` dan deployment preview tetap nonaktif. Seluruh kriteria tersebut telah dipenuhi dan penerapan production berstatus READY.
 
 ## 3. Phase 1 — Identity, Roles, and Admin Foundation
 **Dependencies:** Phase 0.

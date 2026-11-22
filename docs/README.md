@@ -5,8 +5,13 @@ Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi 
 ## Status proyek
 
 - Versi dokumentasi dasar: 1.0.
-- **Fase 0: selesai sepenuhnya** setelah seluruh kriteria penerimaan, pengujian, pemeriksaan rilis, dan penggabungan ke cabang utama terpenuhi.
-- Kebijakan deployment: production saja. Deployment preview dinonaktifkan.
+- **Fase 0: selesai sepenuhnya.**
+- Checkpoint penggabungan: `83c6891ba446b3ad341e4cf20c49190d063ebd22`.
+- Pemeriksaan CI sebelum penggabungan lulus: [lihat hasil CI](https://github.com/Morepp461/Janji-Kita-/actions/runs/45046403758).
+- Penerapan production Vercel dari cabang `main` berstatus **READY**.
+- Penerapan preview dinonaktifkan; hanya production yang digunakan.
+
+Catatan tata kelola: status perlindungan cabang `main` belum dapat diverifikasi melalui integrasi GitHub yang tersedia. Pastikan kedua pemeriksaan CI diwajibkan sebelum penggabungan berikutnya.
 
 ## Dokumen spesifikasi
 
@@ -25,7 +30,7 @@ Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi 
 - Hosting: Vercel.
 - Target gateway pembayaran: Midtrans.
 
-Provider harus tetap dapat diganti. Paket gratis diprioritaskan, tetapi batas kapasitas dan biaya harus diperiksa sebelum production.
+Penyedia teknologi harus tetap dapat diganti. Paket gratis diprioritaskan, tetapi batas kapasitas dan biaya harus diperiksa sebelum penerapan production.
 
 ## Persyaratan pengembangan
 
@@ -35,7 +40,7 @@ Provider harus tetap dapat diganti. Paket gratis diprioritaskan, tetapi batas ka
 - Docker Desktop/Engine untuk Supabase lokal.
 - Supabase CLI.
 - Project Supabase staging dan production yang terpisah.
-- Project Vercel untuk deployment production.
+- Project Vercel untuk penerapan production.
 
 ## Instalasi aplikasi
 
@@ -48,7 +53,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Isi `.env.local` dengan URL dan publishable key Supabase untuk lingkungan yang digunakan. Jangan masukkan kredensial server ke variabel yang dikirim ke browser.
+Isi `.env.local` dengan URL dan kunci publishable Supabase untuk lingkungan yang digunakan. Jangan masukkan kredensial server ke variabel yang dikirim ke browser.
 
 ## Variabel lingkungan
 
@@ -60,7 +65,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_APP_BASE_URL=http://localhost:5173
 ```
 
-`VITE_SUPABASE_ANON_KEY` masih didukung untuk kompatibilitas, tetapi penggunaan publishable key diutamakan.
+`VITE_SUPABASE_ANON_KEY` masih didukung untuk kompatibilitas, tetapi penggunaan kunci publishable diutamakan.
 
 Kredensial server hanya untuk runtime tepercaya:
 
@@ -84,7 +89,9 @@ supabase test db
 supabase stop
 ```
 
-File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.\n\nCI memakai Supabase CLI terbaru. Pada CLI v3, perintah basis data berjalan ke lingkungan lokal secara default. Operasi ke project terkelola harus menyebut target remote secara eksplisit dan menyertakan persetujuan noninteraktif yang sesuai. Jangan menjalankan operasi remote sebelum memeriksa project tujuan.
+File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.
+
+CI memakai Supabase CLI terbaru. Pada CLI v3, perintah basis data berjalan ke lingkungan lokal secara default. Operasi ke project terkelola harus menyebut target remote secara eksplisit dan menyertakan persetujuan noninteraktif yang sesuai. Jangan menjalankan operasi remote sebelum memeriksa project tujuan.
 
 ## Pemeriksaan kualitas
 
@@ -100,33 +107,32 @@ npm run check
 
 CI menjalankan pemeriksaan kualitas aplikasi web dan basis data. Gunakan cabang kerja dan pull request. Jangan mendorong perubahan langsung ke `main`.
 
-## Deployment production saja
+## Penerapan production saja
 
 Workflow `.github/workflows/ci.yml` menjalankan:
 
 - Pemeriksaan kualitas web pada pull request dan push ke `main`.
 - Pengujian migrasi dan RLS menggunakan Supabase lokal pada pull request dan push ke `main`.
-- Deployment Vercel production hanya setelah push ke `main` dan seluruh pemeriksaan CI lulus.
 
-Deployment preview tidak digunakan dan harus tetap dinonaktifkan pada pengaturan project Vercel.
+Integrasi Git Vercel menerapkan perubahan dari cabang `main` ke production. Penerapan preview dinonaktifkan dan harus tetap nonaktif.
 
-Tambahkan GitHub Actions secrets berikut untuk mengaktifkan deployment otomatis:
+Variabel lingkungan production yang telah disiapkan pada Vercel:
 
-- `VERCEL_TOKEN`
-- `VERCEL_ORG_ID`
-- `VERCEL_PROJECT_ID`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+- `VITE_APP_BASE_URL`
 
-Deployment akan dilewati apabila salah satu rahasia belum tersedia. Lindungi cabang `main` dan wajibkan pemeriksaan `Pemeriksaan kualitas web` serta `Pengujian migrasi dan RLS Supabase` berhasil sebelum penggabungan. Status aturan perlindungan cabang harus diverifikasi di pengaturan GitHub repository.
+Lindungi cabang `main` dan wajibkan pemeriksaan `Pemeriksaan kualitas web` serta `Pengujian migrasi dan RLS Supabase` berhasil sebelum penggabungan. Status aturan perlindungan cabang harus diverifikasi pada pengaturan repository GitHub.
 
 ## Lingkungan Supabase
 
-Gunakan project terpisah untuk staging dan production. Jangan arahkan staging ke basis data production. Simpan URL dan publishable key sebagai variabel lingkungan yang sesuai. Kredensial server hanya boleh disimpan sebagai rahasia runtime tepercaya.
+Gunakan project terpisah untuk staging dan production. Jangan arahkan staging ke basis data production. Simpan URL dan kunci publishable sebagai variabel lingkungan yang sesuai. Kredensial server hanya boleh disimpan sebagai rahasia runtime tepercaya.
 
 Aktifkan pencadangan/pemulihan dan verifikasi kebijakan Storage sebelum production.
 
 ## Pembayaran
 
-Gunakan Midtrans sandbox saat mengembangkan modul pembayaran. Pembayaran sungguhan hanya boleh diaktifkan setelah persetujuan merchant, endpoint webhook HTTPS, verifikasi tanda tangan, rekonsiliasi, kebijakan pengembalian dana, dan pengujian menyeluruh lulus.
+Gunakan lingkungan uji Midtrans saat mengembangkan modul pembayaran. Pembayaran sungguhan hanya boleh diaktifkan setelah persetujuan merchant, endpoint webhook HTTPS, verifikasi tanda tangan, rekonsiliasi, kebijakan pengembalian dana, dan pengujian menyeluruh lulus.
 
 ## Daftar periksa keamanan
 
@@ -140,7 +146,7 @@ Gunakan Midtrans sandbox saat mengembangkan modul pembayaran. Pembayaran sungguh
 - [ ] Pencadangan dan pemulihan sudah diuji.
 - [ ] Syarat layanan, privasi, persetujuan, dan kebijakan pengembalian dana siap.
 
-## QA mobile-first
+## Pengujian yang mengutamakan perangkat seluler
 
 Uji peramban Android dengan lebar minimum 360 piksel:
 
@@ -155,7 +161,7 @@ Pastikan tidak ada luapan horizontal, tombol tertutup, atau kontrol terlalu keci
 
 ## Kebijakan biaya
 
-Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan paket gratis jika memadai. Pantau kuota basis data, penyimpanan, bandwidth/egress, eksekusi fungsi, waktu build, email, dan biaya gateway. Provider berbayar tidak boleh diaktifkan tanpa persetujuan pemilik.
+Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan paket gratis jika memadai. Pantau kuota basis data, penyimpanan, bandwidth/egress, eksekusi fungsi, waktu kompilasi, email, dan biaya gateway. Penyedia berbayar tidak boleh diaktifkan tanpa persetujuan pemilik.
 
 ## Sumber kebenaran
 
