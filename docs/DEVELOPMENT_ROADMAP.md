@@ -24,7 +24,7 @@
 
 ## 3. Phase 1 — Identity, Roles, and Admin Foundation
 **Status: SELESAI SEPENUHNYA PADA STAGING — 23 November 2026.**
-**Checkpoint:** PR #10 — `feat/phase-1-identity-admin`.
+**Checkpoint:** PR #10 — `feat/phase-1-identity-admin`. **CI:** [Run #70 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050010670).
 **Dependencies:** Phase 0.
 - Register/login/reset, profiles, locale/timezone preferences, and Supabase Auth sessions.
 - Role and permission model backed by trusted database tables; browser metadata is not used as an authorization source.
