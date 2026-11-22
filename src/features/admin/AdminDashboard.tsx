@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type CatalogItem = {
@@ -57,7 +57,7 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
   const [roleUserId, setRoleUserId] = useState("");
   const [role, setRole] = useState("admin");
 
-  async function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
     const [categoryResult, styleResult, flagResult, auditResult] = await Promise.all([
@@ -79,11 +79,11 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
     setFlags((flagResult.data || []) as FeatureFlag[]);
     setAudit((auditResult.data || []) as AuditEntry[]);
     setLoading(false);
-  }
+  }, [client]);
 
   useEffect(() => {
     void refresh();
-  }, [client]);
+  }, [refresh]);
 
   function beginEdit(kind: CatalogKind, item?: CatalogItem) {
     setEditing(
