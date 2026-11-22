@@ -124,7 +124,7 @@ as $$
 $$;
 
 revoke all on function public.has_permission(text) from public, anon;
-grant execute on function public.has_permission(text) to authenticated;
+grant execute on function public.has_permission(text) to anon, authenticated;
 
 create or replace function public.handle_new_auth_user()
 returns trigger
