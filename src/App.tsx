@@ -358,17 +358,7 @@ export default function App() {
 
         <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />
 
-        {isAdmin ? (
-          <AdminDashboard client={client} isSuperAdmin={isSuperAdmin} />
-        ) : (
-          <section className="rounded-3xl border border-[#eaded5] bg-white p-5 sm:p-7">
-            <h2 className="text-xl font-semibold">Ruang administrasi</h2>
-            <p className="mt-2 text-sm text-[#76675f]">
-              Akses admin tidak diberikan pada akun ini. Peran ditentukan di server dan tidak dapat
-              diubah dari browser.
-            </p>
-          </section>
-        )}
+        {isAdmin && <AdminDashboard client={client} isSuperAdmin={isSuperAdmin} />}
       </div>
     </main>
   );
