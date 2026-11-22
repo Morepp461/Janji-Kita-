@@ -215,7 +215,7 @@ create or replace function app_private.prevent_published_version_mutation()
 returns trigger
 language plpgsql
 set search_path = public, pg_temp
-as $
+as $fn$
 begin
   if old.state = 'published' then
     raise exception 'Versi yang sudah dipublikasikan bersifat permanen' using errcode = '55000';
@@ -223,7 +223,7 @@ begin
   if tg_op = 'DELETE' then return old; end if;
   return new;
 end;
-$;
+$fn$;
 revoke all on function app_private.prevent_published_version_mutation() from public, anon, authenticated;
 
 create trigger invitation_versions_immutable
@@ -234,11 +234,11 @@ create or replace function app_private.prevent_template_version_mutation()
 returns trigger
 language plpgsql
 set search_path = public, pg_temp
-as $
+as $fn$
 begin
   raise exception 'Versi template tidak dapat diubah; terbitkan versi baru' using errcode = '55000';
 end;
-$;
+$fn$;
 revoke all on function app_private.prevent_template_version_mutation() from public, anon, authenticated;
 
 create trigger template_versions_immutable
