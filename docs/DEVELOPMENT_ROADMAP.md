@@ -38,13 +38,19 @@
 **Catatan rilis:** keempat migrasi production telah diterapkan dan riwayat migrasi diselaraskan dengan timestamp file repository. Paket Supabase Free tidak menyediakan backup otomatis harian dan backup manual tidak tersedia melalui koneksi yang digunakan. Sesuai persetujuan pemilik, backup dilewati setelah production diverifikasi memiliki 0 akun Auth dan 0 objek Storage. PR #10 telah digabung dan deployment Vercel production berstatus READY. Vercel preview tetap nonaktif.
 
 ## 4. Phase 2 — Marketplace and Invitation Core
+**Status: SELESAI SEPENUHNYA PADA SUPABASE STAGING — 23 November 2026.**
+**Checkpoint:** [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `8e1c0f925002c62e2a83936512a7d27407b27ea1`.
+**CI:** [Run #45057426083 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057426083), termasuk 40 pengujian pgTAP Fase 2.
+**Migrasi staging:** `20261122183425`, `20261122183930`, `20261122184855`; Security Advisor staging tidak menemukan temuan.
 **Dependencies:** Phase 1.
-- Template metadata/versioning and asset storage.
-- Marketplace browse/search/filter/detail.
-- Create invitation from template and blank starter.
-- Invitation document schema and public renderer.
-- Draft save and preview.
-**Done when:** draft can be created, reopened, and previewed; public route cannot expose unpublished draft; template version change does not alter existing invitation snapshot.
+- Metadata template, versioning immutable, metadata aset, dan bucket Storage.
+- Marketplace dengan pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail `/templates/:slug`, serta pratinjau desktop/ponsel.
+- Draft undangan dari template maupun kanvas kosong, daftar draft, buka ulang, dan pratinjau.
+- Renderer dokumen berbasis daftar komponen yang diizinkan.
+- Renderer publik hanya mengembalikan undangan aktif dan versi terbit melalui RPC `SECURITY INVOKER` dengan RLS; peran anon tidak dapat membaca tabel internal secara langsung.
+- Pengujian snapshot membuktikan perubahan versi template tidak mengubah draft yang telah dibuat; versi template dan versi undangan terbit tidak dapat diubah.
+**Done when:** draft dapat dibuat, dibuka kembali, dan dipratinjau; rute publik tidak dapat menampilkan draft yang belum diterbitkan; perubahan versi template tidak mengubah snapshot undangan lama. Seluruh kriteria Fase 2 telah diverifikasi di staging.
+**Batas rilis:** Supabase production tetap pada Fase 1. Migrasi Fase 2 belum diterapkan dan PR belum digabung ke `main` sampai release gate serta persetujuan rilis production dipenuhi. Deployment preview tetap nonaktif.
 
 ## 5. Phase 3 — Visual Editor
 **Dependencies:** Phase 2 and stable schema.
