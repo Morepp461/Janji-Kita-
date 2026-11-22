@@ -21,18 +21,21 @@ Catatan tata kelola: status perlindungan cabang `main` belum dapat diverifikasi 
 
 ## Status Fase 2
 
-**SELESAI SEPENUHNYA PADA SUPABASE STAGING — 23 November 2026.**
+**SELESAI SEPENUHNYA PADA SUPABASE STAGING DAN PRODUCTION — 23 November 2026.**
 
 - Marketplace: pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail `/templates/:slug`, dan pratinjau desktop/ponsel.
 - Undangan: buat draft dari template atau kanvas kosong, buka kembali, dan pratinjau.
 - Versi template dan versi undangan terbit immutable; snapshot undangan lama tidak berubah saat template mendapat versi baru.
 - Renderer publik hanya mengembalikan undangan aktif dengan versi terbit. Tabel internal tidak dapat dibaca langsung oleh peran anon.
-- Migrasi staging: `20261122183425`, `20261122183930`, `20261122184855`; seluruh timestamp cocok dengan berkas repository.
-- Security Advisor staging: tanpa temuan. Tabel Fase 2 tidak menyimpan data uji setelah smoke test.
-- CI lulus pada [run #45057743405](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405), termasuk 40 pengujian pgTAP Fase 2.
-- Checkpoint implementasi: [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
+- Migrasi staging: `20261122183425`, `20261122183930`, `20261122184855`.
+- Migrasi production: `20261122192144`, `20261122192146`, `20261122192149`.
+- Lima tabel Fase 2 di production memiliki RLS aktif; dua bucket Storage tersedia. Data Fase 2 masih kosong setelah smoke test.
+- Data pemilik tetap utuh: 1 akun Auth, 1 profil, 0 objek Storage.
+- CI kode Fase 2 lulus pada [run #45059131777](https://github.com/Morepp461/Janji-Kita-/actions/runs/45059131777), termasuk 40 pengujian pgTAP.
+- [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12) telah digabung ke `main` pada commit `be079cad82866c77da301aaacede000287f6db8b`.
+- Deployment Vercel production berstatus **READY**: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
-Supabase production tetap pada Fase 1. Migrasi Fase 2 belum diterapkan dan PR belum digabung ke `main`, karena deployment production menunggu release gate dan persetujuan rilis. Vercel preview tetap nonaktif. Peringatan Auth production `Leaked Password Protection Disabled` sudah ada dan tidak diubah karena berada di luar cakupan Fase 2.
+**Keputusan rilis:** Pemilik menyetujui pengecualian backup/restore untuk rilis ini karena backup tidak tersedia melalui paket/akses yang digunakan. Risiko kehilangan data diterima; migrasi bersifat aditif dan pemulihan mengandalkan corrective/forward migration. Restore tidak diklaim telah diuji. Peringatan Auth production `Leaked Password Protection Disabled` sudah ada dan tidak diubah karena berada di luar cakupan Fase 2. Vercel preview tetap nonaktif.
 
 ## Dokumen spesifikasi
 
