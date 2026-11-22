@@ -63,28 +63,3 @@ jobs:
         run: supabase db lint --local --fail-on error
       - name: Jalankan pengujian basis data
         run: supabase test db
-
-  production:
-    name: Deployment Vercel production
-    needs: [web, database]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: production
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - name: Ambil kode sumber
-        uses: actions/checkout@v4
-      - name: Siapkan Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Deploy production
-        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
-        run: |
-          npm install --global vercel
-          vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
-          vercel build --prod --token="$VERCEL_TOKEN"
-          vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
