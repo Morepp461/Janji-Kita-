@@ -63,7 +63,7 @@ select throws_ok(
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000102","role":"authenticated"}', true);
 select throws_ok(
-  $select public.admin_set_user_role('00000000-0000-0000-0000-000000000101'::uuid, 'admin', 'grant')$,
+  'select public.admin_set_user_role(''00000000-0000-0000-0000-000000000101''::uuid, ''admin'', ''grant'')',
   '42501',
   'Tidak memiliki izin untuk mengelola peran',
   'pengguna biasa tidak dapat mengubah peran pengguna lain'
