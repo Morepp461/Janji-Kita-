@@ -69,5 +69,47 @@ create policy feature_flags_read_authenticated on public.feature_flags
   for select to authenticated
   using (is_public or app_private.has_permission('feature_flags.manage'));
 
+drop policy if exists categories_admin_insert on public.categories;
+create policy categories_admin_insert on public.categories
+  for insert to authenticated
+  with check (app_private.has_permission('categories.manage'));
+drop policy if exists categories_admin_update on public.categories;
+create policy categories_admin_update on public.categories
+  for update to authenticated
+  using (app_private.has_permission('categories.manage'))
+  with check (app_private.has_permission('categories.manage'));
+drop policy if exists categories_admin_delete on public.categories;
+create policy categories_admin_delete on public.categories
+  for delete to authenticated
+  using (app_private.has_permission('categories.manage'));
+
+drop policy if exists design_styles_admin_insert on public.design_styles;
+create policy design_styles_admin_insert on public.design_styles
+  for insert to authenticated
+  with check (app_private.has_permission('styles.manage'));
+drop policy if exists design_styles_admin_update on public.design_styles;
+create policy design_styles_admin_update on public.design_styles
+  for update to authenticated
+  using (app_private.has_permission('styles.manage'))
+  with check (app_private.has_permission('styles.manage'));
+drop policy if exists design_styles_admin_delete on public.design_styles;
+create policy design_styles_admin_delete on public.design_styles
+  for delete to authenticated
+  using (app_private.has_permission('styles.manage'));
+
+drop policy if exists feature_flags_admin_insert on public.feature_flags;
+create policy feature_flags_admin_insert on public.feature_flags
+  for insert to authenticated
+  with check (app_private.has_permission('feature_flags.manage'));
+drop policy if exists feature_flags_admin_update on public.feature_flags;
+create policy feature_flags_admin_update on public.feature_flags
+  for update to authenticated
+  using (app_private.has_permission('feature_flags.manage'))
+  with check (app_private.has_permission('feature_flags.manage'));
+drop policy if exists feature_flags_admin_delete on public.feature_flags;
+create policy feature_flags_admin_delete on public.feature_flags
+  for delete to authenticated
+  using (app_private.has_permission('feature_flags.manage'));
+
 revoke all on function public.has_permission(text) from public, anon, authenticated;
 drop function public.has_permission(text);
