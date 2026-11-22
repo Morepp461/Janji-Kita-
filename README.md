@@ -6,6 +6,20 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Fase 0: selesai sepenuhnya.**
 
+**Fase 1: selesai sepenuhnya pada lingkungan staging.**
+
+**Checkpoint: 23 November 2026**
+
+- Implementasi autentikasi: pendaftaran, masuk, pemulihan kata sandi, profil, preferensi bahasa/zona waktu, dan pengelolaan sesi.
+- Model role/permission server-side, bootstrap super admin melalui service role, dan pengelolaan peran melalui RPC yang diaudit.
+- Panel admin untuk CRUD kategori/gaya desain, feature flags, audit log, dan pengelolaan peran.
+- Migrasi fase 1 diterapkan pada Supabase staging; 8 kategori dan 10 gaya desain awal tersedia.
+- Seluruh tabel fase 1 memakai RLS. Security Advisor staging tidak menemukan temuan keamanan.
+- Pengujian pgTAP mencakup isolasi profil/peran antar pengguna, hak akses, dan pembatasan fungsi RPC.
+- Implementasi dan pemeriksaan CI berada pada [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10).
+
+**Batas penerapan:** Supabase production belum menerima migrasi fase 1. Migrasi production dan penggabungan PR menunggu backup/review serta persetujuan rilis sesuai roadmap. Vercel tetap production-only; deployment preview tidak diaktifkan.
+
 **Checkpoint: 22 November 2026**
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
