@@ -1,5 +1,5 @@
 begin;
-select plan(17);
+select plan(18);
 
 select has_table('public', 'profiles', 'tabel profil tersedia');
 select has_table('public', 'user_roles', 'tabel peran tersedia');
