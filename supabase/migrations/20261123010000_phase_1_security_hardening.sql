@@ -100,7 +100,6 @@ create policy role_permissions_read_admin on public.role_permissions
   using (app_private.has_permission('roles.manage'));
 
 revoke all on function public.has_permission(text) from public, anon, authenticated;
-drop function public.has_permission(text);
 
 drop policy if exists categories_read_active on public.categories;
 drop policy if exists categories_admin_manage on public.categories;
