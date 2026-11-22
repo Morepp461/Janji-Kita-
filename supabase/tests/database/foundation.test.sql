@@ -8,8 +8,8 @@ select ok(
   'anonymous role cannot use the private application schema'
 );
 select ok(
-  not has_schema_privilege('authenticated', 'app_private', 'USAGE'),
-  'authenticated role cannot use the private application schema'
+  not has_function_privilege('authenticated', 'public.bootstrap_first_super_admin(uuid)', 'EXECUTE'),
+  'authenticated role cannot bootstrap the first super admin'
 );
 
 create table public.phase0_rls_probe (id integer primary key);
