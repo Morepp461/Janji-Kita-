@@ -1,6 +1,8 @@
 import type { InvitationDocument, InvitationNode } from "../invitations/document";
 
-export const EDITOR_SCHEMA_VERSION = 1;\n\nexport type ComponentDefinition = {
+export const EDITOR_SCHEMA_VERSION = 1;
+
+export type ComponentDefinition = {
   type: string;
   label: string;
   group: string;
