@@ -214,7 +214,7 @@ export default function App() {
 
   if (!session) return <AuthPage client={client} />;
 
-  const editorMatch = pathname.match(/^\\/editor\\/([0-9a-f-]+)\\/?$/i);
+  const editorMatch = pathname.match(/^\/editor\/([0-9a-f-]+)\/?$/i);
   if (editorMatch) {
     return <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />;
   }
