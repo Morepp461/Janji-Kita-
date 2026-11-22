@@ -30,7 +30,7 @@ function safeStyle(style: Record<string, unknown> = {}): CSSProperties {
 function renderNode(node: InvitationNode, assetUrls: Record<string, string>): ReactNode {
   const props = node.props || {};
   const style = safeStyle(node.style);
-  const children = (node.children || []).map((child) => <div key={child.id}>{renderNode(child, assetUrls)}</div>);
+  const children = (node.children || []).map((child) => <div key={child.id} className={child.responsive?.mobile?.hidden ? "hidden sm:block" : child.responsive?.desktop?.hidden ? "sm:hidden" : ""}>{renderNode(child, assetUrls)}</div>);
   const text = typeof props.text === "string" ? props.text : "";
   const assetId = typeof props.assetId === "string" ? props.assetId : "";
   const src = assetUrls[assetId] || "";
@@ -125,5 +125,5 @@ export default function InvitationDocumentView({ document, client }: { document:
     return () => { active = false; };
   }, [client, assetIds]);
 
-  return <div className="mx-auto w-full space-y-4">{sections.map((node) => <div key={node.id}>{renderNode(node, assetUrls)}</div>)}</div>;
+  return <div className="mx-auto w-full space-y-4">{sections.map((node) => <div key={node.id} className={node.responsive?.mobile?.hidden ? "hidden sm:block" : node.responsive?.desktop?.hidden ? "sm:hidden" : ""}>{renderNode(node, assetUrls)}</div>)}</div>;
 }
