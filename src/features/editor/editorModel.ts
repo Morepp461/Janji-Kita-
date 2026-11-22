@@ -152,3 +152,23 @@ export function validateDocument(document: InvitationDocument, title: string): s
   visit(sections);
   return [...new Set(errors)];
 }
+
+export function duplicateNode(document: InvitationDocument, nodeId: string): InvitationDocument {
+  const cloneWithNewIds = (node: InvitationNode): InvitationNode => ({
+    ...structuredClone(node),
+    id: crypto.randomUUID(),
+    children: node.children?.map(cloneWithNewIds),
+  });
+  const duplicate = (nodes: InvitationNode[]): InvitationNode[] => {
+    const index = nodes.findIndex((node) => node.id === nodeId);
+    if (index >= 0) {
+      const next = [...nodes];
+      next.splice(index + 1, 0, cloneWithNewIds(nodes[index]!));
+      return next;
+    }
+    return nodes.map((node) => node.children ? { ...node, children: duplicate(node.children) } : node);
+  };
+  return document.pages?.length
+    ? { ...document, pages: document.pages.map((page) => ({ ...page, sections: duplicate(page.sections || []) })) }
+    : { ...document, sections: duplicate(document.sections || []) };
+}
