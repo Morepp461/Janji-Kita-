@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addNode, createNode, getSections, moveNode, removeNode, updateNode, validateDocument } from "./editorModel";
+import { addNode, createNode, duplicateNode, getSections, moveNode, removeNode, updateNode, validateDocument } from "./editorModel";
 import { createBlankInvitationDocument } from "../invitations/document";
 
 describe("model editor visual", () => {
@@ -18,6 +18,14 @@ describe("model editor visual", () => {
     expect(getSections(doc)[0]?.id).toBe(divider.id);
     doc = removeNode(doc, divider.id);
     expect(getSections(doc)).toHaveLength(1);
+  });
+
+  it("menduplikasi lapisan dengan ID baru", () => {
+    const doc = createBlankInvitationDocument("Undangan");
+    const original = getSections(doc)[0]!;
+    const duplicated = duplicateNode(doc, original.id);
+    expect(getSections(duplicated)).toHaveLength(2);
+    expect(getSections(duplicated)[0]?.id).not.toBe(getSections(duplicated)[1]?.id);
   });
 
   it("menambahkan komponen sebagai anak container", () => {
