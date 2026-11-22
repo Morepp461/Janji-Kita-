@@ -74,7 +74,7 @@ select is(
 select throws_ok(
   $phase3$select public.save_invitation_draft(
     (select id from public.invitations where title = 'Draft editor tersimpan'),
-    current_setting('test.phase3_original_updated_at')::timestamptz,
+    current_setting('test.phase3_original_updated_at')::timestamptz - interval '1 second',
     'Simpan konflik',
     '{"schemaVersion":1,"pages":[]}'::jsonb
   )$phase3$,
