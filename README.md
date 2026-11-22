@@ -21,20 +21,22 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Rilis production:** Keempat migrasi Fase 1 telah diterapkan dan diverifikasi pada Supabase production. Organisasi Supabase menggunakan paket Free sehingga backup otomatis harian tidak tersedia; backup manual tidak dapat dijalankan melalui akses yang tersedia. Sesuai persetujuan pemilik, migrasi dilanjutkan setelah verifikasi bahwa production belum memiliki akun pengguna maupun objek Storage. Deployment Vercel production untuk commit Fase 1 berstatus **READY**. Penerapan preview tetap nonaktif.
 
-**Fase 2: selesai sepenuhnya pada Supabase staging.**
+**Fase 2: selesai sepenuhnya pada Supabase staging dan production.**
 
 **Checkpoint: 23 November 2026**
 
 - Marketplace mendukung pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail template melalui rute `/templates/:slug`, serta pratinjau desktop dan ponsel.
 - Draft undangan dapat dibuat dari template atau kanvas kosong, dibuka kembali, dan dipratinjau.
 - Versi template dan versi undangan terbit bersifat immutable; perubahan versi template tidak mengubah snapshot draft yang sudah dibuat.
-- Rute publik hanya mengembalikan undangan aktif dengan versi terbit. Pengunjung tidak memperoleh akses langsung ke tabel internal undangan.
-- Tiga migrasi Fase 2 diterapkan di staging dan timestamp-nya selaras dengan repository: `20261122183425`, `20261122183930`, dan `20261122184855`.
-- Security Advisor staging tidak menemukan temuan. Tidak ada data uji yang tertinggal pada tabel Fase 2.
-- Seluruh pemeriksaan CI lulus pada [run #45057743405](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405): pemeriksaan web, build production, migrasi lokal, lint basis data, dan 40 pengujian pgTAP Fase 2.
-- Implementasi tersedia pada [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), cabang `feat/phase-2-marketplace-invitation-core`, checkpoint commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
+- Rute publik hanya mengembalikan undangan aktif dengan versi terbit. Peran anon tidak dapat membaca kolom internal pemilik.
+- Tiga migrasi Fase 2 diterapkan pada staging dan production. Riwayat production: `20261122192144`, `20261122192146`, dan `20261122192149`.
+- Lima tabel Fase 2 di production memakai RLS; dua bucket Storage telah tersedia. Tidak ada data uji pada tabel Fase 2.
+- Data pemilik tetap utuh: 1 akun Auth, 1 profil, dan 0 objek Storage.
+- CI kode Fase 2 lulus pada [run #45059131777](https://github.com/Morepp461/Janji-Kita-/actions/runs/45059131777), termasuk 40 pengujian pgTAP, lint skema, format, lint, typecheck, unit test, dan build production.
+- [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12) telah digabung ke `main` pada commit `be079cad82866c77da301aaacede000287f6db8b`.
+- Deployment Vercel production berstatus **READY**: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
-**Batas rilis:** Supabase production masih pada Fase 1 dan tidak menerima migrasi Fase 2. PR #12 belum digabung ke `main` agar aplikasi production tidak berjalan dengan skema basis data yang belum diterapkan. Penerapan production menunggu release gate dan persetujuan rilis sesuai roadmap. Deployment Vercel production saat ini berstatus **READY** pada commit pemulihan `5c07b54b564606850c71e9a0ddafbfddd80fed2b`; kode aplikasi production tetap pada Fase 1. Deployment preview tetap nonaktif.
+**Keputusan rilis:** Pemilik menyetujui pengecualian backup/restore untuk rilis ini karena backup tidak tersedia melalui paket/akses yang digunakan. Risiko kehilangan data diterima; migrasi bersifat aditif dan rencana pemulihan menggunakan corrective/forward migration. Restore tidak diklaim telah diuji. Satu peringatan Security Advisor yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 2. Deployment preview tetap nonaktif.
 
 **Checkpoint: 22 November 2026**
 
