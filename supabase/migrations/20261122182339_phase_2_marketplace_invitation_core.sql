@@ -121,7 +121,9 @@ insert into public.role_permissions (role, permission_key) values
 on conflict (role, permission_key) do nothing;
 
 revoke all on public.templates, public.template_versions, public.media_assets, public.invitations, public.invitation_versions from public, anon, authenticated;
-grant select on public.templates, public.template_versions, public.media_assets to anon, authenticated;
+grant select on public.templates, public.template_versions to anon, authenticated;
+grant select on public.media_assets to authenticated;
+grant select (id, storage_bucket, object_path, visibility) on public.media_assets to anon;
 grant insert, update, select on public.templates, public.template_versions to authenticated;
 grant insert, update on public.media_assets to authenticated;
 grant select, insert, update on public.invitations, public.invitation_versions to authenticated;
