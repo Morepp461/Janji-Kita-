@@ -163,29 +163,13 @@ create policy template_versions_admin_insert on public.template_versions
 
 create policy media_assets_read_public on public.media_assets
   for select to anon
-  using (
-    visibility = 'public'
-    or (
-      visibility = 'template'
-      and exists (
-        select 1 from public.templates t
-        where t.thumbnail_asset_id = media_assets.id and t.status = 'published'
-      )
-    )
-  );
+  using (visibility in ('public', 'template'));
 create policy media_assets_read_authenticated on public.media_assets
   for select to authenticated
   using (
-    visibility = 'public'
+    visibility in ('public', 'template')
     or owner_user_id = (select auth.uid())
     or app_private.has_permission('templates.manage')
-    or (
-      visibility = 'template'
-      and exists (
-        select 1 from public.templates t
-        where t.thumbnail_asset_id = media_assets.id and t.status = 'published'
-      )
-    )
   );
 create policy media_assets_admin_insert on public.media_assets
   for insert to authenticated with check (
