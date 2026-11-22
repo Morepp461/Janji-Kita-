@@ -560,7 +560,10 @@ export default function Marketplace({
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <a href={`/editor/${draft.id}`} className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white">
+                    <a
+                      href={`/editor/${draft.id}`}
+                      className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white"
+                    >
                       Buka editor
                     </a>
                     <button

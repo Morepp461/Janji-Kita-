@@ -236,7 +236,9 @@ export default function App() {
 
   const editorMatch = pathname.match(/^\/editor\/([0-9a-f-]+)\/?$/i);
   if (editorMatch) {
-    return <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />;
+    return (
+      <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />
+    );
   }
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");

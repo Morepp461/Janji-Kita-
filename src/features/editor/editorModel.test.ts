@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { addNode, createNode, duplicateNode, getSections, moveNode, removeNode, updateNode, validateDocument } from "./editorModel";
+import {
+  addNode,
+  createNode,
+  duplicateNode,
+  getSections,
+  moveNode,
+  removeNode,
+  updateNode,
+  validateDocument,
+} from "./editorModel";
 import { createBlankInvitationDocument } from "../invitations/document";
 
 describe("model editor visual", () => {
@@ -12,7 +21,10 @@ describe("model editor visual", () => {
     let doc = createBlankInvitationDocument("Undangan");
     doc = addNode(doc, "Divider");
     const divider = getSections(doc)[1]!;
-    doc = updateNode(doc, divider.id, (node) => ({ ...node, props: { ...node.props, test: true } }));
+    doc = updateNode(doc, divider.id, (node) => ({
+      ...node,
+      props: { ...node.props, test: true },
+    }));
     expect(getSections(doc)[1]?.props?.test).toBe(true);
     doc = moveNode(doc, divider.id, -1);
     expect(getSections(doc)[0]?.id).toBe(divider.id);
