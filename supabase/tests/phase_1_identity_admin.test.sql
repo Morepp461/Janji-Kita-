@@ -1,5 +1,5 @@
 begin;
-select plan(27);
+select plan(32);
 
 select has_table('public', 'profiles', 'tabel profil tersedia');
 select has_table('public', 'user_roles', 'tabel peran tersedia');
@@ -34,14 +34,39 @@ insert into auth.users (
   ('00000000-0000-0000-0000-000000000102', 'authenticated', 'authenticated',
    'phase1-user-b@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now());
 
+insert into public.user_roles (user_id, role, granted_by)
+values ('00000000-0000-0000-0000-000000000101', 'super_admin', null);
+
 set local role authenticated;
-select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000101', true);
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000101","role":"authenticated"}', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000102","role":"authenticated"}', true);
 select is((select count(*) from public.profiles), 1::bigint, 'pengguna hanya membaca profil sendiri');
-select is((select count(*) from public.user_roles), 1::bigint, 'pengguna hanya membaca peran sendiri');
+select is((select count(*) from public.user_roles), 0::bigint, 'pengguna biasa tidak membaca peran pengguna lain');
 select is(app_private.has_permission('admin.access'), false, 'akun biasa tidak memiliki izin admin');
 select ok(has_schema_privilege('authenticated', 'app_private', 'USAGE'), 'schema internal hanya digunakan oleh peran terautentikasi');
 select is((select count(*) from public.audit_logs), 0::bigint, 'pengguna biasa tidak dapat membaca audit log');
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000101', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000101","role":"authenticated"}', true);
+select is(app_private.has_permission('roles.manage'), true, 'super admin memiliki izin mengelola peran');
+select public.admin_set_user_role('00000000-0000-0000-0000-000000000102', 'moderator', 'grant');
+select is((select count(*) from public.user_roles where user_id = '00000000-0000-0000-0000-000000000102' and role = 'moderator'), 1::bigint, 'RPC memberi peran sesuai izin super admin');
+select is((select count(*) from public.audit_logs where actor_user_id = '00000000-0000-0000-0000-000000000101' and action = 'insert' and target_type = 'user_roles'), 1::bigint, 'perubahan peran tercatat di audit log');
+select throws_ok(
+  $select public.admin_set_user_role('00000000-0000-0000-0000-000000000101'::uuid, 'admin', 'grant')$,
+  '42501',
+  'Peran akun sendiri tidak dapat diubah',
+  'super admin tidak dapat mengubah peran akunnya sendiri'
+);
+
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000102","role":"authenticated"}', true);
+select throws_ok(
+  $select public.admin_set_user_role('00000000-0000-0000-0000-000000000101'::uuid, 'admin', 'grant')$,
+  '42501',
+  'Tidak memiliki izin untuk mengelola peran',
+  'pengguna biasa tidak dapat mengubah peran pengguna lain'
+);
 reset role;
 
 select * from finish();
