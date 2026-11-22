@@ -1,0 +1,219 @@
+begin;
+select plan(40);
+
+select has_table('public', 'templates', 'tabel template tersedia');
+select has_table('public', 'template_versions', 'tabel versi template tersedia');
+select has_table('public', 'media_assets', 'tabel aset media tersedia');
+select has_table('public', 'invitations', 'tabel undangan tersedia');
+select has_table('public', 'invitation_versions', 'tabel versi undangan tersedia');
+
+select ok((select relrowsecurity from pg_class where oid = 'public.templates'::regclass), 'RLS template aktif');
+select ok((select relrowsecurity from pg_class where oid = 'public.template_versions'::regclass), 'RLS versi template aktif');
+select ok((select relrowsecurity from pg_class where oid = 'public.media_assets'::regclass), 'RLS aset media aktif');
+select ok((select relrowsecurity from pg_class where oid = 'public.invitations'::regclass), 'RLS undangan aktif');
+select ok((select relrowsecurity from pg_class where oid = 'public.invitation_versions'::regclass), 'RLS versi undangan aktif');
+
+select ok(not has_table_privilege('anon', 'public.invitations', 'select'), 'pengunjung publik tidak dapat membaca tabel undangan');
+select ok(not has_table_privilege('anon', 'public.invitation_versions', 'select'), 'pengunjung publik tidak dapat membaca versi draft');
+select ok(not has_table_privilege('anon', 'public.media_assets', 'select'), 'pengunjung publik tidak dapat membaca seluruh metadata aset');
+select ok(has_column_privilege('anon', 'public.media_assets', 'object_path', 'select'), 'pengunjung publik hanya membaca lokasi aset yang diizinkan');
+select ok(not has_column_privilege('anon', 'public.media_assets', 'owner_user_id', 'select'), 'pengunjung publik tidak dapat membaca pemilik aset');
+select ok(has_function_privilege('anon', 'public.get_public_invitation(text)', 'execute'), 'RPC renderer publik tersedia untuk pengunjung');
+select ok(has_function_privilege('authenticated', 'public.get_public_invitation(text)', 'execute'), 'RPC renderer publik tersedia untuk pengguna');
+select ok(not has_table_privilege('anon', 'public.invitations', 'select'), 'pengunjung publik tidak dapat membaca tabel undangan');
+select ok(not has_table_privilege('anon', 'public.invitation_versions', 'select'), 'pengunjung publik tidak dapat membaca tabel versi undangan');
+select ok(not has_column_privilege('anon', 'public.invitations', 'owner_user_id', 'select'), 'pengunjung publik tidak dapat membaca pemilik undangan');
+select ok(has_function_privilege('authenticated', 'public.create_invitation_draft(text,uuid,uuid)', 'execute'), 'RPC pembuatan draft tersedia');
+select ok(not has_function_privilege('anon', 'public.create_invitation_draft(text,uuid,uuid)', 'execute'), 'pengunjung publik tidak dapat membuat draft');
+select ok(has_function_privilege('authenticated', 'public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid)', 'execute'), 'RPC pembuatan template tersedia');
+select ok(not has_function_privilege('anon', 'public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid)', 'execute'), 'pengunjung publik tidak dapat membuat template');
+select ok(exists (select 1 from storage.buckets where id = 'template-assets' and public), 'bucket aset template publik tersedia');
+select ok(exists (select 1 from storage.buckets where id = 'user-uploads-private' and not public), 'bucket unggahan pengguna bersifat privat');
+
+
+insert into auth.users (
+  id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-0000-0000-000000000201', 'authenticated', 'authenticated',
+  'phase2-owner@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000201', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000201","role":"authenticated"}', true);
+select lives_ok(
+  $phase2$select public.create_invitation_draft(
+    'Draft fase 2',
+    (select id from public.categories order by sort_order limit 1),
+    null
+  )$phase2$,
+  'pengguna dapat membuat draft dari kanvas kosong'
+);
+reset role;
+
+insert into public.templates (
+  id, slug, title, category_id, style_id, description, base_price, status, created_by
+) values (
+  '00000000-0000-0000-0000-000000000204',
+  'phase2-snapshot-template',
+  'Template Snapshot',
+  (select id from public.categories order by sort_order limit 1),
+  (select id from public.design_styles order by sort_order limit 1),
+  'Template untuk uji snapshot versi.',
+  0,
+  'draft',
+  '00000000-0000-0000-0000-000000000201'
+);
+insert into public.template_versions (
+  id, template_id, version_no, schema_version, document, created_by
+) values (
+  '00000000-0000-0000-0000-000000000205',
+  '00000000-0000-0000-0000-000000000204',
+  1, 1, '{"schemaVersion":1,"pages":[],"revision":"v1"}'::jsonb,
+  '00000000-0000-0000-0000-000000000201'
+);
+update public.templates
+set current_version_id = '00000000-0000-0000-0000-000000000205',
+    status = 'published'
+where id = '00000000-0000-0000-0000-000000000204';
+
+set local role authenticated;
+select is(
+  (select count(*) from public.template_versions where id = '00000000-0000-0000-0000-000000000205'),
+  1::bigint,
+  'pengguna dapat membaca versi template aktif'
+);
+select lives_ok(
+  $phase2$select public.create_invitation_draft(
+    'Draft dari template fase 2',
+    (select id from public.categories order by sort_order limit 1),
+    '00000000-0000-0000-0000-000000000204'
+  )$phase2$,
+  'pengguna dapat membuat draft dari template terbit'
+);
+reset role;
+
+insert into public.template_versions (
+  id, template_id, version_no, schema_version, document, created_by
+) values (
+  '00000000-0000-0000-0000-000000000206',
+  '00000000-0000-0000-0000-000000000204',
+  2, 1, '{"schemaVersion":1,"pages":[],"revision":"v2"}'::jsonb,
+  '00000000-0000-0000-0000-000000000201'
+);
+update public.templates
+set current_version_id = '00000000-0000-0000-0000-000000000206'
+where id = '00000000-0000-0000-0000-000000000204';
+
+select is(
+  (select v.document->>'revision'
+   from public.invitation_versions v
+   join public.invitations i on i.draft_version_id = v.id
+   where i.title = 'Draft dari template fase 2'),
+  'v1',
+  'perubahan versi template tidak mengubah snapshot draft lama'
+);
+select is(
+  (select v.document->>'revision'
+   from public.template_versions v
+   join public.templates t on t.current_version_id = v.id
+   where t.id = '00000000-0000-0000-0000-000000000204'),
+  'v2',
+  'template menunjuk ke versi terbaru'
+);
+
+select throws_ok(
+  'update public.template_versions set change_note = ''uji perubahan'' where id = ''00000000-0000-0000-0000-000000000205''::uuid',
+  '55000',
+  'Versi template tidak dapat diubah; terbitkan versi baru',
+  'versi template yang telah dibuat bersifat immutable'
+);
+
+update public.invitations
+set slug = 'phase2-draft-smoke-test'
+where title = 'Draft fase 2' and status = 'draft';
+
+insert into public.invitations (
+  id, owner_user_id, created_by, title, event_category_id, status
+) values (
+  '00000000-0000-0000-0000-000000000202',
+  '00000000-0000-0000-0000-000000000201',
+  '00000000-0000-0000-0000-000000000201',
+  'Undangan terbit untuk pengujian',
+  (select id from public.categories order by sort_order limit 1),
+  'draft'
+);
+insert into public.invitation_versions (
+  id, invitation_id, version_no, schema_version, document, state, created_by
+) values (
+  '00000000-0000-0000-0000-000000000203',
+  '00000000-0000-0000-0000-000000000202',
+  1, 1, '{"schemaVersion":1,"pages":[]}'::jsonb, 'published',
+  '00000000-0000-0000-0000-000000000201'
+);
+update public.invitations
+set status = 'active',
+    slug = 'phase2-active-smoke-test',
+    active_from = now() - interval '1 hour',
+    active_until = now() + interval '1 hour',
+    published_version_id = '00000000-0000-0000-0000-000000000203'
+where id = '00000000-0000-0000-0000-000000000202';
+
+select ok(
+  exists (
+    select 1 from public.invitations
+    where slug = 'phase2-active-smoke-test'
+      and status = 'active'
+      and published_version_id is not null
+  ),
+  'fixture undangan aktif berhasil dibuat'
+);
+select ok(
+  exists (
+    select 1 from public.invitation_versions v
+    join public.invitations i on i.published_version_id = v.id
+    where i.slug = 'phase2-active-smoke-test'
+      and v.state = 'published'
+  ),
+  'fixture versi terbit berhasil dibuat'
+);
+select throws_ok(
+  'update public.invitation_versions set document = ''{}''::jsonb where id = ''00000000-0000-0000-0000-000000000203''::uuid',
+  '55000',
+  'Versi yang sudah dipublikasikan bersifat permanen',
+  'versi undangan yang telah diterbitkan bersifat immutable'
+);
+
+set local role anon;
+select set_config('request.jwt.claim.sub', '', true);
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select is(
+  (select count(*) from public.template_versions where id = '00000000-0000-0000-0000-000000000205'),
+  0::bigint,
+  'pengunjung publik tidak dapat membaca versi template lama'
+);
+select is(
+  (select count(*) from public.template_versions where id = '00000000-0000-0000-0000-000000000206'),
+  1::bigint,
+  'pengunjung publik dapat membaca versi template aktif'
+);
+select is(
+  public.get_public_invitation('phase2-active-smoke-test')->>'slug',
+  'phase2-active-smoke-test',
+  'renderer publik mengembalikan undangan aktif'
+);
+select is(
+  public.get_public_invitation('phase2-active-smoke-test')->'document'->>'schemaVersion',
+  '1',
+  'renderer publik mengembalikan dokumen versi terbit'
+);
+select is(
+  public.get_public_invitation('phase2-draft-smoke-test'),
+  null::jsonb,
+  'renderer publik tidak mengembalikan draft'
+);
+reset role;
+
+select * from finish();
+rollback;

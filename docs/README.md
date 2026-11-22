@@ -10,7 +10,7 @@ Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi 
 - Checkpoint fase 1: [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10).
 - Seluruh CI fase 1 lulus: [hasil CI #76](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050908634) mencakup pemeriksaan web, migrasi, lint basis data, dan pgTAP.
 - Fase 1 mencakup autentikasi, profil, role/permission, panel admin, kategori/gaya, feature flags, audit log, dan RLS.
-- Security Advisor staging dan production setelah migrasi fase 1: tidak ada temuan keamanan.
+- Pada checkpoint Fase 1, Security Advisor staging dan production tidak menemukan temuan. Pemeriksaan Fase 2 mencatat satu peringatan Auth yang sudah ada pada production: `Leaked Password Protection Disabled`; staging tidak memiliki temuan.
 - Keempat migrasi Fase 1 sudah diterapkan pada production dan riwayat migrasinya sudah diselaraskan dengan timestamp file repository. Paket Supabase Free tidak menyediakan backup otomatis harian; backup manual tidak tersedia melalui koneksi yang digunakan. Migrasi dilakukan setelah verifikasi bahwa production memiliki 0 akun Auth dan 0 objek Storage, sesuai persetujuan pemilik untuk melewati backup.
 - Checkpoint Fase 1 di `main`: `8aff277b1ebb88838b2c6c8c2745065428928e13` (PR #10).
 - Pemeriksaan CI sebelum penggabungan lulus: [lihat hasil CI](https://github.com/Morepp461/Janji-Kita-/actions/runs/45046403758).
@@ -18,6 +18,21 @@ Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi 
 - Penerapan preview dinonaktifkan; hanya production yang digunakan.
 
 Catatan tata kelola: status perlindungan cabang `main` belum dapat diverifikasi melalui integrasi GitHub yang tersedia. Pastikan kedua pemeriksaan CI diwajibkan sebelum penggabungan berikutnya.
+
+## Status Fase 2
+
+**SELESAI SEPENUHNYA PADA SUPABASE STAGING — 23 November 2026.**
+
+- Marketplace: pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail `/templates/:slug`, dan pratinjau desktop/ponsel.
+- Undangan: buat draft dari template atau kanvas kosong, buka kembali, dan pratinjau.
+- Versi template dan versi undangan terbit immutable; snapshot undangan lama tidak berubah saat template mendapat versi baru.
+- Renderer publik hanya mengembalikan undangan aktif dengan versi terbit. Tabel internal tidak dapat dibaca langsung oleh peran anon.
+- Migrasi staging: `20261122183425`, `20261122183930`, `20261122184855`; seluruh timestamp cocok dengan berkas repository.
+- Security Advisor staging: tanpa temuan. Tabel Fase 2 tidak menyimpan data uji setelah smoke test.
+- CI lulus pada [run #45057743405](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405), termasuk 40 pengujian pgTAP Fase 2.
+- Checkpoint implementasi: [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
+
+Supabase production tetap pada Fase 1. Migrasi Fase 2 belum diterapkan dan PR belum digabung ke `main`, karena deployment production menunggu release gate dan persetujuan rilis. Vercel preview tetap nonaktif. Peringatan Auth production `Leaked Password Protection Disabled` sudah ada dan tidak diubah karena berada di luar cakupan Fase 2.
 
 ## Dokumen spesifikasi
 
@@ -95,7 +110,7 @@ supabase test db
 supabase stop
 ```
 
-File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.
+File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Jika jalur backup tidak tersedia, pemilik dapat menyetujui pengecualian tertulis yang terbatas pada rilis tertentu; catat inventaris data, risiko yang diterima, sifat migrasi, dan recovery plan. Pengecualian Fase 2 tanggal 23 November 2026 dicatat pada `docs/DEVELOPMENT_ROADMAP.md`. Pengujian RLS wajib lulus di CI.
 
 CI memakai Supabase CLI 3.0.0 yang dipatok agar hasil pemeriksaan konsisten. Pada CLI v3, perintah basis data berjalan ke lingkungan lokal secara default. Operasi ke project terkelola harus menyebut target remote secara eksplisit dan menyertakan persetujuan noninteraktif yang sesuai. Jangan menjalankan operasi remote sebelum memeriksa project tujuan.
 
@@ -149,7 +164,7 @@ Gunakan lingkungan uji Midtrans saat mengembangkan modul pembayaran. Pembayaran 
 - [ ] Pembatasan laju diterapkan pada autentikasi, RSVP, buku tamu, unggahan, dan checkout.
 - [ ] Tanda tangan webhook diverifikasi dan pemrosesannya idempoten.
 - [ ] Aktivitas admin, pembayaran, persetujuan, perubahan peran, dan publikasi tercatat.
-- [ ] Pencadangan dan pemulihan sudah diuji.
+- [ ] Pencadangan dan pemulihan sudah diuji, atau pengecualian rilis disetujui pemilik dan terdokumentasi dengan risiko serta recovery plan.
 - [ ] Syarat layanan, privasi, persetujuan, dan kebijakan pengembalian dana siap.
 
 ## Pengujian yang mengutamakan perangkat seluler

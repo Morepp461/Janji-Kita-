@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import AuthPage from "./features/auth/AuthPage";
+import Marketplace from "./features/marketplace/Marketplace";
+import PublicInvitation from "./features/invitations/PublicInvitation";
 import { getSupabaseClient } from "./lib/supabase";
 
 type Profile = {
@@ -156,6 +158,18 @@ export default function App() {
     );
   }
 
+  const pathname = window.location.pathname;
+  if (pathname.startsWith("/i/")) {
+    const slug = decodeURIComponent(pathname.slice(4).split("/")[0] || "");
+    return <PublicInvitation client={client} slug={slug} />;
+  }
+  const templateSlug = pathname.startsWith("/templates/")
+    ? pathname.slice("/templates/".length).split("/")[0] || undefined
+    : undefined;
+  if (!session && (pathname === "/templates" || templateSlug)) {
+    return <Marketplace client={client} userId={null} initialTemplateSlug={templateSlug} />;
+  }
+
   if (recoveryMode) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fffaf6] px-4 py-10 text-[#30251f]">
@@ -221,6 +235,16 @@ export default function App() {
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
   const isSuperAdmin = roles.includes("super_admin");
+  if (pathname === "/templates" || templateSlug) {
+    return (
+      <Marketplace
+        client={client}
+        userId={session.user.id}
+        isAdmin={isAdmin}
+        initialTemplateSlug={templateSlug}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-4 py-6 text-[#30251f] sm:px-8 sm:py-10">
@@ -331,6 +355,8 @@ export default function App() {
             </p>
           </aside>
         </section>
+
+        <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />
 
         {isAdmin ? (
           <AdminDashboard client={client} isSuperAdmin={isSuperAdmin} />
