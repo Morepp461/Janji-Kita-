@@ -38,6 +38,21 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Keputusan rilis:** Pemilik menyetujui pengecualian backup/restore untuk rilis ini karena backup tidak tersedia melalui paket/akses yang digunakan. Risiko kehilangan data diterima; migrasi bersifat aditif dan rencana pemulihan menggunakan corrective/forward migration. Restore tidak diklaim telah diuji. Satu peringatan Security Advisor yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 2. Deployment preview tetap nonaktif.
 
+**Fase 3: implementasi editor visual selesai pada Supabase staging — 23 November 2026.**
+
+- Editor visual tersedia melalui rute `/editor/:id` untuk draft milik pengguna yang sedang masuk.
+- Registry menyediakan komponen tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
+- Panel properti mendukung pengeditan konten, gaya, tata letak, dan visibilitas responsif desktop/ponsel.
+- Operasi lapisan mencakup tambah, pilih, urutkan, duplikat, kunci/buka kunci, sembunyikan/tampilkan, hapus, serta undo/redo.
+- Pratinjau editor menggunakan renderer undangan yang sama dengan halaman publik; validasi memeriksa judul, struktur komponen, konten wajib, aset gambar, dan tautan HTTPS.
+- Autosave memakai RPC dengan pemeriksaan versi dasar untuk menolak konflik. Perubahan lokal disimpan sebagai pemulihan saat offline atau refresh.
+- Unggahan aset privat memvalidasi MIME/signature dan ukuran, membaca metadata media, serta mengoptimalkan gambar menjadi WebP sebelum disimpan. Metadata aset dibatasi pada folder pemilik.
+- Dua migrasi Fase 3 diterapkan pada staging. RLS tetap aktif, akses simpan hanya untuk pengguna terautentikasi, dan Security Advisor tidak menemukan temuan.
+- Pemeriksaan staging mengonfirmasi RPC, bucket privat, RLS, dan satu kebijakan INSERT aset tanpa tumpang tindih. Performance Advisor tidak lagi melaporkan kebijakan INSERT ganda; temuan indeks FK dan unused index yang sudah ada tetap dicatat sebagai pekerjaan optimasi terpisah.
+- CI Fase 3 lulus: format, lint, typecheck, unit test, build production, migrasi lokal, lint basis data, dan pgTAP. [Lihat CI Fase 3](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062742820).
+
+**Batas rilis production:** kode Fase 3 masih berada di [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14). Migrasi production dan penggabungan ke `main` belum dilakukan. Backup production tidak tersedia melalui paket/akses Supabase saat ini; pengecualian backup yang disetujui untuk Fase 2 tidak otomatis berlaku untuk Fase 3. Deployment preview tetap nonaktif.
+
 **Checkpoint: 22 November 2026**
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
