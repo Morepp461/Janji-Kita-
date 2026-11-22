@@ -39,8 +39,8 @@
 
 ## 4. Phase 2 — Marketplace and Invitation Core
 **Status: SELESAI SEPENUHNYA PADA SUPABASE STAGING — 23 November 2026.**
-**Checkpoint:** [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `8e1c0f925002c62e2a83936512a7d27407b27ea1`.
-**CI:** [Run #45057426083 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057426083), termasuk 40 pengujian pgTAP Fase 2.
+**Checkpoint:** [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
+**CI:** [Run #45057743405 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405), termasuk 40 pengujian pgTAP Fase 2.
 **Migrasi staging:** `20261122183425`, `20261122183930`, `20261122184855`; Security Advisor staging tidak menemukan temuan.
 **Dependencies:** Phase 1.
 - Metadata template, versioning immutable, metadata aset, dan bucket Storage.
