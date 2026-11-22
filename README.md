@@ -38,7 +38,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Keputusan rilis:** Pemilik menyetujui pengecualian backup/restore untuk rilis ini karena backup tidak tersedia melalui paket/akses yang digunakan. Risiko kehilangan data diterima; migrasi bersifat aditif dan rencana pemulihan menggunakan corrective/forward migration. Restore tidak diklaim telah diuji. Satu peringatan Security Advisor yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 2. Deployment preview tetap nonaktif.
 
-**Fase 3: implementasi editor visual selesai pada Supabase staging — 23 November 2026.**
+**Fase 3: selesai pada Supabase staging dan production — 23 November 2026.**
 
 - Editor visual tersedia melalui rute `/editor/:id` untuk draft milik pengguna yang sedang masuk.
 - Registry menyediakan komponen tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
@@ -47,11 +47,11 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 - Pratinjau editor menggunakan renderer undangan yang sama dengan halaman publik; validasi memeriksa judul, struktur komponen, konten wajib, aset gambar, dan tautan HTTPS.
 - Autosave memakai RPC dengan pemeriksaan versi dasar untuk menolak konflik. Perubahan lokal disimpan sebagai pemulihan saat offline atau refresh.
 - Unggahan aset privat memvalidasi MIME/signature dan ukuran, membaca metadata media, serta mengoptimalkan gambar menjadi WebP sebelum disimpan. Metadata aset dibatasi pada folder pemilik.
-- Dua migrasi Fase 3 diterapkan pada staging. RLS tetap aktif, akses simpan hanya untuk pengguna terautentikasi, dan Security Advisor tidak menemukan temuan.
+- Dua migrasi Fase 3 diterapkan pada staging dan production. Riwayat production: `20261122234541` dan `20261122234549`. RLS tetap aktif, akses simpan hanya untuk pengguna terautentikasi, dan smoke test production lulus.
 - Pemeriksaan staging mengonfirmasi RPC, bucket privat, RLS, dan satu kebijakan INSERT aset tanpa tumpang tindih. Performance Advisor tidak lagi melaporkan kebijakan INSERT ganda; temuan indeks FK dan unused index yang sudah ada tetap dicatat sebagai pekerjaan optimasi terpisah.
-- CI Fase 3 lulus: format, lint, typecheck, unit test, build production, migrasi lokal, lint basis data, dan pgTAP. [Lihat CI Fase 3](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063579683).
+- CI Fase 3 lulus: format, lint, typecheck, unit test, build production, migrasi lokal, lint basis data, dan pgTAP. [Lihat CI Fase 3](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
 
-**Batas rilis production:** kode Fase 3 masih berada di [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14). Migrasi production dan penggabungan ke `main` belum dilakukan. Backup production tidak tersedia melalui paket/akses Supabase saat ini; pengecualian backup yang disetujui untuk Fase 2 tidak otomatis berlaku untuk Fase 3. Deployment preview tetap nonaktif.
+**Rilis production:** migrasi Fase 3 telah diterapkan dan diverifikasi. [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) memuat implementasi editor visual. Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek, bukan hanya satu rilis. Pemilik menerima risiko kehilangan data karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Restore tidak diklaim telah diuji; pemulihan mengandalkan corrective/forward migration. Satu peringatan Security Advisor production yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 3.
 
 **Checkpoint: 22 November 2026**
 
@@ -110,7 +110,7 @@ supabase test db
 supabase stop
 ```
 
-Migrasi berada di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Uji migrasi pada lingkungan lokal terlebih dahulu, lalu terapkan ke staging. Production harus menggunakan project Supabase terpisah dan hanya menerima migrasi yang sudah ditinjau serta disetujui. Backup/restore wajib dilakukan kecuali pemilik memberikan pengecualian tertulis untuk rilis tertentu; pengecualian harus mencatat alasan, inventaris data, risiko yang diterima, dan rencana recovery. Pengecualian Fase 2 pada 23 November 2026 tercatat di `docs/DEVELOPMENT_ROADMAP.md`.
+Migrasi berada di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Uji migrasi pada lingkungan lokal terlebih dahulu, lalu terapkan ke staging. Production harus menggunakan project Supabase terpisah dan hanya menerima migrasi yang sudah ditinjau serta disetujui. Backup/restore wajib dilakukan kecuali pemilik memberikan pengecualian tertulis. Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk semua fase proyek selama keterbatasan paket/akses masih berlaku. Risiko kehilangan data diterima; restore tidak diklaim telah diuji dan pemulihan mengandalkan corrective/forward migration. Catatan keputusan ada di `docs/DEVELOPMENT_ROADMAP.md`.
 
 ## Pemeriksaan kualitas
 
