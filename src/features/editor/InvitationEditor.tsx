@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } f
 import type { SupabaseClient } from "@supabase/supabase-js";
 import InvitationDocumentView from "../invitations/InvitationDocumentView";
 import { isInvitationDocument, type InvitationDocument, type InvitationNode } from "../invitations/document";
-import { COMPONENT_REGISTRY, addNode, findNode, getSections, moveNode, removeNode, updateNode, validateDocument } from "./editorModel";
+import { COMPONENT_REGISTRY, addNode, duplicateNode, findNode, getSections, moveNode, removeNode, updateNode, validateDocument } from "./editorModel";
 
 type Props = { client: SupabaseClient; invitationId: string; userId: string };
 type SaveState = "saved" | "dirty" | "saving" | "offline" | "conflict" | "error";
@@ -344,7 +344,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
   const renderLayer = (node: InvitationNode, depth = 0) => (
     <div key={node.id}>
       <button onClick={() => setSelectedId(node.id)} className={`w-full rounded-lg px-2 py-2 text-left text-sm ${selectedId === node.id ? "bg-[#754b3b] text-white" : "hover:bg-[#f7eee8]"}`} style={{ paddingLeft: 10 + depth * 14 }}>
-        <span className="mr-2 text-xs opacity-70">{node.type === "Section" ? "▤" : "◦"}</span>{COMPONENT_REGISTRY.find((item) => item.type === node.type)?.label || node.type}
+        <span className="mr-2 text-xs opacity-70">{node.type === "Section" ? "▤" : "◦"}</span>{COMPONENT_REGISTRY.find((item) => item.type === node.type)?.label || node.type}{node.locked ? ' · Terkunci' : ''}{node.hidden ? ' · Tersembunyi' : ''}
       </button>
       {(node.children || []).map((child) => renderLayer(child, depth + 1))}
     </div>
@@ -418,9 +418,12 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
               {selected.type === "Spacer" && <label className="block text-xs font-medium">Tinggi (px)<input type="number" min="0" max="500" value={Number(selected.props?.height || 32)} onChange={(event) => updateSelected({ height: Math.min(500, Math.max(0, Number(event.target.value))) })} className="mt-1 w-full rounded-lg border border-[#ddcec3] p-2" /></label>}
             </div>}
             <div className="mt-5 grid grid-cols-2 gap-2 border-t border-[#eee4de] pt-4">
-              <button onClick={() => { if (!document) return; commit(moveNode(document, selected.id, -1)); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs">Naikkan</button>
-              <button onClick={() => { if (!document) return; commit(moveNode(document, selected.id, 1)); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs">Turunkan</button>
-              <button onClick={() => { if (!document) return; commit(removeNode(document, selected.id)); setSelectedId(""); }} className="col-span-2 rounded-lg border border-red-200 px-2 py-2 text-xs text-red-700">Hapus komponen</button>
+              <button disabled={Boolean(selected.locked)} onClick={() => { if (!document) return; commit(moveNode(document, selected.id, -1)); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs disabled:opacity-40">Naikkan</button>
+              <button disabled={Boolean(selected.locked)} onClick={() => { if (!document) return; commit(moveNode(document, selected.id, 1)); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs disabled:opacity-40">Turunkan</button>
+              <button disabled={Boolean(selected.locked)} onClick={() => { if (!document) return; const nextDocument = duplicateNode(document, selected.id); commit(nextDocument); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs disabled:opacity-40">Duplikat</button>
+              <button onClick={() => { if (!document) return; commit(updateNode(document, selected.id, (node) => ({ ...node, locked: !node.locked }))); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs">{selected.locked ? "Buka kunci" : "Kunci"}</button>
+              <button disabled={Boolean(selected.locked)} onClick={() => { if (!document) return; commit(updateNode(document, selected.id, (node) => ({ ...node, hidden: !node.hidden }))); }} className="rounded-lg border border-[#ddcec3] px-2 py-2 text-xs disabled:opacity-40">{selected.hidden ? "Tampilkan" : "Sembunyikan"}</button>
+              <button disabled={Boolean(selected.locked)} onClick={() => { if (!document) return; commit(removeNode(document, selected.id)); setSelectedId(""); }} className="rounded-lg border border-red-200 px-2 py-2 text-xs text-red-700 disabled:opacity-40">Hapus</button>
             </div>
           </>}
           <div className="mt-5 border-t border-[#eee4de] pt-4"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#887970]">Validasi dokumen</h3>{validation.length ? <ul className="list-disc space-y-1 pl-4 text-xs text-amber-800">{validation.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="text-xs text-green-700">Struktur dokumen valid.</p>}{errors.length > 0 && <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-red-700">{errors.map((item) => <li key={item}>{item}</li>)}</ul>}</div>
