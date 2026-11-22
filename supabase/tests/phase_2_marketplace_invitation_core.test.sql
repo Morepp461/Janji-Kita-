@@ -1,5 +1,5 @@
 begin;
-select plan(35);
+select plan(37);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
@@ -116,6 +116,19 @@ select is(
    where t.id = '00000000-0000-0000-0000-000000000204'),
   'v2',
   'template menunjuk ke versi terbaru'
+);
+
+select throws_ok(
+  'update public.template_versions set change_note = ''uji perubahan'' where id = ''00000000-0000-0000-0000-000000000205''::uuid',
+  '55000',
+  'Versi template tidak dapat diubah; terbitkan versi baru',
+  'versi template yang telah dibuat bersifat immutable'
+);
+select throws_ok(
+  'update public.invitation_versions set document = ''{}''::jsonb where id = ''00000000-0000-0000-0000-000000000203''::uuid',
+  '55000',
+  'Versi yang sudah dipublikasikan bersifat permanen',
+  'versi undangan yang telah diterbitkan bersifat immutable'
 );
 
 update public.invitations
