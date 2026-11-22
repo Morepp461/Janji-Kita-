@@ -1,5 +1,5 @@
 begin;
-select plan(30);
+select plan(32);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
@@ -89,6 +89,25 @@ set status = 'active',
     published_version_id = v.id
 from new_version v
 where i.id = v.invitation_id;
+
+select ok(
+  exists (
+    select 1 from public.invitations
+    where slug = 'phase2-active-smoke-test'
+      and status = 'active'
+      and published_version_id is not null
+  ),
+  'fixture undangan aktif berhasil dibuat'
+);
+select ok(
+  exists (
+    select 1 from public.invitation_versions v
+    join public.invitations i on i.published_version_id = v.id
+    where i.slug = 'phase2-active-smoke-test'
+      and v.state = 'published'
+  ),
+  'fixture versi terbit berhasil dibuat'
+);
 
 set local role anon;
 select set_config('request.jwt.claim.sub', '', true);
