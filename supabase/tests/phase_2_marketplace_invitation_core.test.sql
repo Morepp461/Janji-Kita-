@@ -1,5 +1,5 @@
 begin;
-select plan(36);
+select plan(35);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
