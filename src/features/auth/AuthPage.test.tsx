@@ -35,7 +35,7 @@ describe("AuthPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Buat akun" }));
     fireEvent.change(screen.getByLabelText("Nama tampilan"), { target: { value: "Pengguna Uji" } });
     fireEvent.change(screen.getByLabelText("Email"), { target: { value: "uji@example.com" } });
-    fireEvent.change(screen.getByLabelText("Kata sandi"), { target: { value: "rahasia-123" } });
+    fireEvent.change(screen.getByLabelText(/Kata sandi/), { target: { value: "rahasia-123" } });
     fireEvent.click(screen.getByRole("button", { name: "Daftar" }));
 
     await waitFor(() => {
