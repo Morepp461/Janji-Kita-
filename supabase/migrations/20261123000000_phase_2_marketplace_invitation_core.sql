@@ -119,9 +119,10 @@ insert into public.role_permissions (role, permission_key) values
   ('super_admin', 'templates.manage')
 on conflict (role, permission_key) do nothing;
 
-grant select on public.templates, public.template_versions to anon, authenticated;
+revoke all on public.templates, public.template_versions, public.media_assets, public.invitations, public.invitation_versions from public, anon, authenticated;
+grant select on public.templates, public.template_versions, public.media_assets to anon, authenticated;
 grant insert, update, select on public.templates, public.template_versions to authenticated;
-grant select, insert, update on public.media_assets to authenticated;
+grant insert, update on public.media_assets to authenticated;
 grant select, insert, update on public.invitations, public.invitation_versions to authenticated;
 
 create policy templates_read_public on public.templates
@@ -153,8 +154,10 @@ create policy template_versions_read_authenticated on public.template_versions
 create policy template_versions_admin_insert on public.template_versions
   for insert to authenticated with check (app_private.has_permission('templates.manage'));
 
-create policy media_assets_read on public.media_assets
-  for select to anon, authenticated
+create policy media_assets_read_public on public.media_assets
+  for select to anon using (visibility in ('template', 'public'));
+create policy media_assets_read_authenticated on public.media_assets
+  for select to authenticated
   using (visibility in ('template', 'public') or owner_user_id = (select auth.uid()) or app_private.has_permission('templates.manage'));
 create policy media_assets_admin_insert on public.media_assets
   for insert to authenticated with check (
