@@ -84,7 +84,7 @@ supabase test db
 supabase stop
 ```
 
-File migrasi SQL disimpan berurutan di `supabase/migrations/`. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.
+File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.\n\nCI memakai Supabase CLI terbaru. Pada CLI v3, perintah basis data berjalan ke lingkungan lokal secara default. Operasi ke project terkelola harus menyebut target remote secara eksplisit dan menyertakan persetujuan noninteraktif yang sesuai. Jangan menjalankan operasi remote sebelum memeriksa project tujuan.
 
 ## Pemeriksaan kualitas
 
@@ -116,7 +116,7 @@ Tambahkan GitHub Actions secrets berikut untuk mengaktifkan deployment otomatis:
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
-Deployment akan dilewati apabila salah satu rahasia belum tersedia. Lindungi cabang `main` dan wajibkan pemeriksaan CI berhasil sebelum penggabungan.
+Deployment akan dilewati apabila salah satu rahasia belum tersedia. Lindungi cabang `main` dan wajibkan pemeriksaan `Pemeriksaan kualitas web` serta `Pengujian migrasi dan RLS Supabase` berhasil sebelum penggabungan. Status aturan perlindungan cabang harus diverifikasi di pengaturan GitHub repository.
 
 ## Lingkungan Supabase
 
