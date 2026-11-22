@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createBlankInvitationDocument, isInvitationDocument, type InvitationDocument } from "../invitations/document";
 import InvitationDocumentView from "../invitations/InvitationDocumentView";
@@ -175,7 +175,7 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
     if (draft) setNotice("Draft berhasil dibuka.");
   }
 
-  async function createTemplate(event: ChangeEvent<HTMLFormElement> | React.FormEvent<HTMLFormElement>) {
+  async function createTemplate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!client || !userId) return;
     setSaving(true);
