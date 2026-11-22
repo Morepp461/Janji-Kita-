@@ -63,14 +63,16 @@ export default function App() {
       return;
     }
     let active = true;
+    const supabase = client;
+    const userId = session.user.id;
     async function loadIdentity() {
       const [profileResult, rolesResult] = await Promise.all([
-        client
+        supabase
           .from("profiles")
           .select("id,display_name,phone,preferred_locale,timezone,account_status")
-          .eq("id", session.user.id)
+          .eq("id", userId)
           .maybeSingle(),
-        client.from("user_roles").select("role").eq("user_id", session.user.id),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
       if (!active) return;
       if (profileResult.error) setError(profileResult.error.message);
@@ -87,7 +89,7 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, [client, session?.user.id]);
+  }, [client, session]);
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
