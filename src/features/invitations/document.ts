@@ -11,6 +11,7 @@ export type InvitationDocument = {
   documentId?: string;
   locale?: string;
   timezone?: string;
+  themeTokens?: Record<string, unknown>;
   pages?: Array<{ id: string; sections?: InvitationNode[] }>;
   sections?: InvitationNode[];
   assets?: unknown[];
