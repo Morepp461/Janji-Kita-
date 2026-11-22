@@ -29,8 +29,8 @@ Catatan tata kelola: status perlindungan cabang `main` belum dapat diverifikasi 
 - Renderer publik hanya mengembalikan undangan aktif dengan versi terbit. Tabel internal tidak dapat dibaca langsung oleh peran anon.
 - Migrasi staging: `20261122183425`, `20261122183930`, `20261122184855`; seluruh timestamp cocok dengan berkas repository.
 - Security Advisor staging: tanpa temuan. Tabel Fase 2 tidak menyimpan data uji setelah smoke test.
-- CI lulus pada [run #45057426083](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057426083), termasuk 40 pengujian pgTAP Fase 2.
-- Checkpoint implementasi: [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `8e1c0f925002c62e2a83936512a7d27407b27ea1`.
+- CI lulus pada [run #45057743405](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405), termasuk 40 pengujian pgTAP Fase 2.
+- Checkpoint implementasi: [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
 
 Supabase production tetap pada Fase 1. Migrasi Fase 2 belum diterapkan dan PR belum digabung ke `main`, karena deployment production menunggu release gate dan persetujuan rilis. Vercel preview tetap nonaktif. Peringatan Auth production `Leaked Password Protection Disabled` sudah ada dan tidak diubah karena berada di luar cakupan Fase 2.
 
