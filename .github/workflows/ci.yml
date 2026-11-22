@@ -56,7 +56,7 @@ jobs:
       - name: Validasi konfigurasi Supabase
         run: supabase config validate
       - name: Jalankan basis data lokal
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,inbucket
       - name: Terapkan seluruh migrasi
         run: supabase db reset
       - name: Periksa basis data
