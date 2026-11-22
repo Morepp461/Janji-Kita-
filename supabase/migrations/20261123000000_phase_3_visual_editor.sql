@@ -32,7 +32,7 @@ begin
   end if;
   if jsonb_typeof(p_document) <> 'object'
      or coalesce((p_document ->> 'schemaVersion')::integer, 0) <> 1
-     or jsonb_typeof(p_document -> 'pages') <> 'array'
+     or coalesce(jsonb_typeof(p_document -> 'pages'), '') <> 'array'
      or octet_length(p_document::text) > 1048576 then
     raise exception 'Dokumen tidak valid atau melebihi batas 1 MB' using errcode = '22023';
   end if;
