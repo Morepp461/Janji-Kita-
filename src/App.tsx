@@ -163,8 +163,11 @@ export default function App() {
     const slug = decodeURIComponent(pathname.slice(4).split("/")[0] || "");
     return <PublicInvitation client={client} slug={slug} />;
   }
-  if (!session && pathname === "/templates") {
-    return <Marketplace client={client} userId={null} />;
+  const templateSlug = pathname.startsWith("/templates/")
+    ? pathname.slice("/templates/".length).split("/")[0] || undefined
+    : undefined;
+  if (!session && (pathname === "/templates" || templateSlug)) {
+    return <Marketplace client={client} userId={null} initialTemplateSlug={templateSlug} />;
   }
 
   if (recoveryMode) {
@@ -232,6 +235,16 @@ export default function App() {
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
   const isSuperAdmin = roles.includes("super_admin");
+  if (pathname === "/templates" || templateSlug) {
+    return (
+      <Marketplace
+        client={client}
+        userId={session.user.id}
+        isAdmin={isAdmin}
+        initialTemplateSlug={templateSlug}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#fffaf6] px-4 py-6 text-[#30251f] sm:px-8 sm:py-10">
