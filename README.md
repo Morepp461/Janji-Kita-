@@ -4,7 +4,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 ## Status proyek
 
-<badge color="success">Fase 0 selesai sepenuhnya</badge>
+**Fase 0: selesai sepenuhnya.**
 
 **Checkpoint: 22 November 2026**
 
