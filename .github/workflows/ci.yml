@@ -53,8 +53,6 @@ jobs:
           supabase --help
           supabase migration --help
           supabase db --help
-      - name: Validasi konfigurasi Supabase
-        run: supabase config validate
       - name: Jalankan basis data lokal
         run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,inbucket
       - name: Terapkan seluruh migrasi
