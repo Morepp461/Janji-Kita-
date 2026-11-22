@@ -76,6 +76,7 @@ new_version as (
 )
 update public.invitations i
 set status = 'active',
+    slug = 'phase2-active-smoke-test',
     active_from = now() - interval '1 hour',
     active_until = now() + interval '1 hour',
     published_version_id = v.id
