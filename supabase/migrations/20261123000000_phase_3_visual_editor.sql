@@ -3,6 +3,8 @@ create policy media_assets_owner_insert on public.media_assets
   for insert to authenticated
   with check (
     owner_user_id = (select auth.uid())
+    and storage_bucket = 'user-uploads-private'
+    and split_part(object_path, '/', 1) = (select auth.uid())::text
     and visibility = 'private'
     and processing_status in ('uploaded', 'ready')
   );
