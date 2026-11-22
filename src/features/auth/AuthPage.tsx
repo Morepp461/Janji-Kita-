@@ -24,6 +24,15 @@ export default function AuthPage({ client }: AuthPageProps) {
 
     try {
       if (mode === "register") {
+        const { data: registrationFlag, error: flagError } = await client
+          .from("feature_flags")
+          .select("enabled")
+          .eq("key", "registration.enabled")
+          .maybeSingle();
+        if (flagError) throw flagError;
+        if (!registrationFlag?.enabled) {
+          throw new Error("Pendaftaran sedang ditutup.");
+        }
         const { error: authError } = await client.auth.signUp({
           email: email.trim(),
           password,
