@@ -262,7 +262,7 @@ returns void
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 begin
   if exists (select 1 from public.user_roles where role = 'super_admin') then
     raise exception 'Super admin pertama sudah ditetapkan' using errcode = '42501';
@@ -274,7 +274,7 @@ begin
   values (p_user_id, 'super_admin')
   on conflict (user_id, role) do nothing;
 end;
-$;
+$$;
 
 revoke all on function public.bootstrap_first_super_admin(uuid) from public, anon, authenticated;
 grant execute on function public.bootstrap_first_super_admin(uuid) to service_role;
