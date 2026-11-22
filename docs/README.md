@@ -187,6 +187,17 @@ Pastikan tidak ada luapan horizontal, tombol tertutup, atau kontrol terlalu keci
 
 Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan paket gratis jika memadai. Pantau kuota basis data, penyimpanan, bandwidth/egress, eksekusi fungsi, waktu kompilasi, email, dan biaya gateway. Penyedia berbayar tidak boleh diaktifkan tanpa persetujuan pemilik.
 
+## Status Fase 3
+
+**IMPLEMENTASI DAN QA STAGING SELESAI — 23 November 2026.**
+
+- Editor visual, registry komponen, panel properti, operasi lapisan, undo/redo, pratinjau responsif, validasi, autosave dengan deteksi konflik, pemulihan lokal, dan unggahan aset privat telah tersedia.
+- Dua migrasi Fase 3 telah diterapkan pada Supabase staging. Pemeriksaan RLS, RPC, bucket privat, dan Security Advisor lulus.
+- CI Fase 3 lulus seluruh pemeriksaan: [run #45062742820](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062742820).
+- Implementasi berada pada [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14).
+
+Migrasi production dan merge ke `main` menunggu persetujuan tertulis pemilik untuk pengecualian backup/restore khusus Fase 3. Pengecualian Fase 2 tidak otomatis berlaku untuk fase berikutnya.
+
 ## Sumber kebenaran
 
 PRD menetapkan keputusan produk. Dokumen teknis menjelaskan implementasi. Jika terjadi konflik, hentikan implementasi yang terdampak, buat permintaan perubahan, perbarui PRD terlebih dahulu jika keputusan produk berubah, selaraskan dokumen terkait, lalu lanjutkan pengembangan.
