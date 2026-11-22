@@ -10,6 +10,10 @@
       "destination": "/"
     },
     {
+      "source": "/templates/:slug",
+      "destination": "/"
+    },
+    {
       "source": "/i/:slug",
       "destination": "/"
     }
