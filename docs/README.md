@@ -194,7 +194,8 @@ Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan pa
 - Editor visual, registry komponen, panel properti, operasi lapisan, undo/redo, pratinjau responsif, validasi, autosave dengan deteksi konflik, pemulihan lokal, dan unggahan aset privat telah tersedia.
 - Dua migrasi Fase 3 telah diterapkan pada Supabase staging dan production. Production mencatat versi `20261122234541` dan `20261122234549`; pemeriksaan RLS, RPC, bucket privat, dan satu kebijakan INSERT aset lulus.
 - CI Fase 3 lulus seluruh pemeriksaan: [run #45063740422](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
-- Implementasi tersedia pada [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15).
+- [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) telah digabung ke `main` pada commit `5a2a003436cce8a5fb31064985255f23148ab068`.
+- Deployment Vercel production berstatus **READY**: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app).
 
 Migrasi production Fase 3 telah diterapkan dan diverifikasi. Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Pemilik menerima risiko kehilangan data; restore tidak diklaim telah diuji dan pemulihan mengandalkan corrective/forward migration. Security Advisor production masih mencatat peringatan Auth yang sudah ada, `Leaked Password Protection Disabled`.
 
