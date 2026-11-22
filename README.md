@@ -31,8 +31,8 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 - Rute publik hanya mengembalikan undangan aktif dengan versi terbit. Pengunjung tidak memperoleh akses langsung ke tabel internal undangan.
 - Tiga migrasi Fase 2 diterapkan di staging dan timestamp-nya selaras dengan repository: `20261122183425`, `20261122183930`, dan `20261122184855`.
 - Security Advisor staging tidak menemukan temuan. Tidak ada data uji yang tertinggal pada tabel Fase 2.
-- Seluruh pemeriksaan CI lulus pada [run #45057426083](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057426083): pemeriksaan web, build production, migrasi lokal, lint basis data, dan 40 pengujian pgTAP Fase 2.
-- Implementasi tersedia pada [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), cabang `feat/phase-2-marketplace-invitation-core`, checkpoint commit `8e1c0f925002c62e2a83936512a7d27407b27ea1`.
+- Seluruh pemeriksaan CI lulus pada [run #45057743405](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405): pemeriksaan web, build production, migrasi lokal, lint basis data, dan 40 pengujian pgTAP Fase 2.
+- Implementasi tersedia pada [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), cabang `feat/phase-2-marketplace-invitation-core`, checkpoint commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
 
 **Batas rilis:** Supabase production masih pada Fase 1 dan tidak menerima migrasi Fase 2. PR #12 belum digabung ke `main` agar aplikasi production tidak berjalan dengan skema basis data yang belum diterapkan. Penerapan production menunggu release gate dan persetujuan rilis sesuai roadmap. Deployment Vercel production saat ini berstatus **READY** pada commit pemulihan `5c07b54b564606850c71e9a0ddafbfddd80fed2b`; kode aplikasi production tetap pada Fase 1. Deployment preview tetap nonaktif.
 
