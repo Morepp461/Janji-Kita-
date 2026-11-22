@@ -26,6 +26,13 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Upload generated npm lockfile for repository pinning
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-lockfile
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 1
       - name: Format
         run: npm run format:check
       - name: Lint
@@ -47,6 +54,13 @@ jobs:
         uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Discover CLI commands
+        run: |
+          supabase --help
+          supabase migration --help
+          supabase db --help
+      - name: Validate Supabase configuration
+        run: supabase config validate
       - name: Start local Supabase database
         run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
       - name: Apply migrations
