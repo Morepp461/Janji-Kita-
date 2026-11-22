@@ -58,7 +58,7 @@
 
 ## 5. Phase 3 — Visual Editor
 **Status: IMPLEMENTASI DAN QA STAGING SELESAI — 23 November 2026.**
-**Checkpoint:** [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14) (belum digabung; menunggu persetujuan release gate production). **CI:** [Run #45062979222 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062979222).
+**Checkpoint:** [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14) (belum digabung; menunggu persetujuan release gate production). **CI:** [Run #45063579683 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063579683).
 **Dependencies:** Phase 2 and stable schema.
 - Component registry and property inspector untuk tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
 - Section/layer operations: add, select, reorder, duplicate, lock/unlock, hide/show, delete, undo, and redo.
