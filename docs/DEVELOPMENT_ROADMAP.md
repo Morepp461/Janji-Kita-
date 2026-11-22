@@ -13,9 +13,9 @@
 - Create repository structure, lint/format/test/CI.
 - Configure local, staging, production environments.
 - Setup Supabase projects, migrations, Auth, RLS baseline.
-- Setup Vercel preview and protected production deploy.
+- Konfigurasikan deployment Vercel production-only dari cabang `main`; deployment preview dinonaktifkan sesuai keputusan pemilik proyek.
 - Add `.env.example`, secrets policy, error logging.
-**Done when:** clean install/build/test; staging and production separated; no secrets committed; migration pipeline repeatable.
+**Done when:** instalasi bersih, build, dan seluruh pengujian lulus; project staging dan production terpisah; tidak ada rahasia yang dikomit; pipeline migrasi dapat dijalankan ulang; deployment Vercel hanya berasal dari `main` dan deployment preview tetap nonaktif.
 
 ## 3. Phase 1 — Identity, Roles, and Admin Foundation
 **Dependencies:** Phase 0.
