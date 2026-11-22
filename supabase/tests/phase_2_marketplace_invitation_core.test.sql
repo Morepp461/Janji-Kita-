@@ -18,11 +18,11 @@ select ok(not has_table_privilege('anon', 'public.invitation_versions', 'select'
 select ok(not has_table_privilege('anon', 'public.media_assets', 'select'), 'pengunjung publik tidak dapat membaca seluruh metadata aset');
 select ok(has_column_privilege('anon', 'public.media_assets', 'object_path', 'select'), 'pengunjung publik hanya membaca lokasi aset yang diizinkan');
 select ok(not has_column_privilege('anon', 'public.media_assets', 'owner_user_id', 'select'), 'pengunjung publik tidak dapat membaca pemilik aset');
-select has_view('public', 'published_invitations', 'view renderer publik tersedia');
-select ok(has_table_privilege('anon', 'public.published_invitations', 'select'), 'pengunjung publik dapat membaca view renderer');
-select ok(has_column_privilege('anon', 'public.invitations', 'slug', 'select'), 'pengunjung publik dapat membaca slug undangan aktif');
+select ok(has_function_privilege('anon', 'public.get_public_invitation(text)', 'execute'), 'RPC renderer publik tersedia untuk pengunjung');
+select ok(has_function_privilege('authenticated', 'public.get_public_invitation(text)', 'execute'), 'RPC renderer publik tersedia untuk pengguna');
+select ok(not has_table_privilege('anon', 'public.invitations', 'select'), 'pengunjung publik tidak dapat membaca tabel undangan');
+select ok(not has_table_privilege('anon', 'public.invitation_versions', 'select'), 'pengunjung publik tidak dapat membaca tabel versi undangan');
 select ok(not has_column_privilege('anon', 'public.invitations', 'owner_user_id', 'select'), 'pengunjung publik tidak dapat membaca pemilik undangan');
-select ok(has_column_privilege('anon', 'public.invitation_versions', 'document', 'select'), 'pengunjung publik dapat membaca dokumen versi terbit');
 select ok(has_function_privilege('authenticated', 'public.create_invitation_draft(text,uuid,uuid)', 'execute'), 'RPC pembuatan draft tersedia');
 select ok(not has_function_privilege('anon', 'public.create_invitation_draft(text,uuid,uuid)', 'execute'), 'pengunjung publik tidak dapat membuat draft');
 select ok(has_function_privilege('authenticated', 'public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid)', 'execute'), 'RPC pembuatan template tersedia');
@@ -51,6 +51,10 @@ select lives_ok(
   'pengguna dapat membuat draft dari kanvas kosong'
 );
 reset role;
+
+update public.invitations
+set slug = 'phase2-draft-smoke-test'
+where title = 'Draft fase 2' and status = 'draft';
 
 with new_invitation as (
   insert into public.invitations (
@@ -90,19 +94,19 @@ set local role anon;
 select set_config('request.jwt.claim.sub', '', true);
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 select is(
-  (select count(*) from public.published_invitations),
-  1::bigint,
-  'renderer publik hanya menampilkan undangan aktif, bukan draft'
+  public.get_public_invitation('phase2-active-smoke-test')->>'slug',
+  'phase2-active-smoke-test',
+  'renderer publik mengembalikan undangan aktif'
 );
 select is(
-  (select count(slug) from public.invitations),
-  1::bigint,
-  'RLS publik menyembunyikan baris draft'
+  public.get_public_invitation('phase2-active-smoke-test')->'document'->>'schemaVersion',
+  '1',
+  'renderer publik mengembalikan dokumen versi terbit'
 );
 select is(
-  (select count(document) from public.invitation_versions),
-  1::bigint,
-  'RLS publik hanya menampilkan versi terbit yang sedang aktif'
+  public.get_public_invitation('phase2-draft-smoke-test'),
+  null::jsonb,
+  'renderer publik tidak mengembalikan draft'
 );
 reset role;
 
