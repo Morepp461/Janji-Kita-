@@ -10,6 +10,16 @@ function makeClient() {
       signUp: vi.fn().mockResolvedValue({ error: null }),
       resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
     },
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { enabled: true },
+            error: null,
+          }),
+        })),
+      })),
+    })),
   } as unknown as SupabaseClient;
 }
 
