@@ -1,5 +1,5 @@
 begin;
-select plan(37);
+select plan(40);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
@@ -79,6 +79,11 @@ set current_version_id = '00000000-0000-0000-0000-000000000205',
 where id = '00000000-0000-0000-0000-000000000204';
 
 set local role authenticated;
+select is(
+  (select count(*) from public.template_versions where id = '00000000-0000-0000-0000-000000000205'),
+  1::bigint,
+  'pengguna dapat membaca versi template aktif'
+);
 select lives_ok(
   $phase2$select public.create_invitation_draft(
     'Draft dari template fase 2',
@@ -183,6 +188,16 @@ select ok(
 set local role anon;
 select set_config('request.jwt.claim.sub', '', true);
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
+select is(
+  (select count(*) from public.template_versions where id = '00000000-0000-0000-0000-000000000205'),
+  0::bigint,
+  'pengunjung publik tidak dapat membaca versi template lama'
+);
+select is(
+  (select count(*) from public.template_versions where id = '00000000-0000-0000-0000-000000000206'),
+  1::bigint,
+  'pengunjung publik dapat membaca versi template aktif'
+);
 select is(
   public.get_public_invitation('phase2-active-smoke-test')->>'slug',
   'phase2-active-smoke-test',
