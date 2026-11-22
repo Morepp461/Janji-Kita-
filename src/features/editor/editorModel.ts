@@ -1,6 +1,6 @@
 import type { InvitationDocument, InvitationNode } from "../invitations/document";
 
-export type ComponentDefinition = {
+export const EDITOR_SCHEMA_VERSION = 1;\n\nexport type ComponentDefinition = {
   type: string;
   label: string;
   group: string;
@@ -206,7 +206,7 @@ export function findNode(nodes: InvitationNode[], id: string): InvitationNode | 
 export function validateDocument(document: InvitationDocument, title: string): string[] {
   const errors: string[] = [];
   if (!title.trim()) errors.push("Judul undangan wajib diisi.");
-  if (document.schemaVersion !== 1) errors.push("Versi dokumen tidak didukung.");
+  if (document.schemaVersion !== EDITOR_SCHEMA_VERSION) errors.push("Versi dokumen tidak didukung.");
   const sections = getSections(document);
   if (!sections.length) errors.push("Tambahkan minimal satu bagian.");
   const visit = (nodes: InvitationNode[]) =>
