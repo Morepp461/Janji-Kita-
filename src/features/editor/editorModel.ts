@@ -115,11 +115,13 @@ export function updateNode(
   update: (node: InvitationNode) => InvitationNode,
 ): InvitationDocument {
   const visit = (nodes: InvitationNode[]): InvitationNode[] =>
-    nodes.map((node) => ({
-      ...node,
-      ...(node.id === nodeId ? update(node) : {}),
-      ...(node.children ? { children: visit(node.children) } : {}),
-    }));
+    nodes.map((node) => {
+      const updated = node.id === nodeId ? update(node) : node;
+      return {
+        ...updated,
+        ...(updated.children ? { children: visit(updated.children) } : {}),
+      };
+    });
   if (document.pages?.length) {
     return {
       ...document,
