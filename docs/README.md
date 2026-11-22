@@ -38,7 +38,7 @@ Provider harus tetap dapat diganti. Free tier diprioritaskan; batas dan biaya wa
 git clone <repository-url>
 cd janji-kita
 nvm use
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```

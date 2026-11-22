@@ -20,7 +20,7 @@ Requirements: Node.js 22, npm 10+, Docker, and Supabase CLI.
 
 ```bash
 nvm use
-npm install
+npm ci
 cp .env.example .env.local
 npm run dev
 ```
