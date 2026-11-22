@@ -209,12 +209,11 @@ create policy invitation_versions_public_published_read on public.invitation_ver
     state = 'published'
     and exists (
       select 1 from public.invitations i
-      where i.published_version_id = id
+      where i.published_version_id = invitation_versions.id
         and i.status = 'active'
         and i.active_from <= now()
         and i.active_until > now()
         and i.deleted_at is null
-        and i.published_version_id = id
     )
   );
 create policy invitation_versions_owner_insert on public.invitation_versions
