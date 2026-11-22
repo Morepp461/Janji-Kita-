@@ -25,7 +25,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
 - Pemeriksaan CI sebelum penggabungan berhasil: [format, lint, tipe, pengujian unit, build, migrasi, dan RLS](https://github.com/Morepp461/Janji-Kita-/actions/runs/45046403758).
-- Penerapan production Vercel untuk commit Fase 1 `8aff277` berstatus **READY**.
+- Penerapan production Vercel untuk commit `83c6891` berstatus **READY**.
 - Project Supabase staging dan production terpisah; riwayat migrasi keduanya selaras dengan berkas migrasi repository, termasuk seluruh migrasi Fase 1.
 - Pemeriksaan Security Advisor pada kedua project Supabase tidak menemukan masalah.
 - Penerapan preview dinonaktifkan. Penerapan aplikasi hanya melalui cabang `main`.
