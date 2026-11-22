@@ -1,5 +1,5 @@
 begin;
-select plan(32);
+select plan(33);
 
 select has_table('public', 'profiles', 'tabel profil tersedia');
 select has_table('public', 'user_roles', 'tabel peran tersedia');
@@ -41,7 +41,8 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000102', true);
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000102","role":"authenticated"}', true);
 select is((select count(*) from public.profiles), 1::bigint, 'pengguna hanya membaca profil sendiri');
-select is((select count(*) from public.user_roles), 0::bigint, 'pengguna biasa tidak membaca peran pengguna lain');
+select is((select count(*) from public.user_roles), 1::bigint, 'pengguna hanya membaca peran miliknya');
+select is((select count(*) from public.user_roles where user_id <> auth.uid()), 0::bigint, 'pengguna tidak membaca peran pengguna lain');
 select is(app_private.has_permission('admin.access'), false, 'akun biasa tidak memiliki izin admin');
 select ok(has_schema_privilege('authenticated', 'app_private', 'USAGE'), 'schema internal hanya digunakan oleh peran terautentikasi');
 select is((select count(*) from public.audit_logs), 0::bigint, 'pengguna biasa tidak dapat membaca audit log');
@@ -53,7 +54,7 @@ select public.admin_set_user_role('00000000-0000-0000-0000-000000000102', 'moder
 select is((select count(*) from public.user_roles where user_id = '00000000-0000-0000-0000-000000000102' and role = 'moderator'), 1::bigint, 'RPC memberi peran sesuai izin super admin');
 select is((select count(*) from public.audit_logs where actor_user_id = '00000000-0000-0000-0000-000000000101' and action = 'insert' and target_type = 'user_roles'), 1::bigint, 'perubahan peran tercatat di audit log');
 select throws_ok(
-  $select public.admin_set_user_role('00000000-0000-0000-0000-000000000101'::uuid, 'admin', 'grant')$,
+  'select public.admin_set_user_role(''00000000-0000-0000-0000-000000000101''::uuid, ''admin'', ''grant'')',
   '42501',
   'Peran akun sendiri tidak dapat diubah',
   'super admin tidak dapat mengubah peran akunnya sendiri'
