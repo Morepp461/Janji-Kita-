@@ -336,9 +336,16 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
             Pilih desain atau mulai dari kanvas kosong. Draft dapat dibuat tanpa pembayaran.
           </p>
         </div>
-        <a className="text-sm font-semibold text-[#754b3b] underline" href="/templates">
-          Buka halaman marketplace
-        </a>
+        <div className="flex items-center gap-4">
+          {!userId && (
+            <a className="text-sm font-semibold text-[#754b3b] underline" href="/">
+              Masuk untuk menyimpan draft
+            </a>
+          )}
+          <a className="text-sm font-semibold text-[#754b3b] underline" href="/templates">
+            Buka halaman marketplace
+          </a>
+        </div>
       </div>
 
       {(notice || error) && (
