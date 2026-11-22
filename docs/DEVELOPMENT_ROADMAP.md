@@ -58,7 +58,7 @@
 
 ## 5. Phase 3 — Visual Editor
 **Status: IMPLEMENTASI, QA, DAN MIGRASI PRODUCTION SELESAI — 23 November 2026.**
-**Checkpoint:** [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15). **CI:** [Run #45063740422 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
+**Checkpoint:** [PR #15 telah digabung](https://github.com/Morepp461/Janji-Kita-/pull/15) ke `main` pada commit `5a2a003436cce8a5fb31064985255f23148ab068`. **CI:** [Run #45063740422 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422). **Deployment Vercel production:** [READY](https://janji-kita-nine.vercel.app).
 **Dependencies:** Phase 2 and stable schema.
 - Component registry and property inspector untuk tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
 - Section/layer operations: add, select, reorder, duplicate, lock/unlock, hide/show, delete, undo, and redo.
