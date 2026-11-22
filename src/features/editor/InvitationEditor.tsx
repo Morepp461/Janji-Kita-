@@ -274,6 +274,22 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     if (newNode) setSelectedId(newNode.id);
   };
 
+  const insertAsset = (asset: Asset) => {
+    const currentDocument = docRef.current;
+    if (!currentDocument) return;
+    const type = asset.type === "image" ? "Image" : asset.type === "video" ? "Video" : "Audio";
+    const node: InvitationNode = {
+      id: crypto.randomUUID(),
+      type,
+      props: asset.type === "image" ? { assetId: asset.id, alt: asset.name } : { assetId: asset.id },
+      style: {},
+    };
+    const added = addNode(currentDocument, type);
+    const last = getSections(added).slice(-1)[0];
+    commit(last ? updateNode(added, last.id, () => node) : added);
+    setSelectedId(node.id);
+  };
+
   const uploadAsset = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -334,7 +350,8 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         props: mediaType === "image" ? { assetId: asset.id, alt: file.name } : { assetId: asset.id },
         style: {},
       };
-      const added = addNode(document, component);
+      const currentDocument = docRef.current || document;
+      const added = addNode(currentDocument, component);
       const last = getSections(added).slice(-1)[0];
       const nextDocument = last ? updateNode(added, last.id, () => node) : added;
       commit(nextDocument);
@@ -441,7 +458,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             </div>
           </>}
           <div className="mt-5 border-t border-[#eee4de] pt-4"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#887970]">Validasi dokumen</h3>{validation.length ? <ul className="list-disc space-y-1 pl-4 text-xs text-amber-800">{validation.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="text-xs text-green-700">Struktur dokumen valid.</p>}{errors.length > 0 && <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-red-700">{errors.map((item) => <li key={item}>{item}</li>)}</ul>}</div>
-          <div className="mt-5 border-t border-[#eee4de] pt-4"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#887970]">Aset sesi ini</h3>{assets.length ? assets.map((asset) => <div key={asset.id} className="mb-2 flex items-center gap-2 text-xs"><span className="min-w-0 flex-1 truncate">{asset.name}</span><button onClick={() => { const type = asset.type === "image" ? "Image" : asset.type === "video" ? "Video" : "Audio"; addComponent(type); }} className="underline">Tambah</button></div>) : <p className="text-xs text-[#887970]">Belum ada aset baru.</p>}</div>
+          <div className="mt-5 border-t border-[#eee4de] pt-4"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#887970]">Aset sesi ini</h3>{assets.length ? assets.map((asset) => <div key={asset.id} className="mb-2 flex items-center gap-2 text-xs"><span className="min-w-0 flex-1 truncate">{asset.name}</span><button onClick={() => insertAsset(asset)} className="underline">Tambah</button></div>) : <p className="text-xs text-[#887970]">Belum ada aset baru.</p>}</div>
         </aside>
       </div>
     </main>
