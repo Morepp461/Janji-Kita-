@@ -48,7 +48,7 @@ describe("model editor visual", () => {
   });
 
   it("memvalidasi judul, konten, komponen, dan tautan", () => {
-    const doc = createBlankInvitationDocument("");
+    const doc = createBlankInvitationDocument("Undangan");
     expect(validateDocument(doc, "")).toContain("Judul undangan wajib diisi.");
     expect(validateDocument(doc, "Undangan")).toHaveLength(0);
     const invalid = updateNode(doc, "paragraph-1", (node) => ({ ...node, props: { text: "" } }));
