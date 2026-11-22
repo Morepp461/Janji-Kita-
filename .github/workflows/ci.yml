@@ -26,15 +26,6 @@ jobs:
           node-version: 22
       - name: Pasang dependensi
         run: npm ci --no-audit --no-fund
-      - name: Keluarkan sumber terformat sementara
-        run: |
-          npx prettier --write "src/**/*.{ts,tsx,css}"
-          for file in src/App.tsx src/features/invitations/document.ts src/features/invitations/InvitationDocumentView.tsx src/features/invitations/PublicInvitation.tsx src/features/invitations/document.test.ts src/features/marketplace/Marketplace.tsx; do
-            echo "FORMAT_FILE_BEGIN:$file"
-            cat "$file"
-            echo "FORMAT_FILE_END:$file"
-          done
-          exit 1
       - name: Periksa format
         run: npm run format:check
       - name: Periksa lint
