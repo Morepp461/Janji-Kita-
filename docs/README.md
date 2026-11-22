@@ -110,7 +110,7 @@ supabase test db
 supabase stop
 ```
 
-File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.
+File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Jika jalur backup tidak tersedia, pemilik dapat menyetujui pengecualian tertulis yang terbatas pada rilis tertentu; catat inventaris data, risiko yang diterima, sifat migrasi, dan recovery plan. Pengecualian Fase 2 tanggal 23 November 2026 dicatat pada `docs/DEVELOPMENT_ROADMAP.md`. Pengujian RLS wajib lulus di CI.
 
 CI memakai Supabase CLI 3.0.0 yang dipatok agar hasil pemeriksaan konsisten. Pada CLI v3, perintah basis data berjalan ke lingkungan lokal secara default. Operasi ke project terkelola harus menyebut target remote secara eksplisit dan menyertakan persetujuan noninteraktif yang sesuai. Jangan menjalankan operasi remote sebelum memeriksa project tujuan.
 
@@ -164,7 +164,7 @@ Gunakan lingkungan uji Midtrans saat mengembangkan modul pembayaran. Pembayaran 
 - [ ] Pembatasan laju diterapkan pada autentikasi, RSVP, buku tamu, unggahan, dan checkout.
 - [ ] Tanda tangan webhook diverifikasi dan pemrosesannya idempoten.
 - [ ] Aktivitas admin, pembayaran, persetujuan, perubahan peran, dan publikasi tercatat.
-- [ ] Pencadangan dan pemulihan sudah diuji.
+- [ ] Pencadangan dan pemulihan sudah diuji, atau pengecualian rilis disetujui pemilik dan terdokumentasi dengan risiko serta recovery plan.
 - [ ] Syarat layanan, privasi, persetujuan, dan kebijakan pengembalian dana siap.
 
 ## Pengujian yang mengutamakan perangkat seluler
