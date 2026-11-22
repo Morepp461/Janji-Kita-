@@ -28,7 +28,7 @@ type Draft = {
   updated_at: string;
 };
 
-type Props = { client: SupabaseClient | null; userId: string | null; isAdmin?: boolean };
+type Props = { client: SupabaseClient | null; userId: string | null; isAdmin?: boolean; initialTemplateSlug?: string };
 
 const currency = (amount: number, code: string) =>
   new Intl.NumberFormat("id-ID", {
@@ -37,7 +37,7 @@ const currency = (amount: number, code: string) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-export default function Marketplace({ client, userId, isAdmin = false }: Props) {
+export default function Marketplace({ client, userId, isAdmin = false, initialTemplateSlug }: Props) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [categories, setCategories] = useState<CatalogItem[]>([]);
   const [styles, setStyles] = useState<CatalogItem[]>([]);
@@ -46,6 +46,9 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [styleFilter, setStyleFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState("recent");
+  const [visibleCount, setVisibleCount] = useState(12);
+  const [previewViewport, setPreviewViewport] = useState<"desktop" | "mobile">("desktop");
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<InvitationDocument | null>(null);
   const [selectedDraftTitle, setSelectedDraftTitle] = useState("");
@@ -130,25 +133,39 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
     void refresh();
   }, [refresh]);
 
-  const filteredTemplates = useMemo(
-    () =>
-      templates.filter((item) => {
-        const query = search.trim().toLocaleLowerCase("id-ID");
-        const matchesQuery =
-          !query ||
-          [item.title, item.description, item.slug].some((value) =>
-            value.toLocaleLowerCase("id-ID").includes(query),
-          );
-        return (
-          matchesQuery &&
-          (!categoryFilter || item.category_id === categoryFilter) &&
-          (!styleFilter || item.style_id === styleFilter)
+  const filteredTemplates = useMemo(() => {
+    const filtered = templates.filter((item) => {
+      const query = search.trim().toLocaleLowerCase("id-ID");
+      const matchesQuery =
+        !query ||
+        [item.title, item.description, item.slug].some((value) =>
+          value.toLocaleLowerCase("id-ID").includes(query),
         );
-      }),
-    [templates, search, categoryFilter, styleFilter],
+      return (
+        matchesQuery &&
+        (!categoryFilter || item.category_id === categoryFilter) &&
+        (!styleFilter || item.style_id === styleFilter)
+      );
+    });
+    if (sortOrder === "title") {
+      filtered.sort((a, b) => a.title.localeCompare(b.title, "id-ID"));
+    } else if (sortOrder === "price-asc") {
+      filtered.sort((a, b) => a.base_price - b.base_price);
+    } else if (sortOrder === "price-desc") {
+      filtered.sort((a, b) => b.base_price - a.base_price);
+    }
+    return filtered;
+  }, [templates, search, categoryFilter, styleFilter, sortOrder]);
+  const visibleTemplates = useMemo(
+    () => filteredTemplates.slice(0, visibleCount),
+    [filteredTemplates, visibleCount],
   );
 
-  async function openTemplate(template: Template) {
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [search, categoryFilter, styleFilter, sortOrder]);
+
+  const openTemplate = useCallback(async (template: Template) => {
     setSelectedTemplate(template);
     setSelectedDocument(null);
     setNewTitle(template.title);
@@ -162,7 +179,14 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
     if (versionError) setError(versionError.message);
     else if (data && isInvitationDocument(data.document)) setSelectedDocument(data.document);
     else setError("Versi template tidak memakai skema dokumen yang didukung.");
-  }
+  }, [client]);
+
+  useEffect(() => {
+    if (!initialTemplateSlug || loading) return;
+    const template = templates.find((item) => item.slug === initialTemplateSlug);
+    if (template) void openTemplate(template);
+    else setError("Template yang diminta tidak tersedia atau belum diterbitkan.");
+  }, [initialTemplateSlug, loading, templates, openTemplate]);
 
   async function createDraft(template: Template | null) {
     if (!client || !userId) {
@@ -357,7 +381,7 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
         </p>
       )}
 
-      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_220px_220px]">
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_180px_180px_180px]">
         <input
           aria-label="Cari template"
           className="w-full rounded-xl border border-[#ddcec3] bg-white px-4 py-3"
@@ -391,13 +415,24 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
             </option>
           ))}
         </select>
+        <select
+          aria-label="Urutkan template"
+          className="rounded-xl border border-[#ddcec3] bg-white px-4 py-3"
+          value={sortOrder}
+          onChange={(event) => setSortOrder(event.target.value)}
+        >
+          <option value="recent">Terbaru</option>
+          <option value="title">Nama A-Z</option>
+          <option value="price-asc">Harga terendah</option>
+          <option value="price-desc">Harga tertinggi</option>
+        </select>
       </div>
 
       {loading ? (
         <p className="py-8 text-center text-sm text-[#76675f]">Memuat marketplace...</p>
       ) : filteredTemplates.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredTemplates.map((template) => (
+          {visibleTemplates.map((template) => (
             <article
               key={template.id}
               className="overflow-hidden rounded-2xl border border-[#eaded5] bg-white"
@@ -428,12 +463,12 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
                   <strong className="text-sm">
                     {currency(template.base_price, template.currency)}
                   </strong>
-                  <button
+                  <a
                     className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold"
-                    onClick={() => void openTemplate(template)}
+                    href={`/templates/${template.slug}`}
                   >
                     Detail template
-                  </button>
+                  </a>
                 </div>
               </div>
             </article>
@@ -445,6 +480,16 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
           <p className="mt-2 text-sm text-[#76675f]">
             Template yang sudah ditinjau dan diterbitkan admin akan muncul di sini.
           </p>
+        </div>
+      )}
+      {!loading && visibleCount < filteredTemplates.length && (
+        <div className="flex justify-center">
+          <button
+            className="rounded-xl border border-[#ddcec3] bg-white px-5 py-3 text-sm font-semibold"
+            onClick={() => setVisibleCount((count) => count + 12)}
+          >
+            Muat lebih banyak template
+          </button>
         </div>
       )}
 
@@ -725,24 +770,50 @@ export default function Marketplace({ client, userId, isAdmin = false }: Props) 
                   {styleName(selectedTemplate.style_id)}
                 </p>
               </div>
-              <button
-                aria-label="Tutup detail"
-                className="rounded-lg border border-[#ddcec3] px-3 py-2"
-                onClick={() => setSelectedTemplate(null)}
-              >
-                Tutup
-              </button>
+              {initialTemplateSlug ? (
+                <a className="rounded-lg border border-[#ddcec3] px-3 py-2" href="/templates">
+                  Kembali ke marketplace
+                </a>
+              ) : (
+                <button
+                  aria-label="Tutup detail"
+                  className="rounded-lg border border-[#ddcec3] px-3 py-2"
+                  onClick={() => setSelectedTemplate(null)}
+                >
+                  Tutup
+                </button>
+              )}
             </div>
             <p className="mt-4 text-sm leading-6 text-[#76675f]">{selectedTemplate.description}</p>
             <div className="mt-5 rounded-2xl border border-[#eaded5] bg-white p-3">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#887970]">
-                Pratinjau desain
-              </p>
-              {selectedDocument ? (
-                <InvitationDocumentView document={selectedDocument} client={client} />
-              ) : (
-                <p className="p-6 text-sm text-[#76675f]">Memuat pratinjau...</p>
-              )}
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#887970]">
+                  Pratinjau desain
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    className={`rounded-lg border px-3 py-1.5 text-xs ${previewViewport === "desktop" ? "border-[#754b3b] bg-[#f7eee8] font-semibold" : "border-[#ddcec3]"}`}
+                    aria-pressed={previewViewport === "desktop"}
+                    onClick={() => setPreviewViewport("desktop")}
+                  >
+                    Desktop
+                  </button>
+                  <button
+                    className={`rounded-lg border px-3 py-1.5 text-xs ${previewViewport === "mobile" ? "border-[#754b3b] bg-[#f7eee8] font-semibold" : "border-[#ddcec3]"}`}
+                    aria-pressed={previewViewport === "mobile"}
+                    onClick={() => setPreviewViewport("mobile")}
+                  >
+                    Ponsel
+                  </button>
+                </div>
+              </div>
+              <div className={`mx-auto transition-all ${previewViewport === "mobile" ? "max-w-sm" : "max-w-3xl"}`}>
+                {selectedDocument ? (
+                  <InvitationDocumentView document={selectedDocument} client={client} />
+                ) : (
+                  <p className="p-6 text-sm text-[#76675f]">Memuat pratinjau...</p>
+                )}
+              </div>
             </div>
             <p className="mt-4 font-semibold">
               {currency(selectedTemplate.base_price, selectedTemplate.currency)}
