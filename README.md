@@ -6,27 +6,27 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Fase 0: selesai sepenuhnya.**
 
-**Fase 1: selesai sepenuhnya pada lingkungan staging.**
+**Fase 1: selesai sepenuhnya pada staging dan production.**
 
 **Checkpoint: 23 November 2026**
 
 - Implementasi autentikasi: pendaftaran, masuk, pemulihan kata sandi, profil, preferensi bahasa/zona waktu, dan pengelolaan sesi.
 - Model role/permission server-side, bootstrap super admin melalui service role, dan pengelolaan peran melalui RPC yang diaudit.
 - Panel admin untuk CRUD kategori/gaya desain, feature flags, audit log, dan pengelolaan peran.
-- Migrasi fase 1 diterapkan pada Supabase staging; 8 kategori dan 10 gaya desain awal tersedia.
-- Seluruh tabel fase 1 memakai RLS. Security Advisor staging tidak menemukan temuan keamanan.
+- Migrasi fase 1 diterapkan pada Supabase staging dan production; masing-masing memiliki 8 kategori dan 10 gaya desain awal.
+- Seluruh 7 tabel fase 1 memakai RLS di staging dan production. Security Advisor production dan staging tidak menemukan temuan keamanan.
 - Pengujian pgTAP mencakup isolasi profil/peran antar pengguna, hak akses, dan pembatasan fungsi RPC.
-- Seluruh pemeriksaan CI lulus: format, lint, tipe, pengujian unit, build, migrasi lokal, lint basis data, dan pgTAP ([hasil CI #70](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050713033)).
-- Implementasi tersedia pada [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10).
+- Seluruh pemeriksaan CI lulus: format, lint, tipe, pengujian unit, build, migrasi lokal, lint basis data, dan pgTAP ([hasil CI #76](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050908634)).
+- Implementasi digabung melalui [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10) ke `main` pada commit `8aff277b1ebb88838b2c6c8c2745065428928e13`.
 
-**Batas penerapan:** Fase 1 dinyatakan selesai pada staging. Supabase production belum menerima migrasi fase 1. PR belum digabung ke `main` karena Vercel hanya menerapkan perubahan dari `main`; penggabungan sebelum migrasi production siap akan merilis aplikasi yang membutuhkan skema basis data yang belum tersedia. Migrasi production memerlukan pencadangan, peninjauan, dan persetujuan rilis. Penerapan preview Vercel tetap nonaktif.
+**Rilis production:** Keempat migrasi Fase 1 telah diterapkan dan diverifikasi pada Supabase production. Organisasi Supabase menggunakan paket Free sehingga backup otomatis harian tidak tersedia; backup manual tidak dapat dijalankan melalui akses yang tersedia. Sesuai persetujuan pemilik, migrasi dilanjutkan setelah verifikasi bahwa production belum memiliki akun pengguna maupun objek Storage. Deployment Vercel production untuk commit Fase 1 berstatus **READY**. Penerapan preview tetap nonaktif.
 
 **Checkpoint: 22 November 2026**
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
 - Pemeriksaan CI sebelum penggabungan berhasil: [format, lint, tipe, pengujian unit, build, migrasi, dan RLS](https://github.com/Morepp461/Janji-Kita-/actions/runs/45046403758).
-- Penerapan production Vercel untuk commit `83c6891` berstatus **READY**.
-- Project Supabase staging dan production terpisah; riwayat migrasi keduanya selaras dengan berkas migrasi repository.
+- Penerapan production Vercel untuk commit Fase 1 `8aff277` berstatus **READY**.
+- Project Supabase staging dan production terpisah; riwayat migrasi keduanya selaras dengan berkas migrasi repository, termasuk seluruh migrasi Fase 1.
 - Pemeriksaan Security Advisor pada kedua project Supabase tidak menemukan masalah.
 - Penerapan preview dinonaktifkan. Penerapan aplikasi hanya melalui cabang `main`.
 
