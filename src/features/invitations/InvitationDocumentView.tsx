@@ -54,7 +54,7 @@ function renderNode(node: InvitationNode, assetUrls: Record<string, string>): Re
 }
 
 export default function InvitationDocumentView({ document, client }: { document: InvitationDocument; client: SupabaseClient | null }) {
-  const sections = document.pages?.flatMap((page) => page.sections || []) || document.sections || [];
+  const sections = useMemo(() => document.pages?.flatMap((page) => page.sections || []) || document.sections || [], [document]);
   const assetIds = useMemo(() => collectAssetIds(sections), [sections]);
   const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
 
