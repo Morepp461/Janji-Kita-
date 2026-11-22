@@ -23,19 +23,19 @@
 **Done when:** instalasi bersih, build, dan seluruh pengujian lulus; project staging dan production terpisah; tidak ada rahasia yang dikomit; pipeline migrasi dapat dijalankan ulang; deployment Vercel hanya berasal dari `main` dan deployment preview tetap nonaktif. Seluruh kriteria tersebut telah dipenuhi dan penerapan production berstatus READY.
 
 ## 3. Phase 1 — Identity, Roles, and Admin Foundation
-**Status: SELESAI SEPENUHNYA PADA STAGING — 23 November 2026.**
-**Checkpoint:** PR #10 — `feat/phase-1-identity-admin`. **CI:** [Run #70 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050713033).
+**Status: SELESAI SEPENUHNYA PADA STAGING DAN PRODUCTION — 23 November 2026.**
+**Checkpoint:** PR #10 telah digabung ke `main` pada commit `8aff277b1ebb88838b2c6c8c2745065428928e13`. **CI:** [Run #76 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050908634). **Deployment Vercel production:** READY.
 **Dependencies:** Phase 0.
 - Register/login/reset, profiles, locale/timezone preferences, and Supabase Auth sessions.
 - Role and permission model backed by trusted database tables; browser metadata is not used as an authorization source.
 - Admin shell with role-gated access and append-only audit records for category, style, feature flag, and role changes.
 - Categories/styles CRUD and feature flag management.
 - RLS policies isolate profiles and roles by authenticated user; privileged functions are restricted and internal helpers are kept outside the exposed API schema.
-- Seed 8 categories and 10 design styles in Supabase staging.
+- Seed 8 categories and 10 design styles in Supabase staging and production.
 - UI tests cover registration and password recovery; pgTAP covers RLS, grants, and cross-user profile/role isolation.
-- Supabase staging Security Advisor reports no security findings.
-**Done when:** user cannot access another user's data; admin actions are permission-gated and audited; mobile-responsive authentication works. Kriteria fase ini telah dipenuhi pada staging.
-**Catatan rilis:** production migration and merge to `main` remain gated by backup/review and explicit release approval. Vercel preview remains disabled per project decision.
+- Supabase staging and production Security Advisor report no security findings.
+**Done when:** user cannot access another user's data; admin actions are permission-gated and audited; mobile-responsive authentication works. Kriteria fase ini telah dipenuhi di staging dan production.
+**Catatan rilis:** keempat migrasi production telah diterapkan dan riwayat migrasi diselaraskan dengan timestamp file repository. Paket Supabase Free tidak menyediakan backup otomatis harian dan backup manual tidak tersedia melalui koneksi yang digunakan. Sesuai persetujuan pemilik, backup dilewati setelah production diverifikasi memiliki 0 akun Auth dan 0 objek Storage. PR #10 telah digabung dan deployment Vercel production berstatus READY. Vercel preview tetap nonaktif.
 
 ## 4. Phase 2 — Marketplace and Invitation Core
 **Dependencies:** Phase 1.

@@ -6,15 +6,15 @@ Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi 
 
 - Versi dokumentasi dasar: 1.0.
 - **Fase 0: selesai sepenuhnya.**
-- **Fase 1: selesai sepenuhnya pada Supabase staging.**
+- **Fase 1: selesai sepenuhnya pada Supabase staging dan production.**
 - Checkpoint fase 1: [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10).
-- Seluruh CI fase 1 lulus: [hasil CI #70](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050713033) mencakup pemeriksaan web, migrasi, lint basis data, dan pgTAP.
+- Seluruh CI fase 1 lulus: [hasil CI #76](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050908634) mencakup pemeriksaan web, migrasi, lint basis data, dan pgTAP.
 - Fase 1 mencakup autentikasi, profil, role/permission, panel admin, kategori/gaya, feature flags, audit log, dan RLS.
-- Security Advisor staging setelah migrasi fase 1: tidak ada temuan keamanan.
-- Production belum dimigrasikan; ikuti release gate, backup/review, dan persetujuan pemilik sebelum rollout.
-- Checkpoint penggabungan: `83c6891ba446b3ad341e4cf20c49190d063ebd22`.
+- Security Advisor staging dan production setelah migrasi fase 1: tidak ada temuan keamanan.
+- Keempat migrasi Fase 1 sudah diterapkan pada production dan riwayat migrasinya sudah diselaraskan dengan timestamp file repository. Paket Supabase Free tidak menyediakan backup otomatis harian; backup manual tidak tersedia melalui koneksi yang digunakan. Migrasi dilakukan setelah verifikasi bahwa production memiliki 0 akun Auth dan 0 objek Storage, sesuai persetujuan pemilik untuk melewati backup.
+- Checkpoint Fase 1 di `main`: `8aff277b1ebb88838b2c6c8c2745065428928e13` (PR #10).
 - Pemeriksaan CI sebelum penggabungan lulus: [lihat hasil CI](https://github.com/Morepp461/Janji-Kita-/actions/runs/45046403758).
-- Penerapan production Vercel dari cabang `main` berstatus **READY**.
+- Penerapan production Vercel dari cabang `main` untuk checkpoint Fase 1 berstatus **READY**.
 - Penerapan preview dinonaktifkan; hanya production yang digunakan.
 
 Catatan tata kelola: status perlindungan cabang `main` belum dapat diverifikasi melalui integrasi GitHub yang tersedia. Pastikan kedua pemeriksaan CI diwajibkan sebelum penggabungan berikutnya.
@@ -176,7 +176,7 @@ PRD menetapkan keputusan produk. Dokumen teknis menjelaskan implementasi. Jika t
 
 ## Bootstrap super admin pertama
 
-Project staging masih memerlukan akun pemilik sebelum panel admin dapat digunakan. Setelah akun pemilik berhasil mendaftar:
+Project staging dan production belum memiliki akun Auth saat checkpoint Fase 1. Buat akun pemilik pada lingkungan yang akan digunakan sebelum panel admin dapat diakses. Setelah akun pemilik berhasil mendaftar:
 
 1. Ambil UUID akun dari Supabase Authentication > Users pada project yang sesuai.
 2. Jalankan perintah berikut melalui akses SQL tepercaya/service role, bukan dari browser:
@@ -188,4 +188,4 @@ select public.bootstrap_first_super_admin('<UUID_AKUN_PEMILIK>');
 3. Fungsi hanya berhasil jika belum ada super admin dan profil pengguna sudah tersedia.
 4. Setelah bootstrap, kelola role berikutnya dari panel admin. Pengguna tidak dapat mengubah role sendiri.
 
-Jangan menjalankan bootstrap ini pada production sebelum migrasi production disetujui dan diterapkan.
+Jalankan bootstrap hanya pada project yang dipilih setelah akun pemilik berhasil dibuat dan migrasi Fase 1 tersedia.
