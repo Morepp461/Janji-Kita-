@@ -256,6 +256,29 @@ $$;
 revoke all on function public.admin_set_user_role(uuid, text, text) from public, anon;
 grant execute on function public.admin_set_user_role(uuid, text, text) to authenticated;
 
+-- Bootstrap hanya dapat dipanggil oleh service_role dan hanya sebelum super admin pertama ada.
+create or replace function public.bootstrap_first_super_admin(p_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+begin
+  if exists (select 1 from public.user_roles where role = 'super_admin') then
+    raise exception 'Super admin pertama sudah ditetapkan' using errcode = '42501';
+  end if;
+  if not exists (select 1 from public.profiles where id = p_user_id) then
+    raise exception 'Profil pengguna tidak ditemukan' using errcode = 'P0002';
+  end if;
+  insert into public.user_roles (user_id, role)
+  values (p_user_id, 'super_admin')
+  on conflict (user_id, role) do nothing;
+end;
+$;
+
+revoke all on function public.bootstrap_first_super_admin(uuid) from public, anon, authenticated;
+grant execute on function public.bootstrap_first_super_admin(uuid) to service_role;
+
 alter table public.profiles enable row level security;
 alter table public.user_roles enable row level security;
 alter table public.role_permissions enable row level security;
