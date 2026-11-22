@@ -39,7 +39,7 @@ select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000101
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000101","role":"authenticated"}', true);
 select is((select count(*) from public.profiles), 1::bigint, 'pengguna hanya membaca profil sendiri');
 select is((select count(*) from public.user_roles), 1::bigint, 'pengguna hanya membaca peran sendiri');
-select is(public.has_permission('admin.access'), false, 'akun biasa tidak memiliki izin admin');
+select is(app_private.has_permission('admin.access'), false, 'akun biasa tidak memiliki izin admin');
 select ok(has_schema_privilege('authenticated', 'app_private', 'USAGE'), 'schema internal hanya digunakan oleh peran terautentikasi');
 select is((select count(*) from public.audit_logs), 0::bigint, 'pengguna biasa tidak dapat membaca audit log');
 reset role;
