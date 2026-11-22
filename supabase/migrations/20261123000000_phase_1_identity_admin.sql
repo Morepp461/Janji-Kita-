@@ -267,6 +267,7 @@ alter table public.audit_logs enable row level security;
 grant select on public.profiles, public.user_roles, public.role_permissions,
   public.categories, public.design_styles, public.feature_flags, public.audit_logs to authenticated;
 grant select on public.categories, public.design_styles, public.feature_flags to anon;
+grant insert, update, delete on public.categories, public.design_styles, public.feature_flags to authenticated;
 grant update (display_name, avatar_path, phone, preferred_locale, timezone)
   on public.profiles to authenticated;
 
