@@ -196,6 +196,11 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     setDocument(previous.document);
     setTitle(previous.title);
     setSaveState("dirty");
+    localStorage.setItem(RECOVERY_PREFIX + invitationId, JSON.stringify({
+      snapshot: { document: previous.document, title: previous.title },
+      updatedAt: updatedAtRef.current,
+      savedAt: new Date().toISOString(),
+    }));
   };
 
   const redo = () => {
@@ -209,6 +214,11 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     setDocument(next.document);
     setTitle(next.title);
     setSaveState("dirty");
+    localStorage.setItem(RECOVERY_PREFIX + invitationId, JSON.stringify({
+      snapshot: { document: next.document, title: next.title },
+      updatedAt: updatedAtRef.current,
+      savedAt: new Date().toISOString(),
+    }));
   };
 
   useEffect(() => {
@@ -390,7 +400,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             </div>
           </div>
           <div className="mt-3 rounded-xl border border-[#eaded5] bg-white p-3"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#887970]">Lapisan</h3><div className="max-h-52 space-y-1 overflow-y-auto">{layers.map(({ node, depth }) => renderLayer(node, depth))}</div></div>
-          {(message || saveState === "conflict" || saveState === "error") && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700">{message || "Draft berubah di perangkat lain. Muat ulang untuk mengambil versi terbaru sebelum melanjutkan."}</p>}
+          {(message || saveState === "conflict" || saveState === "error") && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700">{message || "Draft berubah di perangkat lain. Muat ulang untuk mengambil versi terbaru sebelum melanjutkan."} {saveState === "conflict" && <button onClick={() => window.location.reload()} className="ml-2 font-semibold underline">Muat ulang versi server</button>}</p>}
           {recovery && <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm"><p className="font-semibold">Ada perubahan lokal yang belum tersimpan.</p><p className="mt-1 text-xs">Pulihkan perubahan dari perangkat ini? Jika versi server juga berubah, tindakan ini akan mengganti isi draft server.</p><button onClick={restoreRecovery} className="mt-2 rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white">Pulihkan perubahan lokal</button><button onClick={() => { localStorage.removeItem(RECOVERY_PREFIX + invitationId); setRecovery(null); }} className="ml-2 text-xs underline">Abaikan</button></div>}
         </section>
 
