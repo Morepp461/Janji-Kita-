@@ -57,14 +57,20 @@
 **Keputusan rilis:** Pemilik proyek secara eksplisit menyetujui pengecualian backup/restore untuk rilis Fase 2 pada 23 November 2026. Risiko kehilangan data diterima; inventaris production sebelum migrasi adalah 1 akun Auth, 1 profil, dan 0 objek Storage. Migrasi Fase 2 bersifat aditif dan recovery dilakukan dengan corrective/forward migration bila diperlukan. Pengecualian hanya berlaku untuk rilis ini. Deployment preview tetap nonaktif.
 
 ## 5. Phase 3 — Visual Editor
+**Status: IMPLEMENTASI DAN QA STAGING SELESAI — 23 November 2026.**
+**Checkpoint:** [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14) (belum digabung; menunggu persetujuan release gate production). **CI:** [Run #45062742820 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45062742820).
 **Dependencies:** Phase 2 and stable schema.
-- Component registry and property inspector.
-- Section/layer operations.
-- Content/style/layout controls.
-- Responsive preview and validation.
-- Autosave, conflict handling, undo/redo.
-- Asset upload and processing.
-**Done when:** core editing operations pass tests; refresh/network loss does not silently lose saved work; editor usable on Android; renderer preview parity verified.
+- Component registry and property inspector untuk tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
+- Section/layer operations: add, select, reorder, duplicate, lock/unlock, hide/show, delete, undo, and redo.
+- Content/style/layout controls serta visibilitas responsif desktop/mobile.
+- Responsive preview dan validasi struktur, konten wajib, aset, dan tautan.
+- Autosave melalui RPC dengan optimistic concurrency, konflik eksplisit, dan pemulihan lokal ketika offline/refresh.
+- Asset upload privat dengan validasi MIME/signature/ukuran, ekstraksi metadata, optimasi gambar WebP, dan pembatasan path berdasarkan pemilik.
+- Preview editor dan public renderer menggunakan komponen renderer yang sama.
+- Dua migrasi Fase 3 diterapkan pada Supabase staging. RLS aktif, Security Advisor bersih, dan pemeriksaan staging untuk RPC, bucket privat, serta kebijakan aset lulus.
+**Done when:** core editing operations pass tests; refresh/network loss does not silently lose saved work; responsive mobile layout is implemented; renderer preview parity verified. Seluruh kriteria implementasi dan QA staging telah dipenuhi.
+
+**Production release gate:** migrasi production dan merge ke `main` ditahan sampai pemilik secara eksplisit menyetujui pengecualian backup/restore khusus Fase 3. Persetujuan pengecualian Fase 2 tidak diperluas otomatis.
 
 ## 6. Phase 4 — Commerce and Publication
 **Dependencies:** Phase 2, Phase 3 basic editor, Phase 1 security.
