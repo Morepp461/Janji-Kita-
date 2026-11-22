@@ -1,5 +1,5 @@
 begin;
-select plan(13);
+select plan(17);
 
 select ok(has_function_privilege('authenticated', 'public.save_invitation_draft(uuid,timestamp with time zone,text,jsonb)', 'execute'), 'pengguna terautentikasi dapat menyimpan draft melalui RPC');
 select ok(not has_function_privilege('anon', 'public.save_invitation_draft(uuid,timestamp with time zone,text,jsonb)', 'execute'), 'pengunjung publik tidak dapat menyimpan draft');
@@ -31,6 +31,58 @@ select ok(exists (
   where tgname = 'invitation_versions_immutable'
     and not tgisinternal
 ), 'perlindungan versi terbit tetap aktif');
+
+
+insert into auth.users (
+  id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-0000-0000-000000000301', 'authenticated', 'authenticated',
+  'phase3-editor@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000301', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000301","role":"authenticated"}', true);
+select lives_ok(
+  $phase3$select public.create_invitation_draft(
+    'Draft editor fase 3',
+    (select id from public.categories order by sort_order limit 1),
+    null
+  )$phase3$,
+  'pemilik dapat membuat draft untuk editor'
+);
+select set_config(
+  'test.phase3_original_updated_at',
+  (select updated_at::text from public.invitations where title = 'Draft editor fase 3'),
+  true
+);
+select lives_ok(
+  $phase3$select public.save_invitation_draft(
+    (select id from public.invitations where title = 'Draft editor fase 3'),
+    (select updated_at from public.invitations where title = 'Draft editor fase 3'),
+    'Draft editor tersimpan',
+    '{"schemaVersion":1,"pages":[{"id":"page-1","sections":[]}]}'::jsonb
+  )$phase3$,
+  'pemilik dapat menyimpan dokumen draft'
+);
+select is(
+  (select title from public.invitations where title = 'Draft editor tersimpan'),
+  'Draft editor tersimpan',
+  'judul draft diperbarui saat autosave'
+);
+select throws_ok(
+  $phase3$select public.save_invitation_draft(
+    (select id from public.invitations where title = 'Draft editor tersimpan'),
+    current_setting('test.phase3_original_updated_at')::timestamptz,
+    'Simpan konflik',
+    '{"schemaVersion":1,"pages":[]}'::jsonb
+  )$phase3$,
+  '40001',
+  'Konflik penyuntingan: draft telah berubah di perangkat lain',
+  'autosave menolak versi dasar yang kedaluwarsa'
+);
+reset role;
 
 select * from finish();
 rollback;
