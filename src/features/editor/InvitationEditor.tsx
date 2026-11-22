@@ -175,6 +175,10 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
 
   const updateSelected = (patch: Record<string, unknown>, target: "props" | "style" = "props") => {
     if (!document || !selected) return;
+    if (selected.locked) {
+      setMessage("Lapisan terkunci. Buka kunci sebelum mengubah properti.");
+      return;
+    }
     commit(updateNode(document, selected.id, (node) => ({
       ...node,
       [target]: { ...(node[target] || {}), ...patch },
