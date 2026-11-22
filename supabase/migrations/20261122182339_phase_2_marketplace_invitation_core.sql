@@ -30,6 +30,7 @@ create table public.templates (
   currency char(3) not null default 'IDR',
   status text not null default 'draft' check (status in ('draft', 'published', 'archived')),
   current_version_id uuid,
+  check (status <> 'published' or current_version_id is not null),
   created_by uuid not null references public.profiles(id) on delete restrict,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -72,7 +73,7 @@ create table public.invitations (
   deleted_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (status <> 'active' or (active_from is not null and active_until > active_from and published_version_id is not null))
+  check (status <> 'active' or (slug is not null and active_from is not null and active_until > active_from and published_version_id is not null))
 );
 
 create table public.invitation_versions (
@@ -159,10 +160,31 @@ create policy template_versions_admin_insert on public.template_versions
   for insert to authenticated with check (app_private.has_permission('templates.manage'));
 
 create policy media_assets_read_public on public.media_assets
-  for select to anon using (visibility in ('template', 'public'));
+  for select to anon
+  using (
+    visibility = 'public'
+    or (
+      visibility = 'template'
+      and exists (
+        select 1 from public.templates t
+        where t.thumbnail_asset_id = media_assets.id and t.status = 'published'
+      )
+    )
+  );
 create policy media_assets_read_authenticated on public.media_assets
   for select to authenticated
-  using (visibility in ('template', 'public') or owner_user_id = (select auth.uid()) or app_private.has_permission('templates.manage'));
+  using (
+    visibility = 'public'
+    or owner_user_id = (select auth.uid())
+    or app_private.has_permission('templates.manage')
+    or (
+      visibility = 'template'
+      and exists (
+        select 1 from public.templates t
+        where t.thumbnail_asset_id = media_assets.id and t.status = 'published'
+      )
+    )
+  );
 create policy media_assets_admin_insert on public.media_assets
   for insert to authenticated with check (
     owner_user_id = (select auth.uid())
@@ -198,6 +220,7 @@ create policy invitations_public_active_read on public.invitations
   for select to anon
   using (
     status = 'active'
+    and slug is not null
     and active_from <= now()
     and active_until > now()
     and deleted_at is null
@@ -211,6 +234,7 @@ create policy invitation_versions_public_published_read on public.invitation_ver
       select 1 from public.invitations i
       where i.published_version_id = invitation_versions.id
         and i.status = 'active'
+        and i.slug is not null
         and i.active_from <= now()
         and i.active_until > now()
         and i.deleted_at is null
@@ -470,6 +494,7 @@ select
 from public.invitations i
 join public.invitation_versions v on v.id = i.published_version_id
 where i.status = 'active'
+  and i.slug is not null
   and i.active_from <= now()
   and i.active_until > now()
   and i.deleted_at is null
