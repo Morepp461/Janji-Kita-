@@ -38,19 +38,23 @@
 **Catatan rilis:** keempat migrasi production telah diterapkan dan riwayat migrasi diselaraskan dengan timestamp file repository. Paket Supabase Free tidak menyediakan backup otomatis harian dan backup manual tidak tersedia melalui koneksi yang digunakan. Sesuai persetujuan pemilik, backup dilewati setelah production diverifikasi memiliki 0 akun Auth dan 0 objek Storage. PR #10 telah digabung dan deployment Vercel production berstatus READY. Vercel preview tetap nonaktif.
 
 ## 4. Phase 2 — Marketplace and Invitation Core
-**Status: SELESAI SEPENUHNYA PADA SUPABASE STAGING — 23 November 2026.**
-**Checkpoint:** [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12), commit `9225efe3978fbd6f34c0d2e569f195770dc15d4c`.
-**CI:** [Run #45057743405 lulus seluruh pemeriksaan](https://github.com/Morepp461/Janji-Kita-/actions/runs/45057743405), termasuk 40 pengujian pgTAP Fase 2.
-**Migrasi staging:** `20261122183425`, `20261122183930`, `20261122184855`; Security Advisor staging tidak menemukan temuan.
+**Status: SELESAI SEPENUHNYA DI STAGING DAN PRODUCTION — 23 November 2026.**
+**Checkpoint:** [PR #12 telah digabung](https://github.com/Morepp461/Janji-Kita-/pull/12) ke `main` pada commit `be079cad82866c77da301aaacede000287f6db8b`.
+**CI kode:** [Run #45059131777 lulus](https://github.com/Morepp461/Janji-Kita-/actions/runs/45059131777), termasuk 40 pengujian pgTAP Fase 2, lint skema, format, lint, typecheck, unit test, dan build production. Perubahan setelah checkpoint kode hanya dokumentasi waiver rilis.
+**Migrasi production:** `20261122192144` (`phase_2_marketplace_invitation_core`), `20261122192146` (`phase_2_public_renderer_invoker`), dan `20261122192149` (`phase_2_template_version_rls`). Seluruh migrasi tercatat di Supabase production dan staging.
+**Deployment Vercel production:** [READY](https://janji-kita-morepp.vercel.app), deployment `dpl_6FsS9VkGeL8FcPNaNBcNT8BKuKFX`, alias production aktif.
 **Dependencies:** Phase 1.
 - Metadata template, versioning immutable, metadata aset, dan bucket Storage.
 - Marketplace dengan pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail `/templates/:slug`, serta pratinjau desktop/ponsel.
 - Draft undangan dari template maupun kanvas kosong, daftar draft, buka ulang, dan pratinjau.
 - Renderer dokumen berbasis daftar komponen yang diizinkan.
-- Renderer publik hanya mengembalikan undangan aktif dan versi terbit melalui RPC `SECURITY INVOKER` dengan RLS; peran anon tidak dapat membaca tabel internal secara langsung.
+- Renderer publik hanya mengembalikan undangan aktif dan versi terbit melalui RPC `SECURITY INVOKER` dengan RLS; peran anon tidak dapat membaca kolom internal pemilik.
 - Pengujian snapshot membuktikan perubahan versi template tidak mengubah draft yang telah dibuat; versi template dan versi undangan terbit tidak dapat diubah.
-**Done when:** draft dapat dibuat, dibuka kembali, dan dipratinjau; rute publik tidak dapat menampilkan draft yang belum diterbitkan; perubahan versi template tidak mengubah snapshot undangan lama. Seluruh kriteria Fase 2 telah diverifikasi di staging.
-**Keputusan rilis:** Pemilik proyek secara eksplisit menyetujui pengecualian backup/restore untuk rilis Fase 2 pada 23 November 2026. Risiko kehilangan data diterima; inventaris production sebelum migrasi adalah 1 akun Auth, 1 profil, dan 0 objek Storage. Migrasi Fase 2 bersifat aditif dan recovery dilakukan dengan corrective/forward migration bila diperlukan. Seluruh release gate lain tetap wajib dipenuhi. Deployment preview tetap nonaktif.
+- Production terverifikasi memiliki lima tabel Fase 2 dengan RLS aktif, dua bucket Storage, dan tidak ada data Fase 2 yang tertinggal.
+- Data Auth/profil pemilik tetap utuh (1 akun Auth, 1 profil); Storage objects tetap 0.
+**Done when:** draft dapat dibuat, dibuka kembali, dan dipratinjau; rute publik tidak dapat menampilkan draft yang belum diterbitkan; perubahan versi template tidak mengubah snapshot undangan lama. Kriteria staging, production, dan deployment terpenuhi.
+**Peringatan yang diketahui:** Security Advisor production menampilkan satu peringatan yang sudah ada, `Leaked Password Protection Disabled`; tidak diubah dalam cakupan Fase 2. Performance Advisor melaporkan indeks FK yang belum digunakan/terindeks; bukan kegagalan keamanan atau build dan dicatat untuk optimasi terpisah.
+**Keputusan rilis:** Pemilik proyek secara eksplisit menyetujui pengecualian backup/restore untuk rilis Fase 2 pada 23 November 2026. Risiko kehilangan data diterima; inventaris production sebelum migrasi adalah 1 akun Auth, 1 profil, dan 0 objek Storage. Migrasi Fase 2 bersifat aditif dan recovery dilakukan dengan corrective/forward migration bila diperlukan. Pengecualian hanya berlaku untuk rilis ini. Deployment preview tetap nonaktif.
 
 ## 5. Phase 3 — Visual Editor
 **Dependencies:** Phase 2 and stable schema.
