@@ -113,7 +113,7 @@ supabase test db
 supabase stop
 ```
 
-File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Jika jalur backup tidak tersedia, pemilik dapat menyetujui pengecualian tertulis yang terbatas pada rilis tertentu; catat inventaris data, risiko yang diterima, sifat migrasi, dan recovery plan. Pengecualian Fase 2 tanggal 23 November 2026 dicatat pada `docs/DEVELOPMENT_ROADMAP.md`. Pengujian RLS wajib lulus di CI.
+File migrasi SQL disimpan berurutan di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Jika jalur backup tidak tersedia, pemilik dapat menyetujui pengecualian tertulis. Pada 23 November 2026, pemilik menyetujui pengecualian backup/restore untuk seluruh fase proyek dan menerima risiko kehilangan data. Restore tidak diklaim telah diuji; setiap fase tetap wajib mencatat inventaris data, risiko, sifat migrasi, dan recovery plan. Keputusan dicatat pada `docs/DEVELOPMENT_ROADMAP.md`. Pengujian RLS wajib lulus di CI.
 
 CI memakai Supabase CLI 3.0.0 yang dipatok agar hasil pemeriksaan konsisten. Pada CLI v3, perintah basis data berjalan ke lingkungan lokal secara default. Operasi ke project terkelola harus menyebut target remote secara eksplisit dan menyertakan persetujuan noninteraktif yang sesuai. Jangan menjalankan operasi remote sebelum memeriksa project tujuan.
 
@@ -167,7 +167,7 @@ Gunakan lingkungan uji Midtrans saat mengembangkan modul pembayaran. Pembayaran 
 - [ ] Pembatasan laju diterapkan pada autentikasi, RSVP, buku tamu, unggahan, dan checkout.
 - [ ] Tanda tangan webhook diverifikasi dan pemrosesannya idempoten.
 - [ ] Aktivitas admin, pembayaran, persetujuan, perubahan peran, dan publikasi tercatat.
-- [ ] Pencadangan dan pemulihan sudah diuji, atau pengecualian rilis disetujui pemilik dan terdokumentasi dengan risiko serta recovery plan.
+- [ ] Pencadangan dan pemulihan sudah diuji, atau pengecualian backup global yang disetujui pemilik terdokumentasi dengan risiko serta recovery plan.
 - [ ] Syarat layanan, privasi, persetujuan, dan kebijakan pengembalian dana siap.
 
 ## Pengujian yang mengutamakan perangkat seluler
@@ -189,14 +189,14 @@ Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan pa
 
 ## Status Fase 3
 
-**IMPLEMENTASI DAN QA STAGING SELESAI — 23 November 2026.**
+**IMPLEMENTASI, QA, DAN MIGRASI PRODUCTION SELESAI — 23 November 2026.**
 
 - Editor visual, registry komponen, panel properti, operasi lapisan, undo/redo, pratinjau responsif, validasi, autosave dengan deteksi konflik, pemulihan lokal, dan unggahan aset privat telah tersedia.
-- Dua migrasi Fase 3 telah diterapkan pada Supabase staging. Pemeriksaan RLS, RPC, bucket privat, dan Security Advisor lulus.
-- CI Fase 3 lulus seluruh pemeriksaan: [run #45063579683](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063579683).
-- Implementasi berada pada [PR #14](https://github.com/Morepp461/Janji-Kita-/pull/14).
+- Dua migrasi Fase 3 telah diterapkan pada Supabase staging dan production. Production mencatat versi `20261122234541` dan `20261122234549`; pemeriksaan RLS, RPC, bucket privat, dan satu kebijakan INSERT aset lulus.
+- CI Fase 3 lulus seluruh pemeriksaan: [run #45063740422](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
+- Implementasi tersedia pada [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15).
 
-Migrasi production dan merge ke `main` menunggu persetujuan tertulis pemilik untuk pengecualian backup/restore khusus Fase 3. Pengecualian Fase 2 tidak otomatis berlaku untuk fase berikutnya.
+Migrasi production Fase 3 telah diterapkan dan diverifikasi. Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Pemilik menerima risiko kehilangan data; restore tidak diklaim telah diuji dan pemulihan mengandalkan corrective/forward migration. Security Advisor production masih mencatat peringatan Auth yang sudah ada, `Leaked Password Protection Disabled`.
 
 ## Sumber kebenaran
 
