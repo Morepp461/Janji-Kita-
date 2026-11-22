@@ -15,81 +15,57 @@ concurrency:
 
 jobs:
   web:
-    name: Web quality gates
+    name: Pemeriksaan kualitas web
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Ambil kode sumber
         uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Siapkan Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
+      - name: Pasang dependensi
         run: npm ci --no-audit --no-fund
-      - name: Format
+      - name: Periksa format
         run: npm run format:check
-      - name: Lint
+      - name: Periksa lint
         run: npm run lint
-      - name: Typecheck
+      - name: Periksa tipe
         run: npm run typecheck
-      - name: Unit tests
+      - name: Jalankan pengujian unit
         run: npm run test:run
-      - name: Production build
+      - name: Build production
         run: npm run build
 
   database:
-    name: Supabase migration and RLS tests
+    name: Pengujian migrasi dan RLS Supabase
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout
+      - name: Ambil kode sumber
         uses: actions/checkout@v4
-      - name: Setup Supabase CLI
+      - name: Siapkan Supabase CLI
         uses: supabase/setup-cli@v1
         with:
           version: latest
-      - name: Discover CLI commands
+      - name: Periksa perintah CLI
         run: |
           supabase --help
           supabase migration --help
           supabase db --help
-      - name: Validate Supabase configuration
+      - name: Validasi konfigurasi Supabase
         run: supabase config validate
-      - name: Start local Supabase database
+      - name: Jalankan basis data lokal
         run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
-      - name: Apply migrations
+      - name: Terapkan seluruh migrasi
         run: supabase db reset
-      - name: Lint database
+      - name: Periksa basis data
         run: supabase db lint --local --fail-on error
-      - name: Run database tests
+      - name: Jalankan pengujian basis data
         run: supabase test db
 
-  preview:
-    name: Vercel preview
-    needs: [web, database]
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Deploy preview
-        if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
-        run: |
-          npm install --global vercel
-          vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
-          vercel build --token="$VERCEL_TOKEN"
-          vercel deploy --prebuilt --token="$VERCEL_TOKEN"
-
   production:
-    name: Vercel production
+    name: Deployment Vercel production
     needs: [web, database]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -99,8 +75,12 @@ jobs:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - name: Checkout
+      - name: Ambil kode sumber
         uses: actions/checkout@v4
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
       - name: Deploy production
         if: env.VERCEL_TOKEN != '' && env.VERCEL_ORG_ID != '' && env.VERCEL_PROJECT_ID != ''
         run: |
