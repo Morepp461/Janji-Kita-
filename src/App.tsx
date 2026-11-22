@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import AuthPage from "./features/auth/AuthPage";
+import Marketplace from "./features/marketplace/Marketplace";
+import PublicInvitation from "./features/invitations/PublicInvitation";
 import { getSupabaseClient } from "./lib/supabase";
 
 type Profile = {
@@ -154,6 +156,15 @@ export default function App() {
         </section>
       </main>
     );
+  }
+
+  const pathname = window.location.pathname;
+  if (pathname.startsWith("/i/")) {
+    const slug = decodeURIComponent(pathname.slice(4).split("/")[0] || "");
+    return <PublicInvitation client={client} slug={slug} />;
+  }
+  if (!session && pathname === "/templates") {
+    return <Marketplace client={client} userId={null} />;
   }
 
   if (recoveryMode) {
@@ -331,6 +342,8 @@ export default function App() {
             </p>
           </aside>
         </section>
+
+        <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />
 
         {isAdmin ? (
           <AdminDashboard client={client} isSuperAdmin={isSuperAdmin} />
