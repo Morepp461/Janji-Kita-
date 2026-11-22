@@ -1,7 +1,9 @@
 # Janji Kita
+
 Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini adalah panduan awal repository untuk developer dan operator.
 
 ## Status
+
 Dokumentasi baseline final v1.0. Dokumen spesifikasi:
 - `PRD.md`
 - `SYSTEM_ARCHITECTURE.md`
@@ -11,112 +13,112 @@ Dokumentasi baseline final v1.0. Dokumen spesifikasi:
 - `MONETIZATION_SPECIFICATION.md`
 - `DEVELOPMENT_ROADMAP.md`
 
-## Teknologi Baseline
+## Teknologi
+
 - Frontend: React + TypeScript + Vite + Tailwind CSS.
 - Backend/data: Supabase Auth + PostgreSQL + Storage + server-side Edge Functions/API.
 - Hosting web: Vercel.
 - Payment target: Midtrans.
-Teknologi/provider dapat berubah melalui keputusan engineering yang dicatat. Free tier diprioritaskan; batas dan biaya wajib diverifikasi sebelum production.
+
+Provider harus tetap dapat diganti. Free tier diprioritaskan; batas dan biaya wajib diverifikasi sebelum production.
 
 ## Prasyarat
-- Node.js versi LTS yang didukung proyek.
-- npm (atau package manager yang dikunci repository).
+
+- Node.js 22 LTS dan npm 10 atau lebih baru.
 - Git.
-- Akun Supabase untuk environment development/staging.
+- Docker Desktop/Engine untuk Supabase lokal.
+- Supabase CLI.
+- Akun Supabase untuk environment staging dan production.
 - Akun Vercel untuk preview/deployment.
 - Midtrans sandbox hanya saat mengerjakan modul pembayaran.
 
-## Instalasi
-1. Clone repository.
-2. Masuk ke folder proyek.
-3. Install dependency sesuai lockfile.
-4. Salin `.env.example` menjadi `.env.local`.
-5. Isi variabel development yang diperlukan.
-6. Jalankan migrasi database lokal/staging sesuai instruksi migration runner.
-7. Jalankan development server.
+## Instalasi aplikasi
 
-Contoh perintah umum (sesuaikan scripts aktual di `package.json`):
 ```bash
 git clone <repository-url>
 cd janji-kita
-npm ci
+nvm use
+npm install
 cp .env.example .env.local
 npm run dev
 ```
-Jangan membuat `.env.example` berisi credential asli. Jika repository memakai pnpm/yarn, ikuti lockfile dan README khusus package manager tersebut.
+
+Isi `.env.local` dengan URL dan anon/publishable key Supabase lokal atau environment yang dituju. Jangan masukkan credential server ke variabel browser.
 
 ## Environment Variables
-Nama variabel final harus disesuaikan dengan implementasi aktual. Pola yang disarankan:
+
+Variabel browser:
 ```env
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+VITE_APP_BASE_URL=http://localhost:5173
+```
+
+Variabel server hanya untuk runtime tepercaya:
+```env
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 MIDTRANS_SERVER_KEY=
 MIDTRANS_CLIENT_KEY=
 MIDTRANS_IS_PRODUCTION=false
-APP_BASE_URL=http://localhost:5173
 ```
-`SUPABASE_SERVICE_ROLE_KEY` dan `MIDTRANS_SERVER_KEY` hanya boleh berada di environment server/secret store. Jangan pernah memakai prefix `VITE_` untuk secret. Jangan commit `.env*` selain `.env.example`.
 
-## Database and Migrations
-- Gunakan migration SQL berurutan dan tersimpan di Git.
-- Terapkan ke development terlebih dahulu, lalu staging.
-- Jalankan RLS tests dan seed idempotent.
-- Production migration memerlukan backup, review, dan approval.
-- Jangan mengedit schema production secara manual tanpa migration.
+`SUPABASE_SERVICE_ROLE_KEY` dan `MIDTRANS_SERVER_KEY` tidak boleh berada di browser atau memakai prefix `VITE_`. Jangan commit file `.env*` selain `.env.example`.
 
-## Development Workflow
-1. Baca PRD dan dokumen spesifikasi terkait.
-2. Buat issue/task dengan acceptance criteria.
-3. Implementasikan satu vertical slice.
-4. Tambahkan unit/integration/RLS tests.
-5. Jalankan lint, typecheck, tests, dan build.
-6. Deploy preview.
-7. Uji Android mobile dan desktop.
-8. Update dokumentasi/changelog.
-9. Merge melalui pull request setelah review.
+## Supabase lokal
 
-## Testing
-Scripts yang disarankan:
 ```bash
+supabase start
+supabase status
+supabase db reset
+supabase test db
+supabase stop
+```
+
+Migration SQL disimpan berurutan di `supabase/migrations/`. Terapkan dan uji di local terlebih dahulu, lalu staging. Production migration memerlukan backup, review, dan approval. RLS tests wajib lulus di CI.
+
+## Quality checks
+
+```bash
+npm run format
+npm run format:check
 npm run lint
 npm run typecheck
-npm test
+npm run test:run
 npm run build
+npm run check
 ```
-Nama script harus mengikuti `package.json` aktual. Test minimum:
-- Auth dan authorization.
-- RLS cross-user isolation.
-- Invitation draft/versioning.
-- Renderer active/expired.
-- Price calculation.
-- Payment webhook signature/idempotency.
-- Collaborator limits.
-- Guest privacy, RSVP rate limits, QR duplicate check-in.
-- Mobile responsive smoke tests.
+
+CI menjalankan quality gates web dan database. Gunakan branch dan pull request; jangan push langsung ke `main`.
 
 ## Deployment
+
 ### Vercel
-1. Import repository ke Vercel.
-2. Atur build command/output sesuai project.
-3. Isi environment variables per environment.
-4. Hubungkan preview deployment untuk branch/PR.
-5. Production deploy hanya dari branch terlindungi setelah CI lulus.
+
+Workflow `.github/workflows/deploy.yml` menyiapkan:
+- Preview deployment untuk pull request.
+- Production deployment hanya untuk push ke `main`.
+- Production workflow menggunakan GitHub Environment `production`.
+
+Setelah project Vercel dibuat dan repository dihubungkan, tambahkan GitHub Actions secrets:
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+Workflow deployment akan dilewati selama secrets belum tersedia. Lindungi branch `main` dan wajibkan workflow CI sukses sebelum merge.
 
 ### Supabase
-- Pisahkan project development/staging/production.
-- Aktifkan RLS untuk seluruh tabel yang terekspos.
-- Simpan secrets di environment server.
-- Konfigurasikan Storage policies dan lifecycle cleanup.
-- Pastikan backup dan recovery tersedia.
+
+Buat project terpisah untuk staging dan production. Jangan arahkan staging ke database production. Setelah project tersedia, simpan URL dan anon key sebagai environment variables serta credential server sebagai secrets. Aktifkan backup/recovery dan verifikasi Storage policies sebelum production.
 
 ### Payment
+
 Gunakan Midtrans sandbox terlebih dahulu. Production payment hanya aktif setelah merchant approval, webhook HTTPS, signature verification, reconciliation, refund policy, dan end-to-end test lulus.
 
-## Security Checklist
+## Security checklist
+
 - [ ] Tidak ada secret di Git atau browser bundle.
-- [ ] RLS aktif dan diuji.
+- [ ] RLS aktif dan diuji untuk setiap tabel user-facing.
 - [ ] Semua privileged action server-side.
 - [ ] Upload divalidasi berdasarkan MIME/signature dan ukuran.
 - [ ] Rate limit auth, RSVP, guestbook, upload, checkout.
@@ -126,25 +128,21 @@ Gunakan Midtrans sandbox terlebih dahulu. Production payment hanya aktif setelah
 - [ ] Terms, privacy, consent, dan refund policy siap.
 
 ## Mobile-first QA
-Uji pada Android browser dengan lebar 360px dan ukuran umum lain:
+
+Uji Android browser pada lebar minimum 360px:
 - Landing, marketplace, login.
 - Dashboard dan form.
 - Editor dengan touch controls.
 - Checkout dan payment return.
 - Public invitation, RSVP, guestbook.
 - Guest manager dan check-in.
+
 Pastikan tidak ada horizontal overflow, tombol tertutup, atau kontrol terlalu kecil.
 
-## Cost Policy
-Domain adalah biaya awal yang direncanakan. Layanan lain harus memakai free tier jika memadai. Pantau kuota database, storage, bandwidth/egress, function execution, build minutes, email, dan gateway fee. Paid API/provider tidak boleh diaktifkan tanpa persetujuan pemilik. Free tier tidak boleh diasumsikan cukup untuk skala produksi tanpa pengujian.
+## Cost policy
 
-## Support and Operations
-Sediakan runbook untuk webhook tertunda, payment mismatch, invitation expired, upload gagal, restore version, user report, dan suspected abuse. Catat insiden tanpa menyimpan data sensitif berlebihan.
+Domain adalah biaya awal yang direncanakan. Layanan lain harus memakai free tier jika memadai. Pantau kuota database, storage, bandwidth/egress, function execution, build minutes, email, dan gateway fee. Paid API/provider tidak boleh diaktifkan tanpa persetujuan pemilik.
 
-## Source of Truth
-PRD menetapkan keputusan produk. Dokumen teknis menjelaskan implementasi. Jika ada konflik:
-1. Hentikan implementasi yang terdampak.
-2. Buat change request.
-3. Perbarui PRD terlebih dahulu jika keputusan produk berubah.
-4. Sinkronkan semua dokumen terkait.
-5. Baru lanjutkan coding.
+## Source of truth
+
+PRD menetapkan keputusan produk. Dokumen teknis menjelaskan implementasi. Jika ada konflik, hentikan implementasi yang terdampak, buat change request, perbarui PRD terlebih dahulu bila keputusan produk berubah, sinkronkan dokumen terkait, lalu lanjutkan coding.
