@@ -6,7 +6,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Fase 0: Fondasi Repository dan Infrastruktur**
 
-Status selesai sepenuhnya akan dicatat setelah seluruh kriteria penerimaan fase 0 terpenuhi, CI dan QA lulus, serta perubahan digabungkan ke cabang utama.
+Status penyelesaian fase dicatat pada bagian ini setelah seluruh kriteria penerimaan fase 0 terpenuhi, CI dan QA lulus, serta perubahan digabungkan ke cabang utama.
 
 ## Dokumentasi
 
