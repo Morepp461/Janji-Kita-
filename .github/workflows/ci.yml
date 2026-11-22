@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.sha }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -45,18 +45,16 @@ jobs:
       - name: Ambil kode sumber
         uses: actions/checkout@v4
       - name: Siapkan Supabase CLI
-        uses: supabase/setup-cli@v1
+        uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 3.0.0
       - name: Periksa perintah CLI
         run: |
           supabase --help
           supabase migration --help
           supabase db --help
-      - name: Validasi konfigurasi Supabase
-        run: supabase config validate
       - name: Jalankan basis data lokal
-        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,inbucket
       - name: Terapkan seluruh migrasi
         run: supabase db reset
       - name: Periksa basis data
