@@ -214,11 +214,6 @@ export default function App() {
 
   if (!session) return <AuthPage client={client} />;
 
-  const editorMatch = pathname.match(/^\/editor\/([0-9a-f-]+)\/?$/i);
-  if (editorMatch) {
-    return <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />;
-  }
-
   if (profile?.account_status === "suspended" || profile?.account_status === "closed") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fffaf6] px-5">
@@ -237,6 +232,11 @@ export default function App() {
         </section>
       </main>
     );
+  }
+
+  const editorMatch = pathname.match(/^\/editor\/([0-9a-f-]+)\/?$/i);
+  if (editorMatch) {
+    return <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />;
   }
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
