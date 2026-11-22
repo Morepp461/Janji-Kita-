@@ -70,8 +70,6 @@ $$;
 revoke all on function public.admin_set_user_role(uuid, text, text) from public, anon;
 grant execute on function public.admin_set_user_role(uuid, text, text) to authenticated;
 
-revoke all on function public.has_permission(text) from public, anon, authenticated;
-drop function public.has_permission(text);
 revoke all on function public.handle_new_auth_user() from public, anon, authenticated;
 revoke all on function public.write_admin_audit_log() from public, anon, authenticated;
 revoke all on function public.set_updated_at() from public, anon, authenticated;
@@ -90,6 +88,14 @@ drop policy if exists user_roles_read_admin on public.user_roles;
 create policy user_roles_read on public.user_roles
   for select to authenticated
   using (user_id = (select auth.uid()) or app_private.has_permission('roles.manage'));
+
+drop policy if exists audit_logs_read_admin on public.audit_logs;
+create policy audit_logs_read_admin on public.audit_logs
+  for select to authenticated
+  using (app_private.has_permission('audit.read'));
+
+revoke all on function public.has_permission(text) from public, anon, authenticated;
+drop function public.has_permission(text);
 
 drop policy if exists role_permissions_read_admin on public.role_permissions;
 create policy role_permissions_read_admin on public.role_permissions
