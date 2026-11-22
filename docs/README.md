@@ -8,7 +8,7 @@ Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi 
 - **Fase 0: selesai sepenuhnya.**
 - **Fase 1: selesai sepenuhnya pada Supabase staging.**
 - Checkpoint fase 1: [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10).
-- Seluruh CI fase 1 lulus: [hasil CI #70](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050010670) mencakup pemeriksaan web, migrasi, lint basis data, dan pgTAP.
+- Seluruh CI fase 1 lulus: [hasil CI #70](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050713033) mencakup pemeriksaan web, migrasi, lint basis data, dan pgTAP.
 - Fase 1 mencakup autentikasi, profil, role/permission, panel admin, kategori/gaya, feature flags, audit log, dan RLS.
 - Security Advisor staging setelah migrasi fase 1: tidak ada temuan keamanan.
 - Production belum dimigrasikan; ikuti release gate, backup/review, dan persetujuan pemilik sebelum rollout.
