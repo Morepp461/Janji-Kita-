@@ -1,4 +1,4 @@
--- Perbaikan Fase 3: satukan kebijakan INSERT aset untuk menghindari evaluasi ganda.
+-- Perbaikan Fase 3: satukan kebijakan INSERT aset agar hanya ada satu kebijakan permisif.
 drop policy if exists media_assets_admin_insert on public.media_assets;
 drop policy if exists media_assets_owner_insert on public.media_assets;
 
