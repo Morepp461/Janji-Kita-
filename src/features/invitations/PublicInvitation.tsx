@@ -4,7 +4,6 @@ import InvitationDocumentView from "./InvitationDocumentView";
 import { isInvitationDocument, type InvitationDocument } from "./document";
 
 type PublicInvitationData = {
-  id: string;
   slug: string;
   title: string;
   locale: string;
@@ -31,9 +30,11 @@ export default function PublicInvitation({
         setLoading(false);
         return;
       }
-      const { data, error: queryError } = await client.rpc("get_public_invitation", {
-        p_slug: slug,
-      });
+      const { data, error: queryError } = await client
+        .from("published_invitations")
+        .select("slug,title,locale,timezone,document")
+        .eq("slug", slug)
+        .maybeSingle();
       if (!active) return;
       if (queryError) setError("Undangan belum dapat ditampilkan.");
       else if (
