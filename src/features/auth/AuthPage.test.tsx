@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import AuthPage from "./AuthPage";
 
@@ -12,6 +12,10 @@ function makeClient() {
     },
   } as unknown as SupabaseClient;
 }
+
+afterEach(() => {
+  cleanup();
+});
 
 describe("AuthPage", () => {
   it("registers with display name, email, and password", async () => {
