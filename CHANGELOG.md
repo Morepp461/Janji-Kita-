@@ -1,14 +1,19 @@
-# Changelog
+# Catatan Perubahan
 
-## Unreleased
+## Belum Dirilis
 
-### Added
-- React, TypeScript, Vite, and Tailwind application foundation.
-- Local Supabase configuration and default-deny database baseline.
-- Structured client error logger that omits raw error messages.
-- Formatting, lint, typecheck, unit-test, build, and database CI workflows.
-- Optional Vercel preview/production deployment workflow, activated only after project secrets are configured.
-- Hosted Supabase foundation setup for separate staging and production projects.
+### Ditambahkan
+- Fondasi aplikasi React, TypeScript, Vite, dan Tailwind.
+- Konfigurasi Supabase lokal serta dasar keamanan basis data dengan akses ditolak secara default.
+- Pencatatan kesalahan terstruktur tanpa pesan kesalahan mentah.
+- Pemeriksaan format, lint, tipe, pengujian unit, build, dan CI basis data.
+- Pemisahan project Supabase staging dan production.
 
-### Security
-- Restricted direct API execution of the Supabase RLS auto-enable event-trigger function while preserving its internal event-trigger behavior.
+### Diubah
+- Deployment Vercel ditetapkan hanya untuk production dari cabang `main`.
+- Deployment preview dinonaktifkan sesuai kebijakan proyek.
+- README utama dan panduan pengembang ditulis dalam bahasa Indonesia.
+- Klien Supabase menggunakan publishable key dan tetap mendukung anon key lama untuk kompatibilitas.
+
+### Keamanan
+- Membatasi pemanggilan langsung fungsi event-trigger otomatis RLS Supabase tanpa menonaktifkan perilaku event-trigger internal.
