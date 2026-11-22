@@ -52,7 +52,11 @@ export default function AuthPage({ client }: AuthPageProps) {
   }
 
   const title =
-    mode === "register" ? "Buat akun Janji Kita" : mode === "forgot" ? "Pulihkan kata sandi" : "Masuk ke akun";
+    mode === "register"
+      ? "Buat akun Janji Kita"
+      : mode === "forgot"
+        ? "Pulihkan kata sandi"
+        : "Masuk ke akun";
   const submitLabel =
     mode === "register" ? "Daftar" : mode === "forgot" ? "Kirim tautan pemulihan" : "Masuk";
 
@@ -109,13 +113,17 @@ export default function AuthPage({ client }: AuthPageProps) {
                 value={password}
               />
               {mode === "register" && (
-                <span className="mt-1 block text-xs font-normal text-[#887970]">Minimal 8 karakter.</span>
+                <span className="mt-1 block text-xs font-normal text-[#887970]">
+                  Minimal 8 karakter.
+                </span>
               )}
             </label>
           )}
 
           {error && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-          {message && <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800">{message}</p>}
+          {message && (
+            <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-800">{message}</p>
+          )}
 
           <button
             className="w-full rounded-xl bg-[#754b3b] px-4 py-3 font-semibold text-white transition hover:bg-[#5d392d] disabled:cursor-not-allowed disabled:opacity-60"
@@ -129,7 +137,11 @@ export default function AuthPage({ client }: AuthPageProps) {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-sm text-[#765e52]">
           {mode === "login" ? (
             <>
-              <button className="underline underline-offset-4" onClick={() => setMode("forgot")} type="button">
+              <button
+                className="underline underline-offset-4"
+                onClick={() => setMode("forgot")}
+                type="button"
+              >
                 Lupa kata sandi?
               </button>
               <button className="font-semibold" onClick={() => setMode("register")} type="button">
@@ -137,7 +149,11 @@ export default function AuthPage({ client }: AuthPageProps) {
               </button>
             </>
           ) : (
-            <button className="font-semibold underline underline-offset-4" onClick={() => setMode("login")} type="button">
+            <button
+              className="font-semibold underline underline-offset-4"
+              onClick={() => setMode("login")}
+              type="button"
+            >
               Kembali ke masuk
             </button>
           )}

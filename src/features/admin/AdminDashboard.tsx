@@ -40,7 +40,9 @@ const catalogLabels: Record<CatalogKind, string> = {
 };
 
 export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardProps) {
-  const [tab, setTab] = useState<"categories" | "styles" | "flags" | "audit" | "roles">("categories");
+  const [tab, setTab] = useState<"categories" | "styles" | "flags" | "audit" | "roles">(
+    "categories",
+  );
   const [categories, setCategories] = useState<CatalogItem[]>([]);
   const [styles, setStyles] = useState<CatalogItem[]>([]);
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
@@ -62,10 +64,15 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
       client.from("categories").select("*").order("sort_order"),
       client.from("design_styles").select("*").order("sort_order"),
       client.from("feature_flags").select("*").order("key"),
-      client.from("audit_logs").select("id,action,target_type,target_id,created_at,actor_user_id").order("created_at", { ascending: false }).limit(30),
+      client
+        .from("audit_logs")
+        .select("id,action,target_type,target_id,created_at,actor_user_id")
+        .order("created_at", { ascending: false })
+        .limit(30),
     ]);
 
-    const firstError = categoryResult.error || styleResult.error || flagResult.error || auditResult.error;
+    const firstError =
+      categoryResult.error || styleResult.error || flagResult.error || auditResult.error;
     if (firstError) setError(firstError.message);
     setCategories((categoryResult.data || []) as CatalogItem[]);
     setStyles((styleResult.data || []) as CatalogItem[]);
@@ -79,7 +86,21 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
   }, [client]);
 
   function beginEdit(kind: CatalogKind, item?: CatalogItem) {
-    setEditing(item ? { kind, item } : { kind, item: { id: "", slug: "", name_i18n: {}, description_i18n: {}, sort_order: 0, is_active: true } });
+    setEditing(
+      item
+        ? { kind, item }
+        : {
+            kind,
+            item: {
+              id: "",
+              slug: "",
+              name_i18n: {},
+              description_i18n: {},
+              sort_order: 0,
+              is_active: true,
+            },
+          },
+    );
     setSlug(item?.slug || "");
     setName(item?.name_i18n?.["id-ID"] || "");
     setDescription(item?.description_i18n?.["id-ID"] || "");
@@ -156,23 +177,33 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
     <section className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a36d55]">Control center</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a36d55]">
+            Control center
+          </p>
           <h2 className="mt-1 text-2xl font-semibold">Administrasi</h2>
-          <p className="mt-1 text-sm text-[#76675f]">Akses mengikuti izin server dan setiap perubahan penting tercatat.</p>
+          <p className="mt-1 text-sm text-[#76675f]">
+            Akses mengikuti izin server dan setiap perubahan penting tercatat.
+          </p>
         </div>
-        <button className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]" onClick={() => void refresh()} type="button">
+        <button
+          className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]"
+          onClick={() => void refresh()}
+          type="button"
+        >
           Muat ulang
         </button>
       </div>
 
       <nav aria-label="Menu administrasi" className="flex gap-2 overflow-x-auto pb-1">
-        {([
-          ["categories", "Kategori"],
-          ["styles", "Gaya desain"],
-          ["flags", "Feature flags"],
-          ["audit", "Audit log"],
-          ...(isSuperAdmin ? [["roles", "Peran pengguna"]] : []),
-        ] as string[][]).map(([key, label]) => (
+        {(
+          [
+            ["categories", "Kategori"],
+            ["styles", "Gaya desain"],
+            ["flags", "Feature flags"],
+            ["audit", "Audit log"],
+            ...(isSuperAdmin ? [["roles", "Peran pengguna"]] : []),
+          ] as string[][]
+        ).map(([key, label]) => (
           <button
             aria-current={tab === key ? "page" : undefined}
             className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${tab === key ? "bg-[#754b3b] text-white" : "border border-[#ddcec3] text-[#765e52] hover:bg-[#f8f1eb]"}`}
@@ -185,52 +216,111 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
         ))}
       </nav>
 
-      {notice && <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">{notice}</p>}
+      {notice && (
+        <p className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">{notice}</p>
+      )}
       {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
       {(tab === "categories" || tab === "styles") && (
         <div className="rounded-2xl border border-[#eaded5] bg-white p-4 sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-3">
             <h3 className="font-semibold">{catalogLabels[catalogKind]}</h3>
-            <button className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white" onClick={() => beginEdit(catalogKind)} type="button">
+            <button
+              className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white"
+              onClick={() => beginEdit(catalogKind)}
+              type="button"
+            >
               Tambah
             </button>
           </div>
           {editing?.kind === catalogKind && (
-            <form className="mb-5 grid gap-3 rounded-xl bg-[#faf5f0] p-4 sm:grid-cols-2" onSubmit={saveCatalog}>
+            <form
+              className="mb-5 grid gap-3 rounded-xl bg-[#faf5f0] p-4 sm:grid-cols-2"
+              onSubmit={saveCatalog}
+            >
               <label className="text-sm font-medium">
                 Slug
-                <input className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2" onChange={(event) => setSlug(event.target.value)} pattern="[a-z0-9]+(-[a-z0-9]+)*" required value={slug} />
+                <input
+                  className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2"
+                  onChange={(event) => setSlug(event.target.value)}
+                  pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                  required
+                  value={slug}
+                />
               </label>
               <label className="text-sm font-medium">
                 Nama (Indonesia)
-                <input className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2" maxLength={100} onChange={(event) => setName(event.target.value)} required value={name} />
+                <input
+                  className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2"
+                  maxLength={100}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                  value={name}
+                />
               </label>
               <label className="text-sm font-medium sm:col-span-2">
                 Deskripsi
-                <textarea className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2" maxLength={500} onChange={(event) => setDescription(event.target.value)} rows={2} value={description} />
+                <textarea
+                  className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2"
+                  maxLength={500}
+                  onChange={(event) => setDescription(event.target.value)}
+                  rows={2}
+                  value={description}
+                />
               </label>
               <div className="flex gap-2 sm:col-span-2">
-                <button className="rounded-lg bg-[#754b3b] px-4 py-2 text-sm font-semibold text-white" type="submit">Simpan</button>
-                <button className="rounded-lg border border-[#ddcec3] px-4 py-2 text-sm" onClick={() => setEditing(null)} type="button">Batal</button>
+                <button
+                  className="rounded-lg bg-[#754b3b] px-4 py-2 text-sm font-semibold text-white"
+                  type="submit"
+                >
+                  Simpan
+                </button>
+                <button
+                  className="rounded-lg border border-[#ddcec3] px-4 py-2 text-sm"
+                  onClick={() => setEditing(null)}
+                  type="button"
+                >
+                  Batal
+                </button>
               </div>
             </form>
           )}
-          {loading ? <p className="py-8 text-sm text-[#887970]">Memuat data...</p> : (
+          {loading ? (
+            <p className="py-8 text-sm text-[#887970]">Memuat data...</p>
+          ) : (
             <div className="divide-y divide-[#f0e7e0]">
               {catalog.map((item) => (
-                <div className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between" key={item.id}>
+                <div
+                  className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  key={item.id}
+                >
                   <div>
                     <p className="font-medium">{item.name_i18n?.["id-ID"] || item.slug}</p>
-                    <p className="text-xs text-[#887970]">{item.slug} · {item.is_active ? "Aktif" : "Nonaktif"}</p>
+                    <p className="text-xs text-[#887970]">
+                      {item.slug} · {item.is_active ? "Aktif" : "Nonaktif"}
+                    </p>
                   </div>
                   <div className="flex gap-2">
-                    <button className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold" onClick={() => beginEdit(catalogKind, item)} type="button">Ubah</button>
-                    <button className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700" onClick={() => void deleteCatalog(catalogKind, item)} type="button">Hapus</button>
+                    <button
+                      className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+                      onClick={() => beginEdit(catalogKind, item)}
+                      type="button"
+                    >
+                      Ubah
+                    </button>
+                    <button
+                      className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700"
+                      onClick={() => void deleteCatalog(catalogKind, item)}
+                      type="button"
+                    >
+                      Hapus
+                    </button>
                   </div>
                 </div>
               ))}
-              {catalog.length === 0 && <p className="py-8 text-sm text-[#887970]">Belum ada data.</p>}
+              {catalog.length === 0 && (
+                <p className="py-8 text-sm text-[#887970]">Belum ada data.</p>
+              )}
             </div>
           )}
         </div>
@@ -239,33 +329,57 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
       {tab === "flags" && (
         <div className="rounded-2xl border border-[#eaded5] bg-white p-4 sm:p-6">
           <h3 className="mb-4 font-semibold">Feature flags</h3>
-          {loading ? <p className="py-8 text-sm text-[#887970]">Memuat data...</p> : flags.map((flag) => (
-            <div className="flex flex-col gap-3 border-b border-[#f0e7e0] py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between" key={flag.key}>
-              <div>
-                <p className="font-medium">{flag.key}</p>
-                <p className="text-xs text-[#887970]">{flag.is_public ? "Dapat dibaca publik" : "Internal"}</p>
+          {loading ? (
+            <p className="py-8 text-sm text-[#887970]">Memuat data...</p>
+          ) : (
+            flags.map((flag) => (
+              <div
+                className="flex flex-col gap-3 border-b border-[#f0e7e0] py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+                key={flag.key}
+              >
+                <div>
+                  <p className="font-medium">{flag.key}</p>
+                  <p className="text-xs text-[#887970]">
+                    {flag.is_public ? "Dapat dibaca publik" : "Internal"}
+                  </p>
+                </div>
+                <button
+                  aria-pressed={flag.enabled}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold ${flag.enabled ? "bg-green-100 text-green-800" : "bg-[#eee8e3] text-[#6f625a]"}`}
+                  onClick={() => void toggleFlag(flag)}
+                  type="button"
+                >
+                  {flag.enabled ? "Aktif" : "Nonaktif"}
+                </button>
               </div>
-              <button aria-pressed={flag.enabled} className={`rounded-full px-4 py-2 text-sm font-semibold ${flag.enabled ? "bg-green-100 text-green-800" : "bg-[#eee8e3] text-[#6f625a]"}`} onClick={() => void toggleFlag(flag)} type="button">
-                {flag.enabled ? "Aktif" : "Nonaktif"}
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
 
       {tab === "audit" && (
         <div className="rounded-2xl border border-[#eaded5] bg-white p-4 sm:p-6">
           <h3 className="mb-4 font-semibold">Riwayat aktivitas administratif</h3>
-          {loading ? <p className="py-8 text-sm text-[#887970]">Memuat data...</p> : (
+          {loading ? (
+            <p className="py-8 text-sm text-[#887970]">Memuat data...</p>
+          ) : (
             <div className="divide-y divide-[#f0e7e0]">
               {audit.map((entry) => (
                 <div className="py-3" key={entry.id}>
-                  <p className="text-sm font-semibold">{entry.action} · {entry.target_type}</p>
-                  <p className="mt-1 break-all text-xs text-[#887970]">{entry.target_id || "Tanpa ID target"} · {entry.actor_user_id || "Sistem"}</p>
-                  <time className="mt-1 block text-xs text-[#887970]" dateTime={entry.created_at}>{new Date(entry.created_at).toLocaleString("id-ID")}</time>
+                  <p className="text-sm font-semibold">
+                    {entry.action} · {entry.target_type}
+                  </p>
+                  <p className="mt-1 break-all text-xs text-[#887970]">
+                    {entry.target_id || "Tanpa ID target"} · {entry.actor_user_id || "Sistem"}
+                  </p>
+                  <time className="mt-1 block text-xs text-[#887970]" dateTime={entry.created_at}>
+                    {new Date(entry.created_at).toLocaleString("id-ID")}
+                  </time>
                 </div>
               ))}
-              {audit.length === 0 && <p className="py-8 text-sm text-[#887970]">Belum ada aktivitas.</p>}
+              {audit.length === 0 && (
+                <p className="py-8 text-sm text-[#887970]">Belum ada aktivitas.</p>
+              )}
             </div>
           )}
         </div>
@@ -274,21 +388,59 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
       {tab === "roles" && isSuperAdmin && (
         <div className="rounded-2xl border border-[#eaded5] bg-white p-4 sm:p-6">
           <h3 className="font-semibold">Kelola peran pengguna</h3>
-          <p className="mt-1 text-sm text-[#76675f]">Gunakan UUID pengguna dari Supabase Auth. Perubahan peran sendiri ditolak dan seluruh perubahan dicatat.</p>
+          <p className="mt-1 text-sm text-[#76675f]">
+            Gunakan UUID pengguna dari Supabase Auth. Perubahan peran sendiri ditolak dan seluruh
+            perubahan dicatat.
+          </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_180px]">
             <label className="text-sm font-medium sm:col-span-2">
               ID pengguna
-              <input className="mt-1 w-full rounded-lg border border-[#ddcec3] px-3 py-2" onChange={(event) => setRoleUserId(event.target.value)} placeholder="UUID pengguna" value={roleUserId} />
+              <input
+                className="mt-1 w-full rounded-lg border border-[#ddcec3] px-3 py-2"
+                onChange={(event) => setRoleUserId(event.target.value)}
+                placeholder="UUID pengguna"
+                value={roleUserId}
+              />
             </label>
             <label className="text-sm font-medium">
               Peran
-              <select className="mt-1 w-full rounded-lg border border-[#ddcec3] px-3 py-2" onChange={(event) => setRole(event.target.value)} value={role}>
-                {["user", "admin", "finance", "support", "moderator", "reseller", "super_admin"].map((value) => <option key={value} value={value}>{value}</option>)}
+              <select
+                className="mt-1 w-full rounded-lg border border-[#ddcec3] px-3 py-2"
+                onChange={(event) => setRole(event.target.value)}
+                value={role}
+              >
+                {[
+                  "user",
+                  "admin",
+                  "finance",
+                  "support",
+                  "moderator",
+                  "reseller",
+                  "super_admin",
+                ].map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
               </select>
             </label>
             <div className="flex items-end gap-2">
-              <button className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" disabled={!roleUserId.trim()} onClick={() => void changeRole("grant")} type="button">Berikan</button>
-              <button className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm disabled:opacity-50" disabled={!roleUserId.trim()} onClick={() => void changeRole("revoke")} type="button">Cabut</button>
+              <button
+                className="rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                disabled={!roleUserId.trim()}
+                onClick={() => void changeRole("grant")}
+                type="button"
+              >
+                Berikan
+              </button>
+              <button
+                className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm disabled:opacity-50"
+                disabled={!roleUserId.trim()}
+                onClick={() => void changeRole("revoke")}
+                type="button"
+              >
+                Cabut
+              </button>
             </div>
           </div>
         </div>

@@ -34,11 +34,14 @@ export default function App() {
       return;
     }
     let active = true;
-    client.auth.getSession().then(({ data }) => {
-      if (active) setSession(data.session);
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
+    client.auth
+      .getSession()
+      .then(({ data }) => {
+        if (active) setSession(data.session);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     const { data } = client.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
       if (event === "PASSWORD_RECOVERY") setRecoveryMode(true);
@@ -62,7 +65,11 @@ export default function App() {
     let active = true;
     async function loadIdentity() {
       const [profileResult, rolesResult] = await Promise.all([
-        client.from("profiles").select("id,display_name,phone,preferred_locale,timezone,account_status").eq("id", session.user.id).maybeSingle(),
+        client
+          .from("profiles")
+          .select("id,display_name,phone,preferred_locale,timezone,account_status")
+          .eq("id", session.user.id)
+          .maybeSingle(),
         client.from("user_roles").select("role").eq("user_id", session.user.id),
       ]);
       if (!active) return;
@@ -77,7 +84,9 @@ export default function App() {
       setRoles((rolesResult.data || []).map((item: { role: string }) => item.role));
     }
     void loadIdentity();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [client, session?.user.id]);
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -86,16 +95,29 @@ export default function App() {
     setSaving(true);
     setError("");
     setNotice("");
-    const { error: updateError } = await client.from("profiles").update({
-      display_name: profileName.trim(),
-      phone: phone.trim() || null,
-      preferred_locale: locale,
-      timezone,
-    }).eq("id", session.user.id);
+    const { error: updateError } = await client
+      .from("profiles")
+      .update({
+        display_name: profileName.trim(),
+        phone: phone.trim() || null,
+        preferred_locale: locale,
+        timezone,
+      })
+      .eq("id", session.user.id);
     if (updateError) setError(updateError.message);
     else {
       setNotice("Profil berhasil diperbarui.");
-      setProfile((current) => current ? { ...current, display_name: profileName.trim(), phone: phone.trim() || null, preferred_locale: locale, timezone } : current);
+      setProfile((current) =>
+        current
+          ? {
+              ...current,
+              display_name: profileName.trim(),
+              phone: phone.trim() || null,
+              preferred_locale: locale,
+              timezone,
+            }
+          : current,
+      );
     }
     setSaving(false);
   }
@@ -123,7 +145,10 @@ export default function App() {
         <section className="max-w-lg rounded-3xl border border-[#eaded5] bg-white p-8">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a36d55]">Janji Kita</p>
           <h1 className="mt-4 text-2xl font-semibold">Konfigurasi belum tersedia</h1>
-          <p className="mt-2 text-sm leading-6 text-[#76675f]">Isi VITE_SUPABASE_URL dan VITE_SUPABASE_PUBLISHABLE_KEY pada environment aplikasi untuk mengaktifkan autentikasi.</p>
+          <p className="mt-2 text-sm leading-6 text-[#76675f]">
+            Isi VITE_SUPABASE_URL dan VITE_SUPABASE_PUBLISHABLE_KEY pada environment aplikasi untuk
+            mengaktifkan autentikasi.
+          </p>
         </section>
       </main>
     );
@@ -132,22 +157,42 @@ export default function App() {
   if (recoveryMode) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fffaf6] px-4 py-10 text-[#30251f]">
-        <form className="w-full max-w-md rounded-3xl border border-[#eaded5] bg-white p-7" onSubmit={updatePassword}>
+        <form
+          className="w-full max-w-md rounded-3xl border border-[#eaded5] bg-white p-7"
+          onSubmit={updatePassword}
+        >
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a36d55]">Janji Kita</p>
           <h1 className="mt-4 text-2xl font-semibold">Atur kata sandi baru</h1>
           <label className="mt-6 block text-sm font-medium">
             Kata sandi baru
-            <input autoComplete="new-password" className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" minLength={8} name="new-password" required type="password" />
+            <input
+              autoComplete="new-password"
+              className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
+              minLength={8}
+              name="new-password"
+              required
+              type="password"
+            />
           </label>
           {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
-          <button className="mt-5 w-full rounded-xl bg-[#754b3b] px-4 py-3 font-semibold text-white disabled:opacity-60" disabled={saving} type="submit">Simpan kata sandi</button>
+          <button
+            className="mt-5 w-full rounded-xl bg-[#754b3b] px-4 py-3 font-semibold text-white disabled:opacity-60"
+            disabled={saving}
+            type="submit"
+          >
+            Simpan kata sandi
+          </button>
         </form>
       </main>
     );
   }
 
   if (loading) {
-    return <main className="flex min-h-screen items-center justify-center bg-[#fffaf6] text-sm text-[#76675f]">Memuat sesi...</main>;
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#fffaf6] text-sm text-[#76675f]">
+        Memuat sesi...
+      </main>
+    );
   }
 
   if (!session) return <AuthPage client={client} />;
@@ -157,8 +202,16 @@ export default function App() {
       <main className="flex min-h-screen items-center justify-center bg-[#fffaf6] px-5">
         <section className="max-w-md rounded-3xl border border-[#eaded5] bg-white p-8 text-center">
           <h1 className="text-2xl font-semibold">Akun tidak aktif</h1>
-          <p className="mt-2 text-sm text-[#76675f]">Akses akun ini sedang dibatasi. Hubungi dukungan Janji Kita.</p>
-          <button className="mt-5 rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold" onClick={() => void client.auth.signOut()} type="button">Keluar</button>
+          <p className="mt-2 text-sm text-[#76675f]">
+            Akses akun ini sedang dibatasi. Hubungi dukungan Janji Kita.
+          </p>
+          <button
+            className="mt-5 rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold"
+            onClick={() => void client.auth.signOut()}
+            type="button"
+          >
+            Keluar
+          </button>
         </section>
       </main>
     );
@@ -172,47 +225,85 @@ export default function App() {
       <div className="mx-auto max-w-6xl space-y-8">
         <header className="flex flex-col gap-4 border-b border-[#eaded5] pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a36d55]">Janji Kita</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a36d55]">
+              Janji Kita
+            </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Ruang kerja</h1>
             <p className="mt-1 text-sm text-[#76675f]">{session.user.email}</p>
           </div>
-          <button className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-white" onClick={() => void client.auth.signOut()} type="button">Keluar</button>
+          <button
+            className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-white"
+            onClick={() => void client.auth.signOut()}
+            type="button"
+          >
+            Keluar
+          </button>
         </header>
 
         {(notice || error) && (
-          <p className={`rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{error || notice}</p>
+          <p
+            className={`rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}
+          >
+            {error || notice}
+          </p>
         )}
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="rounded-3xl border border-[#eaded5] bg-white p-5 sm:p-7">
             <h2 className="text-xl font-semibold">Profil akun</h2>
-            <p className="mt-1 text-sm text-[#76675f]">Informasi dasar akun dan preferensi tampilan.</p>
+            <p className="mt-1 text-sm text-[#76675f]">
+              Informasi dasar akun dan preferensi tampilan.
+            </p>
             <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={saveProfile}>
               <label className="text-sm font-medium sm:col-span-2">
                 Nama tampilan
-                <input className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" maxLength={80} onChange={(event) => setProfileName(event.target.value)} required value={profileName} />
+                <input
+                  className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
+                  maxLength={80}
+                  onChange={(event) => setProfileName(event.target.value)}
+                  required
+                  value={profileName}
+                />
               </label>
               <label className="text-sm font-medium">
                 Nomor telepon
-                <input className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" onChange={(event) => setPhone(event.target.value)} value={phone} />
+                <input
+                  className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
+                  onChange={(event) => setPhone(event.target.value)}
+                  value={phone}
+                />
               </label>
               <label className="text-sm font-medium">
                 Bahasa dashboard
-                <select className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" onChange={(event) => setLocale(event.target.value)} value={locale}>
+                <select
+                  className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
+                  onChange={(event) => setLocale(event.target.value)}
+                  value={locale}
+                >
                   <option value="id-ID">Bahasa Indonesia</option>
                   <option value="en">English</option>
                 </select>
               </label>
               <label className="text-sm font-medium sm:col-span-2">
                 Zona waktu
-                <select className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" onChange={(event) => setTimezone(event.target.value)} value={timezone}>
+                <select
+                  className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
+                  onChange={(event) => setTimezone(event.target.value)}
+                  value={timezone}
+                >
                   <option value="Asia/Jakarta">WIB · Asia/Jakarta</option>
                   <option value="Asia/Makassar">WITA · Asia/Makassar</option>
                   <option value="Asia/Jayapura">WIT · Asia/Jayapura</option>
                 </select>
               </label>
               <div className="sm:col-span-2">
-                <button className="rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60" disabled={saving} type="submit">{saving ? "Menyimpan..." : "Simpan profil"}</button>
+                <button
+                  className="rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  disabled={saving}
+                  type="submit"
+                >
+                  {saving ? "Menyimpan..." : "Simpan profil"}
+                </button>
               </div>
             </form>
           </div>
@@ -220,11 +311,22 @@ export default function App() {
           <aside className="rounded-3xl border border-[#eaded5] bg-white p-5 sm:p-7">
             <h2 className="text-xl font-semibold">Akun & sesi</h2>
             <dl className="mt-5 space-y-4 text-sm">
-              <div><dt className="text-[#887970]">Status</dt><dd className="mt-1 font-semibold">{profile?.account_status || "Memuat"}</dd></div>
-              <div><dt className="text-[#887970]">Peran</dt><dd className="mt-1 font-semibold">{roles.join(", ") || "user"}</dd></div>
-              <div><dt className="text-[#887970]">Sesi</dt><dd className="mt-1 font-semibold">Aktif pada perangkat ini</dd></div>
+              <div>
+                <dt className="text-[#887970]">Status</dt>
+                <dd className="mt-1 font-semibold">{profile?.account_status || "Memuat"}</dd>
+              </div>
+              <div>
+                <dt className="text-[#887970]">Peran</dt>
+                <dd className="mt-1 font-semibold">{roles.join(", ") || "user"}</dd>
+              </div>
+              <div>
+                <dt className="text-[#887970]">Sesi</dt>
+                <dd className="mt-1 font-semibold">Aktif pada perangkat ini</dd>
+              </div>
             </dl>
-            <p className="mt-5 text-xs leading-5 text-[#887970]">Sesi dikelola oleh Supabase Auth. Tombol keluar mengakhiri sesi saat ini.</p>
+            <p className="mt-5 text-xs leading-5 text-[#887970]">
+              Sesi dikelola oleh Supabase Auth. Tombol keluar mengakhiri sesi saat ini.
+            </p>
           </aside>
         </section>
 
@@ -233,7 +335,10 @@ export default function App() {
         ) : (
           <section className="rounded-3xl border border-[#eaded5] bg-white p-5 sm:p-7">
             <h2 className="text-xl font-semibold">Ruang administrasi</h2>
-            <p className="mt-2 text-sm text-[#76675f]">Akses admin tidak diberikan pada akun ini. Peran ditentukan di server dan tidak dapat diubah dari browser.</p>
+            <p className="mt-2 text-sm text-[#76675f]">
+              Akses admin tidak diberikan pada akun ini. Peran ditentukan di server dan tidak dapat
+              diubah dari browser.
+            </p>
           </section>
         )}
       </div>
