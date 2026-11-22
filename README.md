@@ -16,7 +16,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 - Migrasi fase 1 diterapkan pada Supabase staging; 8 kategori dan 10 gaya desain awal tersedia.
 - Seluruh tabel fase 1 memakai RLS. Security Advisor staging tidak menemukan temuan keamanan.
 - Pengujian pgTAP mencakup isolasi profil/peran antar pengguna, hak akses, dan pembatasan fungsi RPC.
-- Seluruh pemeriksaan CI lulus: format, lint, tipe, pengujian unit, build, migrasi lokal, lint basis data, dan pgTAP ([hasil CI #70](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050010670)).
+- Seluruh pemeriksaan CI lulus: format, lint, tipe, pengujian unit, build, migrasi lokal, lint basis data, dan pgTAP ([hasil CI #70](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050713033)).
 - Implementasi tersedia pada [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10).
 
 **Batas penerapan:** Fase 1 dinyatakan selesai pada staging. Supabase production belum menerima migrasi fase 1. PR belum digabung ke `main` karena Vercel hanya menerapkan perubahan dari `main`; penggabungan sebelum migrasi production siap akan merilis aplikasi yang membutuhkan skema basis data yang belum tersedia. Migrasi production memerlukan pencadangan, peninjauan, dan persetujuan rilis. Penerapan preview Vercel tetap nonaktif.
