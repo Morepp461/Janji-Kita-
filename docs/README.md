@@ -95,10 +95,10 @@ CI menjalankan quality gates web dan database. Gunakan branch dan pull request; 
 
 ### Vercel
 
-Workflow `.github/workflows/deploy.yml` menyiapkan:
-- Preview deployment untuk pull request.
-- Production deployment hanya untuk push ke `main`.
-- Production workflow menggunakan GitHub Environment `production`.
+Workflow `.github/workflows/ci.yml` menyiapkan:
+- Preview deployment untuk pull request setelah web dan database checks lulus.
+- Production deployment hanya untuk push ke `main` setelah seluruh CI lulus.
+- Production deployment memakai GitHub Environment `production`.
 
 Setelah project Vercel dibuat dan repository dihubungkan, tambahkan GitHub Actions secrets:
 - `VERCEL_TOKEN`
