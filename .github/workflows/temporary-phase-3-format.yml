@@ -1,0 +1,39 @@
+name: Temporary Phase 3 formatting
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Pasang dependensi
+        run: npm ci --no-audit --no-fund
+      - name: Format kode sumber
+        run: npm run format
+      - name: Simpan hasil format
+        run: |
+          if git diff --quiet; then
+            echo "Tidak ada perubahan format."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          git commit -m "style: format implementasi editor fase 3"
+          git push origin "HEAD:${{ github.head_ref }}"
