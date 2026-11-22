@@ -28,7 +28,12 @@ type Draft = {
   updated_at: string;
 };
 
-type Props = { client: SupabaseClient | null; userId: string | null; isAdmin?: boolean; initialTemplateSlug?: string };
+type Props = {
+  client: SupabaseClient | null;
+  userId: string | null;
+  isAdmin?: boolean;
+  initialTemplateSlug?: string;
+};
 
 const currency = (amount: number, code: string) =>
   new Intl.NumberFormat("id-ID", {
@@ -37,7 +42,12 @@ const currency = (amount: number, code: string) =>
     maximumFractionDigits: 0,
   }).format(amount);
 
-export default function Marketplace({ client, userId, isAdmin = false, initialTemplateSlug }: Props) {
+export default function Marketplace({
+  client,
+  userId,
+  isAdmin = false,
+  initialTemplateSlug,
+}: Props) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [categories, setCategories] = useState<CatalogItem[]>([]);
   const [styles, setStyles] = useState<CatalogItem[]>([]);
@@ -165,21 +175,24 @@ export default function Marketplace({ client, userId, isAdmin = false, initialTe
     setVisibleCount(12);
   }, [search, categoryFilter, styleFilter, sortOrder]);
 
-  const openTemplate = useCallback(async (template: Template) => {
-    setSelectedTemplate(template);
-    setSelectedDocument(null);
-    setNewTitle(template.title);
-    setError("");
-    if (!client || !template.current_version_id) return;
-    const { data, error: versionError } = await client
-      .from("template_versions")
-      .select("document")
-      .eq("id", template.current_version_id)
-      .maybeSingle();
-    if (versionError) setError(versionError.message);
-    else if (data && isInvitationDocument(data.document)) setSelectedDocument(data.document);
-    else setError("Versi template tidak memakai skema dokumen yang didukung.");
-  }, [client]);
+  const openTemplate = useCallback(
+    async (template: Template) => {
+      setSelectedTemplate(template);
+      setSelectedDocument(null);
+      setNewTitle(template.title);
+      setError("");
+      if (!client || !template.current_version_id) return;
+      const { data, error: versionError } = await client
+        .from("template_versions")
+        .select("document")
+        .eq("id", template.current_version_id)
+        .maybeSingle();
+      if (versionError) setError(versionError.message);
+      else if (data && isInvitationDocument(data.document)) setSelectedDocument(data.document);
+      else setError("Versi template tidak memakai skema dokumen yang didukung.");
+    },
+    [client],
+  );
 
   useEffect(() => {
     if (!initialTemplateSlug || loading) return;
@@ -807,7 +820,9 @@ export default function Marketplace({ client, userId, isAdmin = false, initialTe
                   </button>
                 </div>
               </div>
-              <div className={`mx-auto transition-all ${previewViewport === "mobile" ? "max-w-sm" : "max-w-3xl"}`}>
+              <div
+                className={`mx-auto transition-all ${previewViewport === "mobile" ? "max-w-sm" : "max-w-3xl"}`}
+              >
                 {selectedDocument ? (
                   <InvitationDocumentView document={selectedDocument} client={client} />
                 ) : (
