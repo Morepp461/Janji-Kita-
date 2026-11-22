@@ -93,7 +93,7 @@ supabase test db
 supabase stop
 ```
 
-Migrasi berada di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Uji migrasi pada lingkungan lokal terlebih dahulu, lalu terapkan ke staging. Production harus menggunakan project Supabase terpisah dan hanya menerima migrasi yang sudah ditinjau serta disetujui.
+Migrasi berada di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Uji migrasi pada lingkungan lokal terlebih dahulu, lalu terapkan ke staging. Production harus menggunakan project Supabase terpisah dan hanya menerima migrasi yang sudah ditinjau serta disetujui. Backup/restore wajib dilakukan kecuali pemilik memberikan pengecualian tertulis untuk rilis tertentu; pengecualian harus mencatat alasan, inventaris data, risiko yang diterima, dan rencana recovery. Pengecualian Fase 2 pada 23 November 2026 tercatat di `docs/DEVELOPMENT_ROADMAP.md`.
 
 ## Pemeriksaan kualitas
 
