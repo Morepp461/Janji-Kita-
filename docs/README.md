@@ -1,10 +1,15 @@
 # Janji Kita
 
-Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini adalah panduan awal repository untuk developer dan operator.
+Platform SaaS untuk membuat dan mengelola undangan digital. Dokumen ini menjadi panduan bagi pengembang dan operator repository.
 
-## Status
+## Status proyek
 
-Dokumentasi baseline final v1.0. Dokumen spesifikasi:
+- Versi dokumentasi dasar: 1.0.
+- **Fase 0: selesai sepenuhnya** setelah seluruh kriteria penerimaan, pengujian, pemeriksaan rilis, dan penggabungan ke cabang utama terpenuhi.
+- Kebijakan deployment: production saja. Deployment preview dinonaktifkan.
+
+## Dokumen spesifikasi
+
 - `PRD.md`
 - `SYSTEM_ARCHITECTURE.md`
 - `DATABASE_SCHEMA.md`
@@ -15,46 +20,50 @@ Dokumentasi baseline final v1.0. Dokumen spesifikasi:
 
 ## Teknologi
 
-- Frontend: React + TypeScript + Vite + Tailwind CSS.
-- Backend/data: Supabase Auth + PostgreSQL + Storage + server-side Edge Functions/API.
-- Hosting web: Vercel.
-- Payment target: Midtrans.
+- Aplikasi web: React, TypeScript, Vite, dan Tailwind CSS.
+- Backend dan data: Supabase Auth, PostgreSQL, Storage, serta Edge Functions/API sisi server.
+- Hosting: Vercel.
+- Target gateway pembayaran: Midtrans.
 
-Provider harus tetap dapat diganti. Free tier diprioritaskan; batas dan biaya wajib diverifikasi sebelum production.
+Provider harus tetap dapat diganti. Paket gratis diprioritaskan, tetapi batas kapasitas dan biaya harus diperiksa sebelum production.
 
-## Prasyarat
+## Persyaratan pengembangan
 
-- Node.js 22 LTS dan npm 10 atau lebih baru.
+- Node.js 22.12.x.
+- npm 10 atau lebih baru.
 - Git.
 - Docker Desktop/Engine untuk Supabase lokal.
 - Supabase CLI.
-- Akun Supabase untuk environment staging dan production.
-- Akun Vercel untuk preview/deployment.
-- Midtrans sandbox hanya saat mengerjakan modul pembayaran.
+- Project Supabase staging dan production yang terpisah.
+- Project Vercel untuk deployment production.
 
 ## Instalasi aplikasi
 
 ```bash
-git clone <repository-url>
-cd janji-kita
+git clone <alamat-repository>
+cd Janji-Kita-
 nvm use
 npm ci
 cp .env.example .env.local
 npm run dev
 ```
 
-Isi `.env.local` dengan URL dan anon/publishable key Supabase lokal atau environment yang dituju. Jangan masukkan credential server ke variabel browser.
+Isi `.env.local` dengan URL dan publishable key Supabase untuk lingkungan yang digunakan. Jangan masukkan kredensial server ke variabel yang dikirim ke browser.
 
-## Environment Variables
+## Variabel lingkungan
 
-Variabel browser:
+Kredensial browser:
+
 ```env
 VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
+VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_APP_BASE_URL=http://localhost:5173
 ```
 
-Variabel server hanya untuk runtime tepercaya:
+`VITE_SUPABASE_ANON_KEY` masih didukung untuk kompatibilitas, tetapi penggunaan publishable key diutamakan.
+
+Kredensial server hanya untuk runtime tepercaya:
+
 ```env
 SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
@@ -63,7 +72,7 @@ MIDTRANS_CLIENT_KEY=
 MIDTRANS_IS_PRODUCTION=false
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` dan `MIDTRANS_SERVER_KEY` tidak boleh berada di browser atau memakai prefix `VITE_`. Jangan commit file `.env*` selain `.env.example`.
+`SUPABASE_SERVICE_ROLE_KEY` dan `MIDTRANS_SERVER_KEY` tidak boleh berada di browser atau memakai awalan `VITE_`. Jangan commit file `.env*` selain `.env.example`.
 
 ## Supabase lokal
 
@@ -75,9 +84,9 @@ supabase test db
 supabase stop
 ```
 
-Migration SQL disimpan berurutan di `supabase/migrations/`. Terapkan dan uji di local terlebih dahulu, lalu staging. Production migration memerlukan backup, review, dan approval. RLS tests wajib lulus di CI.
+File migrasi SQL disimpan berurutan di `supabase/migrations/`. Buat dan uji migrasi pada lingkungan lokal terlebih dahulu, kemudian terapkan ke staging. Migrasi production memerlukan peninjauan, rencana pencadangan, dan persetujuan. Pengujian RLS wajib lulus di CI.
 
-## Quality checks
+## Pemeriksaan kualitas
 
 ```bash
 npm run format
@@ -89,60 +98,65 @@ npm run build
 npm run check
 ```
 
-CI menjalankan quality gates web dan database. Gunakan branch dan pull request; jangan push langsung ke `main`.
+CI menjalankan pemeriksaan kualitas aplikasi web dan basis data. Gunakan cabang kerja dan pull request. Jangan mendorong perubahan langsung ke `main`.
 
-## Deployment
+## Deployment production saja
 
-### Vercel
+Workflow `.github/workflows/ci.yml` menjalankan:
 
-Workflow `.github/workflows/ci.yml` menyiapkan:
-- Preview deployment untuk pull request setelah web dan database checks lulus.
-- Production deployment hanya untuk push ke `main` setelah seluruh CI lulus.
-- Production deployment memakai GitHub Environment `production`.
+- Pemeriksaan kualitas web pada pull request dan push ke `main`.
+- Pengujian migrasi dan RLS menggunakan Supabase lokal pada pull request dan push ke `main`.
+- Deployment Vercel production hanya setelah push ke `main` dan seluruh pemeriksaan CI lulus.
 
-Setelah project Vercel dibuat dan repository dihubungkan, tambahkan GitHub Actions secrets:
+Deployment preview tidak digunakan dan harus tetap dinonaktifkan pada pengaturan project Vercel.
+
+Tambahkan GitHub Actions secrets berikut untuk mengaktifkan deployment otomatis:
+
 - `VERCEL_TOKEN`
 - `VERCEL_ORG_ID`
 - `VERCEL_PROJECT_ID`
 
-Workflow deployment akan dilewati selama secrets belum tersedia. Lindungi branch `main` dan wajibkan workflow CI sukses sebelum merge.
+Deployment akan dilewati apabila salah satu rahasia belum tersedia. Lindungi cabang `main` dan wajibkan pemeriksaan CI berhasil sebelum penggabungan.
 
-### Supabase
+## Lingkungan Supabase
 
-Buat project terpisah untuk staging dan production. Jangan arahkan staging ke database production. Setelah project tersedia, simpan URL dan anon key sebagai environment variables serta credential server sebagai secrets. Aktifkan backup/recovery dan verifikasi Storage policies sebelum production.
+Gunakan project terpisah untuk staging dan production. Jangan arahkan staging ke basis data production. Simpan URL dan publishable key sebagai variabel lingkungan yang sesuai. Kredensial server hanya boleh disimpan sebagai rahasia runtime tepercaya.
 
-### Payment
+Aktifkan pencadangan/pemulihan dan verifikasi kebijakan Storage sebelum production.
 
-Gunakan Midtrans sandbox terlebih dahulu. Production payment hanya aktif setelah merchant approval, webhook HTTPS, signature verification, reconciliation, refund policy, dan end-to-end test lulus.
+## Pembayaran
 
-## Security checklist
+Gunakan Midtrans sandbox saat mengembangkan modul pembayaran. Pembayaran sungguhan hanya boleh diaktifkan setelah persetujuan merchant, endpoint webhook HTTPS, verifikasi tanda tangan, rekonsiliasi, kebijakan pengembalian dana, dan pengujian menyeluruh lulus.
 
-- [ ] Tidak ada secret di Git atau browser bundle.
-- [ ] RLS aktif dan diuji untuk setiap tabel user-facing.
-- [ ] Semua privileged action server-side.
-- [ ] Upload divalidasi berdasarkan MIME/signature dan ukuran.
-- [ ] Rate limit auth, RSVP, guestbook, upload, checkout.
-- [ ] Webhook signature diverifikasi dan idempotent.
-- [ ] Audit log untuk admin, payment, consent, role, publish.
-- [ ] Backup/restore diuji.
-- [ ] Terms, privacy, consent, dan refund policy siap.
+## Daftar periksa keamanan
 
-## Mobile-first QA
+- [ ] Tidak ada rahasia di Git atau bundel browser.
+- [ ] RLS aktif dan diuji untuk setiap tabel yang dapat diakses pengguna.
+- [ ] Semua operasi dengan hak istimewa dilakukan di sisi server.
+- [ ] Unggahan divalidasi berdasarkan MIME/tanda tangan dan ukuran.
+- [ ] Pembatasan laju diterapkan pada autentikasi, RSVP, buku tamu, unggahan, dan checkout.
+- [ ] Tanda tangan webhook diverifikasi dan pemrosesannya idempoten.
+- [ ] Aktivitas admin, pembayaran, persetujuan, perubahan peran, dan publikasi tercatat.
+- [ ] Pencadangan dan pemulihan sudah diuji.
+- [ ] Syarat layanan, privasi, persetujuan, dan kebijakan pengembalian dana siap.
 
-Uji Android browser pada lebar minimum 360px:
-- Landing, marketplace, login.
-- Dashboard dan form.
-- Editor dengan touch controls.
-- Checkout dan payment return.
-- Public invitation, RSVP, guestbook.
-- Guest manager dan check-in.
+## QA mobile-first
 
-Pastikan tidak ada horizontal overflow, tombol tertutup, atau kontrol terlalu kecil.
+Uji peramban Android dengan lebar minimum 360 piksel:
 
-## Cost policy
+- Halaman awal, marketplace, dan login.
+- Dashboard dan formulir.
+- Editor dengan kontrol sentuh.
+- Checkout dan pengembalian dari pembayaran.
+- Undangan publik, RSVP, dan buku tamu.
+- Pengelola tamu dan check-in.
 
-Domain adalah biaya awal yang direncanakan. Layanan lain harus memakai free tier jika memadai. Pantau kuota database, storage, bandwidth/egress, function execution, build minutes, email, dan gateway fee. Paid API/provider tidak boleh diaktifkan tanpa persetujuan pemilik.
+Pastikan tidak ada luapan horizontal, tombol tertutup, atau kontrol terlalu kecil.
 
-## Source of truth
+## Kebijakan biaya
 
-PRD menetapkan keputusan produk. Dokumen teknis menjelaskan implementasi. Jika ada konflik, hentikan implementasi yang terdampak, buat change request, perbarui PRD terlebih dahulu bila keputusan produk berubah, sinkronkan dokumen terkait, lalu lanjutkan coding.
+Domain merupakan biaya awal yang direncanakan. Layanan lain harus menggunakan paket gratis jika memadai. Pantau kuota basis data, penyimpanan, bandwidth/egress, eksekusi fungsi, waktu build, email, dan biaya gateway. Provider berbayar tidak boleh diaktifkan tanpa persetujuan pemilik.
+
+## Sumber kebenaran
+
+PRD menetapkan keputusan produk. Dokumen teknis menjelaskan implementasi. Jika terjadi konflik, hentikan implementasi yang terdampak, buat permintaan perubahan, perbarui PRD terlebih dahulu jika keputusan produk berubah, selaraskan dokumen terkait, lalu lanjutkan pengembangan.
