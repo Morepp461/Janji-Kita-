@@ -129,12 +129,6 @@ select throws_ok(
   'Versi template tidak dapat diubah; terbitkan versi baru',
   'versi template yang telah dibuat bersifat immutable'
 );
-select throws_ok(
-  'update public.invitation_versions set document = ''{}''::jsonb where id = ''00000000-0000-0000-0000-000000000203''::uuid',
-  '55000',
-  'Versi yang sudah dipublikasikan bersifat permanen',
-  'versi undangan yang telah diterbitkan bersifat immutable'
-);
 
 update public.invitations
 set slug = 'phase2-draft-smoke-test'
@@ -183,6 +177,12 @@ select ok(
       and v.state = 'published'
   ),
   'fixture versi terbit berhasil dibuat'
+);
+select throws_ok(
+  'update public.invitation_versions set document = ''{}''::jsonb where id = ''00000000-0000-0000-0000-000000000203''::uuid',
+  '55000',
+  'Versi yang sudah dipublikasikan bersifat permanen',
+  'versi undangan yang telah diterbitkan bersifat immutable'
 );
 
 set local role anon;
