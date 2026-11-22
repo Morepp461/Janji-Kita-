@@ -1,0 +1,30 @@
+name: Format Fase 2
+on:
+  push:
+    branches:
+      - feat/phase-2-marketplace-invitation-core
+permissions:
+  contents: write
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --no-audit --no-fund
+      - run: npx prettier --write "src/**/*.{ts,tsx,css}"
+      - name: Simpan format
+        run: |
+          if git diff --quiet; then
+            echo "Tidak ada perubahan format."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          git commit -m "Format implementasi fase 2"
+          git push origin HEAD:${{ github.ref_name }}
