@@ -36,7 +36,7 @@ async function optimizeImage(file: File): Promise<{ file: File; width: number; h
 
 function readDuration(file: File, kind: "audio" | "video"): Promise<number> {
   return new Promise((resolve, reject) => {
-    const media = document.createElement(kind);
+    const media: HTMLMediaElement = kind === "audio" ? document.createElement("audio") : document.createElement("video");
     const url = URL.createObjectURL(file);
     media.preload = "metadata";
     media.onloadedmetadata = () => {
@@ -140,7 +140,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       if (rawRecovery) {
         try {
           const parsed = JSON.parse(rawRecovery) as { snapshot: Snapshot; updatedAt: string };
-          if (parsed.updatedAt === invitation.updated_at && isInvitationDocument(parsed.snapshot.document)) setRecovery(parsed.snapshot);
+          if (isInvitationDocument(parsed.snapshot.document)) setRecovery(parsed.snapshot);
         } catch {
           localStorage.removeItem(RECOVERY_PREFIX + invitationId);
         }
@@ -387,7 +387,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           </div>
           <div className="mt-3 rounded-xl border border-[#eaded5] bg-white p-3"><h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-[#887970]">Lapisan</h3><div className="max-h-52 space-y-1 overflow-y-auto">{layers.map(({ node, depth }) => renderLayer(node, depth))}</div></div>
           {(message || saveState === "conflict" || saveState === "error") && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-xs text-red-700">{message || "Draft berubah di perangkat lain. Muat ulang untuk mengambil versi terbaru sebelum melanjutkan."}</p>}
-          {recovery && <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm"><p className="font-semibold">Ada perubahan lokal yang belum tersimpan.</p><p className="mt-1 text-xs">Pulihkan perubahan dari perangkat ini?</p><button onClick={restoreRecovery} className="mt-2 rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white">Pulihkan perubahan</button><button onClick={() => { localStorage.removeItem(RECOVERY_PREFIX + invitationId); setRecovery(null); }} className="ml-2 text-xs underline">Abaikan</button></div>}
+          {recovery && <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm"><p className="font-semibold">Ada perubahan lokal yang belum tersimpan.</p><p className="mt-1 text-xs">Pulihkan perubahan dari perangkat ini? Jika versi server juga berubah, tindakan ini akan mengganti isi draft server.</p><button onClick={restoreRecovery} className="mt-2 rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white">Pulihkan perubahan lokal</button><button onClick={() => { localStorage.removeItem(RECOVERY_PREFIX + invitationId); setRecovery(null); }} className="ml-2 text-xs underline">Abaikan</button></div>}
         </section>
 
         <aside className="order-3 border-t border-[#eaded5] bg-white p-3 lg:border-l lg:border-t-0">
