@@ -1,5 +1,5 @@
 begin;
-select plan(32);
+select plan(36);
 
 select has_table('public', 'templates', 'tabel template tersedia');
 select has_table('public', 'template_versions', 'tabel versi template tersedia');
@@ -50,45 +50,101 @@ select lives_ok(
   )$phase2$,
   'pengguna dapat membuat draft dari kanvas kosong'
 );
+insert into public.templates (
+  id, slug, title, category_id, style_id, description, base_price, status, created_by
+) values (
+  '00000000-0000-0000-0000-000000000204',
+  'phase2-snapshot-template',
+  'Template Snapshot',
+  (select id from public.categories order by sort_order limit 1),
+  (select id from public.design_styles order by sort_order limit 1),
+  'Template untuk uji snapshot versi.',
+  0,
+  'draft',
+  '00000000-0000-0000-0000-000000000201'
+);
+insert into public.template_versions (
+  id, template_id, version_no, schema_version, document, created_by
+) values (
+  '00000000-0000-0000-0000-000000000205',
+  '00000000-0000-0000-0000-000000000204',
+  1, 1, '{"schemaVersion":1,"pages":[],"revision":"v1"}'::jsonb,
+  '00000000-0000-0000-0000-000000000201'
+);
+update public.templates
+set current_version_id = '00000000-0000-0000-0000-000000000205',
+    status = 'published'
+where id = '00000000-0000-0000-0000-000000000204';
+
+set local role authenticated;
+select lives_ok(
+  $phase2$select public.create_invitation_draft(
+    'Draft dari template fase 2',
+    (select id from public.categories order by sort_order limit 1),
+    '00000000-0000-0000-0000-000000000204'
+  )$phase2$,
+  'pengguna dapat membuat draft dari template terbit'
+);
 reset role;
+
+insert into public.template_versions (
+  id, template_id, version_no, schema_version, document, created_by
+) values (
+  '00000000-0000-0000-0000-000000000206',
+  '00000000-0000-0000-0000-000000000204',
+  2, 1, '{"schemaVersion":1,"pages":[],"revision":"v2"}'::jsonb,
+  '00000000-0000-0000-0000-000000000201'
+);
+update public.templates
+set current_version_id = '00000000-0000-0000-0000-000000000206'
+where id = '00000000-0000-0000-0000-000000000204';
+
+select is(
+  (select v.document->>'revision'
+   from public.invitation_versions v
+   join public.invitations i on i.draft_version_id = v.id
+   where i.title = 'Draft dari template fase 2'),
+  'v1',
+  'perubahan versi template tidak mengubah snapshot draft lama'
+);
+select is(
+  (select v.document->>'revision'
+   from public.template_versions v
+   join public.templates t on t.current_version_id = v.id
+   where t.id = '00000000-0000-0000-0000-000000000204'),
+  'v2',
+  'template menunjuk ke versi terbaru'
+);
 
 update public.invitations
 set slug = 'phase2-draft-smoke-test'
 where title = 'Draft fase 2' and status = 'draft';
 
-with new_invitation as (
-  insert into public.invitations (
-    owner_user_id, created_by, title, event_category_id, status
-  )
-  values (
-    '00000000-0000-0000-0000-000000000201',
-    '00000000-0000-0000-0000-000000000201',
-    'Undangan terbit untuk pengujian',
-    (select id from public.categories order by sort_order limit 1),
-    'draft'
-  )
-  returning id
-),
-new_version as (
-  insert into public.invitation_versions (
-    invitation_id, version_no, schema_version, document, state, created_by
-  )
-  select
-    id, 1, 1,
-    '{"schemaVersion":1,"pages":[]}'::jsonb,
-    'published',
-    '00000000-0000-0000-0000-000000000201'
-  from new_invitation
-  returning id, invitation_id
-)
-update public.invitations i
+insert into public.invitations (
+  id, owner_user_id, created_by, title, event_category_id, status
+) values (
+  '00000000-0000-0000-0000-000000000202',
+  '00000000-0000-0000-0000-000000000201',
+  '00000000-0000-0000-0000-000000000201',
+  'Undangan terbit untuk pengujian',
+  (select id from public.categories order by sort_order limit 1),
+  'draft'
+);
+insert into public.invitation_versions (
+  id, invitation_id, version_no, schema_version, document, state, created_by
+) values (
+  '00000000-0000-0000-0000-000000000203',
+  '00000000-0000-0000-0000-000000000202',
+  1, 1, '{"schemaVersion":1,"pages":[]}'::jsonb, 'published',
+  '00000000-0000-0000-0000-000000000201'
+);
+update public.invitations
 set status = 'active',
     slug = 'phase2-active-smoke-test',
     active_from = now() - interval '1 hour',
     active_until = now() + interval '1 hour',
-    published_version_id = v.id
-from new_version v
-where i.id = v.invitation_id;
+    published_version_id = '00000000-0000-0000-0000-000000000203'
+where id = '00000000-0000-0000-0000-000000000202';
 
 select ok(
   exists (
