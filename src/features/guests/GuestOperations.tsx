@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createQrSvg } from "../../lib/qr";
 import { exportGuestsCsv, parseGuestCsv, type GuestCsvIssue, type GuestCsvRow } from "./guestCsv";
@@ -26,6 +26,8 @@ type GuestbookEntry = {
 
 type TicketPreview = { guestName: string; ticketCode: string; token: string };
 type GuestStats = { total: number; confirmed: number; declined: number; pending: number; checkedIn: number };
+type BarcodeDetectorLike = { detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue?: string }>> };
+type BarcodeDetectorConstructor = new (options: { formats: string[] }) => BarcodeDetectorLike;
 
 const token = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(12));
@@ -57,7 +59,7 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
   const [ticket, setTicket] = useState<TicketPreview | null>(null);
   const [personalLink, setPersonalLink] = useState("");
   const [checkinToken, setCheckinToken] = useState("");
-  const [checkinResult, setCheckinResult] = useState<{ status: string; guest_name?: string } | null>(null);
+  const [checkinResult, setCheckinResult] = useState<{ status: string; guest_name?: string } | null>(null);\n  const [scanning, setScanning] = useState(false);\n  const [scannerMessage, setScannerMessage] = useState("");\n  const videoRef = useRef<HTMLVideoElement | null>(null);\n  const streamRef = useRef<MediaStream | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -164,6 +166,56 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
       await refresh();
     }
   }
+
+  async function startScanner() {
+    const Detector = (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector;
+    if (!Detector) {
+      setScannerMessage("Pemindaian kamera QR belum didukung browser ini. Gunakan kolom token atau check-in manual.");
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setScannerMessage("Akses kamera tidak tersedia. Gunakan kolom token atau check-in manual.");
+      return;
+    }
+    let stream: MediaStream | null = null;
+    try {
+      setScannerMessage("");
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } } });
+      streamRef.current = stream;
+      setScanning(true);
+      const video = videoRef.current;
+      if (!video) throw new Error("Tampilan kamera belum siap.");
+      video.srcObject = stream;
+      await video.play();
+      const detector = new Detector({ formats: ["qr_code"] });
+      while (stream.active && streamRef.current === stream) {
+        const results = await detector.detect(video);
+        const scanned = results.find((result) => result.rawValue)?.rawValue;
+        if (scanned) {
+          setCheckinToken(scanned);
+          await checkIn(scanned);
+          break;
+        }
+        await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+      }
+    } catch (scanError) {
+      setScannerMessage(scanError instanceof Error ? scanError.message : "Kamera tidak dapat digunakan.");
+    } finally {
+      stream?.getTracks().forEach((track) => track.stop());
+      if (streamRef.current === stream) streamRef.current = null;
+      setScanning(false);
+    }
+  }
+
+  function stopScanner() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    setScanning(false);
+  }
+
+  useEffect(() => () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+  }, []);
 
   async function manualCheckIn(guest: Guest) {
     const { data, error: rpcError } = await client.rpc("check_in_guest_manually", {
@@ -306,6 +358,12 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
             <input value={checkinToken} onChange={(e) => setCheckinToken(e.target.value)} placeholder="Token dari QR tiket" className="min-w-0 flex-1 rounded-xl border border-[#ddcec3] px-3 py-3"/>
             <button className="rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white">Validasi & check-in</button>
           </form>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" onClick={() => void startScanner()} disabled={scanning} className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold disabled:opacity-50">{scanning ? "Memindai QR..." : "Buka kamera pemindai QR"}</button>
+            {scanning && <button type="button" onClick={stopScanner} className="rounded-xl border border-red-200 px-4 py-2 text-sm text-red-700">Hentikan kamera</button>}
+          </div>
+          {scanning && <video ref={videoRef} muted playsInline className="mt-3 aspect-video w-full max-w-lg rounded-xl bg-black object-cover" />}
+          {scannerMessage && <p className="mt-2 text-sm text-[#76675f]">{scannerMessage}</p>}
           {checkinResult && <p className="mt-3 text-sm">{checkinResult.status === "checked_in" ? "Check-in berhasil" : checkinResult.status === "duplicate" ? "Tiket sudah digunakan" : "Tiket tidak valid"}</p>}
           <h3 className="mt-6 font-semibold">Check-in manual</h3>
           <div className="mt-2 divide-y divide-[#f0e8e2]">{guests.filter((guest) => guest.status !== "checked_in").map((guest) => <div key={guest.id} className="flex items-center justify-between gap-3 py-3"><span className="text-sm">{guest.display_name}</span><button onClick={() => void manualCheckIn(guest)} className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold">Tandai hadir</button></div>)}</div>
