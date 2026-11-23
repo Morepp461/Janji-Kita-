@@ -929,3 +929,10 @@ $$;
 create trigger invitations_apply_owner_localization
   before insert on public.invitations
   for each row execute function public.apply_owner_localization_on_invitation_insert();
+
+
+-- Trigger helpers are not RPC endpoints.
+revoke all on function public.audit_phase7_admin_change() from public, anon, authenticated;
+revoke all on function public.validate_localization_preferences() from public, anon, authenticated;
+revoke all on function public.apply_default_locale_on_profile_insert() from public, anon, authenticated;
+revoke all on function public.apply_owner_localization_on_invitation_insert() from public, anon, authenticated;
