@@ -42,10 +42,10 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000501',true);
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000501","role":"authenticated"}',true);
 insert into public.guests(id,invitation_id,display_name,email,plus_one_allowed,personalized_token_hash)
-select '00000000-0000-0000-0000-000000000503',id,'Tamu Fase Lima','guest@example.test',true,'personal-token-hash-phase5'
+select '00000000-0000-0000-0000-000000000503',id,'Tamu Fase Lima','guest@example.test',true,repeat('a',64)
 from public.invitations where title='Undangan Operasi Tamu';
 insert into public.guests(id,invitation_id,display_name,personalized_token_hash)
-select '00000000-0000-0000-0000-000000000504',id,'Tamu Manual','personal-token-hash-manual'
+select '00000000-0000-0000-0000-000000000504',id,'Tamu Manual',repeat('c',64)
 from public.invitations where title='Undangan Operasi Tamu';
 select is((select count(*) from public.guests),2::bigint,'pemilik dapat membaca daftar tamu miliknya');
 select throws_ok(
@@ -55,26 +55,26 @@ select throws_ok(
   'pemilik tidak dapat menambah tamu ke undangan pengguna lain'
 );
 
-select lives_ok($q$select public.submit_guest_rsvp('personal-token-hash-phase5','yes',2,'{"meal":"vegetarian"}'::jsonb)$q$,'tamu dapat mengirim RSVP dan plus-one');
+select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',2,'{"meal":"vegetarian"}'::jsonb)$q$,'tamu dapat mengirim RSVP dan plus-one');
 select is((select response from public.rsvps r join public.guests g on g.id=r.guest_id where g.display_name='Tamu Fase Lima'),'yes','jawaban RSVP tersimpan');
 select is((select attendee_count from public.rsvps r join public.guests g on g.id=r.guest_id where g.display_name='Tamu Fase Lima'),2,'jumlah kehadiran tersimpan');
 select is((select status from public.guests where display_name='Tamu Fase Lima'),'responded','status tamu berubah setelah RSVP');
 
-select lives_ok($q$select public.submit_guestbook_entry('personal-token-hash-phase5','Selamat menempuh hidup baru!')$q$,'tamu dapat mengirim ucapan');
+select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Selamat menempuh hidup baru!')$q$,'tamu dapat mengirim ucapan');
 select is((select moderation_status from public.guestbook_entries limit 1),'pending','ucapan menunggu moderasi');
-select lives_ok($q$select public.submit_guestbook_entry('personal-token-hash-phase5','Ucapan kedua')$q$,'ucapan kedua diterima');
-select lives_ok($q$select public.submit_guestbook_entry('personal-token-hash-phase5','Ucapan ketiga')$q$,'ucapan ketiga diterima');
+select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan kedua')$q$,'ucapan kedua diterima');
+select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan ketiga')$q$,'ucapan ketiga diterima');
 select throws_ok(
-  $q$select public.submit_guestbook_entry('personal-token-hash-phase5','Ucapan keempat')$q$,
+  $q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan keempat')$q$,
   'P0001','Terlalu banyak pengiriman ucapan. Coba lagi nanti.',
   'rate limit guestbook mencegah spam'
 );
 
-select lives_ok($q$select public.issue_guest_ticket('00000000-0000-0000-0000-000000000503','ticket-token-hash-phase5')$q$,'pemilik menerbitkan tiket');
+select lives_ok($q$select public.issue_guest_ticket('00000000-0000-0000-0000-000000000503',repeat('b',64))$q$,'pemilik menerbitkan tiket');
 select is((select count(*) from public.tickets where guest_id='00000000-0000-0000-0000-000000000503'),1::bigint,'satu tiket diterbitkan per tamu');
 select is((select length(ticket_code) from public.tickets where guest_id='00000000-0000-0000-0000-000000000503'),12,'kode tiket acak dibuat');
-select is((public.check_in_ticket('ticket-token-hash-phase5')->>'status'),'checked_in','tiket valid dapat check-in');
-select is((public.check_in_ticket('ticket-token-hash-phase5')->>'status'),'duplicate','tiket yang sama ditolak sebagai duplikat');
+select is((public.check_in_ticket(repeat('b',64))->>'status'),'checked_in','tiket valid dapat check-in');
+select is((public.check_in_ticket(repeat('b',64))->>'status'),'duplicate','tiket yang sama ditolak sebagai duplikat');
 select is((select count(*) from public.checkins where ticket_id=(select id from public.tickets where guest_id='00000000-0000-0000-0000-000000000503')),1::bigint,'check-in hanya tercatat sekali');
 select is((select status from public.guests where id='00000000-0000-0000-0000-000000000503'),'checked_in','status tamu diperbarui');
 select is((public.check_in_guest_manually('00000000-0000-0000-0000-000000000504')->>'status'),'checked_in','check-in manual tersedia');
