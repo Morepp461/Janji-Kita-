@@ -13,8 +13,9 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 | Fase 4 — Commerce dan publikasi | **Selesai sepenuhnya di staging dan production** |
 | Fase 5 — Operasi tamu | **Selesai sepenuhnya di staging dan production** |
 | Fase 6 — Kolaborasi, Premium, dan Reseller | **Selesai sepenuhnya di staging dan production** |
+| Fase 7 — Operasional admin, analitik, dan lokalisasi | **Selesai sepenuhnya di staging dan production** |
 
-**Checkpoint dokumentasi:** 23 November 2026. Fase 6 telah diterapkan dan diverifikasi pada Supabase staging, Supabase production, serta Vercel production.
+**Checkpoint dokumentasi:** 23 November 2026. Fase 7 telah diterapkan dan diverifikasi pada Supabase staging, Supabase production, serta Vercel production. Implementasi Fase 0–6 tetap menjadi checkpoint sebelumnya.
 
 ### Fase 1 — Identitas dan administrasi
 
@@ -94,6 +95,22 @@ Ruang lingkup implementasi:
 - Penerapan Vercel production berstatus **SIAP** pada commit yang sama: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
 **Fase 6 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi staging/production, pengujian akses, dan penerapan production telah selesai. Konfigurasi harga dan penyedia pembayaran Premium sengaja tetap nonaktif sampai admin menyelesaikan persetujuan komersial.
+
+### Fase 7 — Operasional admin, analitik, dan lokalisasi
+
+- Pusat operasional admin menyediakan ringkasan analitik agregat, moderasi template, pemeriksaan dan persetujuan penggunaan desain pelanggan, inventaris media, pengelolaan locale/zona waktu, pengaturan sistem, serta audit log.
+- Template baru dan versi baru tetap berstatus draft. Template yang berasal dari desain pelanggan tidak dapat dipublikasikan tanpa persetujuan aktif yang terhubung ke undangan sumber dan telah disetujui moderator.
+- Checkout menyediakan persetujuan penggunaan desain pelanggan yang bersifat opsional dan tidak dicentang otomatis. Pemilik dapat melihat riwayat dan menarik persetujuan; template terkait diarsipkan ketika persetujuan ditarik atau ditolak.
+- Analitik hanya menerima nama peristiwa dan label rute yang diizinkan. ID undangan, slug, kontak tamu, isi dokumen, dan data pribadi tidak disimpan sebagai properti analitik.
+- Preferensi bahasa dashboard terpisah dari locale dan zona waktu undangan. Pilihan locale/zona waktu divalidasi di server, tersedia untuk renderer publik, dan menjadi nilai bawaan untuk profil/undangan baru.
+- Implementasi RPC berprivilege dipindahkan ke skema privat `app_private`. RPC yang terekspos berjalan sebagai `SECURITY INVOKER`; helper privat tetap memeriksa identitas pemanggil dan permission. RLS aktif pada tabel fase ini.
+- Empat migrasi Fase 7 diterapkan pada Supabase staging dan production. Kedua lingkungan memiliki dua locale aktif dengan satu locale default, satu katalog zona waktu publik, serta seluruh helper RPC privat tidak dapat dieksekusi oleh peran anon.
+- Data awal fase ini tetap kosong: belum ada catatan consent atau peristiwa analitik. Data pemilik yang sudah ada tidak dihapus atau diubah.
+- CI lulus seluruh pemeriksaan format, lint, TypeScript, unit test, build production, migrasi lokal, database lint, dan **318 pengujian pgTAP lintas fase**: [CI run #45117350630](https://github.com/Morepp461/Janji-Kita-/actions/runs/45117350630).
+- [PR #23](https://github.com/Morepp461/Janji-Kita-/pull/23) digabung ke `main` pada commit `fdae3b5169aefd8fc911821f4dd4432e02c57ee4`.
+- Vercel production berstatus **SIAP** pada commit tersebut: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+
+**Fase 7 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi dan verifikasi Supabase staging/production, serta deployment Vercel production telah selesai. Fase 7 menjadi checkpoint terbaru proyek.
 
 ## Keputusan dan catatan operasional
 
