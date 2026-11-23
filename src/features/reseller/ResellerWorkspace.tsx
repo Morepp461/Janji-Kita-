@@ -108,9 +108,14 @@ export default function ResellerWorkspace({
         client.from("reseller_price_rules").select("*").order("valid_from", { ascending: false }),
         client.from("templates").select("id,title").eq("status", "published").order("title"),
         client.from("add_ons").select("id,code,name_i18n").eq("is_active", true).order("code"),
-        client.from("categories").select("id,slug,name_i18n").eq("is_active", true).order("sort_order"),
+        client
+          .from("categories")
+          .select("id,slug,name_i18n")
+          .eq("is_active", true)
+          .order("sort_order"),
       ]);
-      const catalogError = ruleResult.error || templateResult.error || addOnResult.error || categoryResult.error;
+      const catalogError =
+        ruleResult.error || templateResult.error || addOnResult.error || categoryResult.error;
       if (catalogError) setError(catalogError.message);
       setPriceRules((ruleResult.data || []) as PriceRule[]);
       setTemplates((templateResult.data || []) as CatalogOption[]);
@@ -167,7 +172,6 @@ export default function ResellerWorkspace({
     }
     setSaving(false);
   }
-
 
   async function createInvitationForClient(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

@@ -89,7 +89,8 @@ export default function CheckoutPage({
     ]);
     if (invitationResult.error || !invitationResult.data) {
       setError(
-        invitationResult.error?.message || "Undangan tidak ditemukan atau akun ini tidak memiliki akses.",
+        invitationResult.error?.message ||
+          "Undangan tidak ditemukan atau akun ini tidak memiliki akses.",
       );
     } else {
       setInvitation(invitationResult.data as Invitation);

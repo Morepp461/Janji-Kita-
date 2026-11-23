@@ -160,7 +160,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setLoading(true);
       const { data: invitation, error: invitationError } = await client
         .from("invitations")
-        .select("id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id,reseller_user_id")
+        .select(
+          "id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id,reseller_user_id",
+        )
         .eq("id", invitationId)
         .maybeSingle();
       if (!active) return;
