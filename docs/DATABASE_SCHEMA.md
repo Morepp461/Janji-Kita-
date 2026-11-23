@@ -213,7 +213,7 @@ Index `(invitation_id,sort_order)`.
 ### `seating_assignments`
 - `id uuid PK`, `invitation_id uuid FK invitations ON DELETE CASCADE`, `guest_id uuid FK guests ON DELETE CASCADE`
 - `seating_table_id uuid FK seating_tables ON DELETE CASCADE`, `seat_label text NULL` (maks. 40 karakter).
-- Unique `(invitation_id,guest_id)`; indeks untuk `invitation_id`, `guest_id`, dan foreign key `seating_table_id`.
+- Unique `(invitation_id,guest_id)`; indeks query `(invitation_id,seating_table_id)` serta indeks komposit foreign key `(guest_id,invitation_id)` dan `(seating_table_id,invitation_id)`.
 - Trigger memastikan tamu dan meja berasal dari undangan yang sama, mencegah kapasitas terlampaui secara transaksional, dan menolak pengurangan kapasitas di bawah jumlah penempatan aktif.
 - RLS hanya mengizinkan pemilik undangan membaca dan mengelola penempatan.
 
