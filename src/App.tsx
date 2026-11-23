@@ -140,16 +140,16 @@ export default function App() {
     const eventName = pathname.startsWith("/i/")
       ? "invitation_view"
       : pathname.startsWith("/admin")
-      ? "admin_view"
-      : pathname.startsWith("/editor/")
-        ? "editor_view"
-        : pathname.startsWith("/checkout/")
-          ? "checkout_view"
-          : pathname === "/templates" || pathname.startsWith("/templates/")
-            ? "marketplace_view"
-            : pathname === "/settings/consents"
-              ? "consent_settings_view"
-              : "dashboard_view";
+        ? "admin_view"
+        : pathname.startsWith("/editor/")
+          ? "editor_view"
+          : pathname.startsWith("/checkout/")
+            ? "checkout_view"
+            : pathname === "/templates" || pathname.startsWith("/templates/")
+              ? "marketplace_view"
+              : pathname === "/settings/consents"
+                ? "consent_settings_view"
+                : "dashboard_view";
     const analyticsRoute = pathname.startsWith("/editor/")
       ? "/editor/:id"
       : pathname.startsWith("/checkout/")
