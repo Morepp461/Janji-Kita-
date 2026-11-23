@@ -214,6 +214,38 @@ export default function ResellerWorkspace({
     setSaving(false);
   }
 
+  async function archiveClient(clientId: string) {
+    setSaving(true);
+    setError("");
+    setNotice("");
+    const { error: updateError } = await client
+      .from("reseller_clients")
+      .update({ status: "archived", updated_at: new Date().toISOString() })
+      .eq("id", clientId);
+    if (updateError) setError(updateError.message);
+    else {
+      setNotice("Klien diarsipkan.");
+      await refresh();
+    }
+    setSaving(false);
+  }
+
+  async function deactivateRule(ruleId: string) {
+    setSaving(true);
+    setError("");
+    setNotice("");
+    const { error: updateError } = await client
+      .from("reseller_price_rules")
+      .update({ valid_until: new Date().toISOString() })
+      .eq("id", ruleId);
+    if (updateError) setError(updateError.message);
+    else {
+      setNotice("Aturan harga dinonaktifkan.");
+      await refresh();
+    }
+    setSaving(false);
+  }
+
   async function savePriceRule(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!ruleReference) {
