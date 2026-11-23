@@ -37,7 +37,8 @@ Deno.serve(async (request: Request) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}") as Record<string, string>;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? secretKeys.default;
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
     if (!supabaseUrl || !serviceRoleKey || !serverKey) {
       console.error("Konfigurasi webhook pembayaran belum lengkap.");
