@@ -135,13 +135,42 @@
 
 **Catatan operasional:** paket Premium tetap nonaktif tanpa harga dan penyedia pembayaran yang disetujui admin. Implementasi adapter langganan selesai, tetapi penjualan langganan otomatis belum dibuka.
 
-## 9. Phase 7 — Admin, Analytics, and Localization
-**Dependencies:** core modules.
-- Complete admin configuration surfaces.
-- Template moderation and marketplace consent workflow.
-- Analytics and audit dashboards.
-- Locale and timezone management.
-**Done when:** admin can manage operational content without code for supported fields; consent traceable; locale switching works on dashboard and invitation.
+## 9. Fase 7 — Operasional Admin, Analitik, dan Lokalisasi
+
+**STATUS: SELESAI SEPENUHNYA PADA STAGING DAN PRODUCTION — 23 NOVEMBER 2026.**
+
+**Checkpoint rilis:** [PR #23 digabung](https://github.com/Morepp461/Janji-Kita-/pull/23) ke `main` pada commit `fdae3b5169aefd8fc911821f4dd4432e02c57ee4`. **CI:** [run #45117350630 lulus seluruh job](https://github.com/Morepp461/Janji-Kita-/actions/runs/45117350630), termasuk 318 pengujian pgTAP lintas fase. **Vercel production:** [READY](https://janji-kita-morepp.vercel.app) pada commit yang sama.
+
+**Ketergantungan:** fondasi admin dan permission Fase 1, marketplace/editor Fase 2–3, commerce dan consent checkout Fase 4, serta operasi tamu Fase 5.
+
+### Implementasi dan verifikasi
+
+- Pusat admin menyediakan ringkasan analitik agregat, moderasi template, antrean persetujuan marketplace, inventaris media, katalog locale/zona waktu, pengaturan sistem, dan audit log.
+- Template baru dan versi baru dibuat sebagai draft. Template bersumber dari desain pelanggan harus memiliki persetujuan aktif yang terhubung ke undangan sumber dan disetujui moderator sebelum dapat dipublikasikan.
+- Checkout menyediakan persetujuan penggunaan desain pelanggan yang opsional dan tidak dicentang otomatis. Pemilik dapat membaca riwayat dan menarik persetujuan. Template terkait diarsipkan saat persetujuan ditarik atau ditolak.
+- Analitik memakai allowlist peristiwa dan label rute. ID undangan, slug, kontak tamu, isi dokumen, dan data pribadi tidak diterima sebagai properti analitik.
+- Preferensi bahasa dashboard terpisah dari locale dan zona waktu undangan. Pilihan divalidasi di server; undangan baru mewarisi preferensi pemilik, dan renderer publik menggunakan locale/zona waktu undangan.
+- Helper berprivilege berada di skema privat `app_private`; RPC yang terekspos berjalan sebagai `SECURITY INVOKER`. Pemeriksaan permission/ownership tetap dilakukan pada implementasi privat.
+- RLS aktif pada tabel consent, analitik, locale, pengaturan sistem, template, dan media. Peran anon tidak dapat menjalankan helper analitik privat atau RPC admin.
+- Empat migrasi Fase 7 diterapkan pada Supabase staging dan production:
+  - Staging: `20261123051019`, `20261123051844`, `20261123051921`, `20261123052434`.
+  - Production: `20261123052117`, `20261123052120`, `20261123052123`, `20261123052436`.
+- Kedua lingkungan diverifikasi memiliki dua locale aktif dan tepat satu locale default, satu katalog zona waktu publik, serta batas eksekusi RPC privat yang sesuai. Data awal fase ini tetap kosong: belum ada catatan consent atau peristiwa analitik.
+- Security Advisor tidak menunjukkan temuan baru dari RPC Fase 7. Peringatan yang tetap tercatat merupakan temuan lintas fase yang telah ada, termasuk proteksi kata sandi bocor yang belum diaktifkan dan RPC `SECURITY DEFINER` yang memang diperlukan untuk operasi tamu/kolaborasi/commerce.
+- CI lulus format, lint, typecheck, unit test, build production, seluruh migrasi lokal, database lint, dan 318 pengujian pgTAP: [run #45117350630](https://github.com/Morepp461/Janji-Kita-/actions/runs/45117350630).
+
+### Kriteria selesai — seluruhnya terpenuhi
+
+- Admin dapat mengelola konten operasional yang didukung tanpa perubahan kode.
+- Template bersumber dari desain pelanggan tidak dapat dipublikasikan tanpa persetujuan yang aktif dan disetujui.
+- Riwayat persetujuan dapat ditelusuri dan pencabutan memblokir penggunaan lanjutan serta mengarsipkan template terkait.
+- Analitik menyimpan hanya peristiwa dan label rute yang diizinkan tanpa data pribadi.
+- Bahasa dashboard dan locale/zona waktu undangan bekerja secara terpisah pada editor serta renderer publik.
+- RLS, batas eksekusi RPC, migrasi, dan pengujian regresi lulus pada pipeline CI.
+- Migrasi diterapkan dan diverifikasi pada Supabase staging serta production.
+- PR #23 telah digabung dan Vercel production berstatus READY pada commit rilis.
+
+**Checkpoint fase:** implementasi, QA, CI, migrasi staging/production, verifikasi keamanan, dan deployment production selesai sepenuhnya. Fase 7 menjadi checkpoint terbaru proyek.
 
 ## 10. Phase 8 — Advanced Imports and Experience
 **Dependencies:** stable editor and asset pipeline.
