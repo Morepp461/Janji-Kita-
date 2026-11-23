@@ -24,6 +24,7 @@ type SeatingTable = { id: string; label: string; capacity: number; sort_order: n
 type SeatingAssignment = { guest_id: string; seating_table_id: string; seat_label: string | null };
 type ImportReport = {
   source: string;
+  format: string;
   status: "imported" | "preview_only" | "unsupported" | "rejected";
   editableObjects: number;
   flattenedElements: number;
@@ -179,6 +180,7 @@ export default function PhaseEightPanel({
     const compatibility = classifyImport(file.name);
     const report: ImportReport = {
       source: file.name,
+      format: compatibility.label,
       status: "unsupported",
       editableObjects: 0,
       flattenedElements: 0,
@@ -466,6 +468,7 @@ export default function PhaseEightPanel({
                           {report.status.replace("_", " ")}
                         </span>
                       </div>
+                      <p className="mt-1 text-[#76675f]">Format sumber: {report.format}</p>
                       <p className="mt-2">
                         Objek editable: {report.editableObjects} · Diratakan:{" "}
                         {report.flattenedElements} · Dilewati: {report.skippedElements}
