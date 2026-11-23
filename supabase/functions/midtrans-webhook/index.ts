@@ -84,6 +84,9 @@ Deno.serve(async (request: Request) => {
       return json({ error: "Nominal transaksi tidak cocok." }, 400);
     }
 
+    const refundAmount = verified.refund_amount == null
+      ? null
+      : Math.round(Number.parseFloat(String(verified.refund_amount)));
     const eventKey = [
       String(verified.transaction_id ?? orderId),
       String(verified.status_code ?? statusCode),
@@ -99,6 +102,7 @@ Deno.serve(async (request: Request) => {
       payment_type: verified.payment_type ?? null,
       status_code: verified.status_code ?? statusCode,
       gross_amount: verified.gross_amount ?? grossAmount,
+      refund_amount: verified.refund_amount ?? null,
       transaction_time: verified.transaction_time ?? null,
       currency: verified.currency ?? "IDR",
     };
@@ -114,6 +118,7 @@ Deno.serve(async (request: Request) => {
       p_payment_type: String(verified.payment_type ?? ""),
       p_status_code: String(verified.status_code ?? statusCode),
       p_gross_amount: amount,
+      p_refund_amount: refundAmount,
       p_event_key: eventKey,
       p_payload_redacted: redactedPayload,
       p_signature_valid: true,
