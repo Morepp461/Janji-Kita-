@@ -37,6 +37,10 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000502'
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000502","role":"authenticated"}',true);
 select lives_ok($q$select public.create_invitation_draft('Undangan Milik Pengguna Lain',(select id from public.categories order by sort_order limit 1),null)$q$,'pengguna kedua membuat undangan sendiri');
 reset role;
+create temporary table phase5_other_invitation(id uuid primary key) on commit drop;
+insert into phase5_other_invitation(id)
+select id from public.invitations where title='Undangan Milik Pengguna Lain';
+grant select on phase5_other_invitation to authenticated;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000501',true);
@@ -50,11 +54,13 @@ from public.invitations where title='Undangan Operasi Tamu';
 select is((select count(*) from public.guests),2::bigint,'pemilik dapat membaca daftar tamu miliknya');
 select throws_ok(
   $q$insert into public.guests(invitation_id,display_name)
-     select id,'Tamu Tidak Sah' from public.invitations where title='Undangan Milik Pengguna Lain'$q$,
+     select id,'Tamu Tidak Sah' from phase5_other_invitation$q$,
   '42501','new row violates row-level security policy for table "guests"',
   'pemilik tidak dapat menambah tamu ke undangan pengguna lain'
 );
 
+select lives_ok($q$select public.mark_guest_viewed(repeat('a',64))$q$,'tautan personal mencatat kunjungan');
+select is((select status from public.guests where display_name='Tamu Fase Lima'),'viewed','status berubah menjadi dibuka');
 select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',2,'{"meal":"vegetarian"}'::jsonb)$q$,'tamu dapat mengirim RSVP dan plus-one');
 select is((select response from public.rsvps r join public.guests g on g.id=r.guest_id where g.display_name='Tamu Fase Lima'),'yes','jawaban RSVP tersimpan');
 select is((select attendee_count from public.rsvps r join public.guests g on g.id=r.guest_id where g.display_name='Tamu Fase Lima'),2,'jumlah kehadiran tersimpan');
@@ -66,7 +72,7 @@ select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan k
 select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan ketiga')$q$,'ucapan ketiga diterima');
 select throws_ok(
   $q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan keempat')$q$,
-  'P0001','Terlalu banyak pengiriman ucapan. Coba lagi nanti.',
+  'P0001','Batas pengiriman ucapan tercapai. Coba lagi nanti.',
   'rate limit guestbook mencegah spam'
 );
 
