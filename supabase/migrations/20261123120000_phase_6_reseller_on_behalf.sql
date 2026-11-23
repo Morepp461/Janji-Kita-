@@ -119,7 +119,10 @@ begin
 end;
 $$;
 
-create or replace function public.publish_invitation(p_invitation_id uuid, p_expected_draft_version_id uuid)
+create or replace function public.publish_invitation(
+  p_invitation_id uuid,
+  p_expected_draft_version_id uuid
+)
 returns jsonb
 language plpgsql
 security definer
@@ -133,6 +136,7 @@ declare
   next_version integer;
   new_version_id uuid;
   public_slug text;
+  published_title text;
 begin
   if current_user_id is null then raise exception 'Autentikasi diperlukan' using errcode = '42501'; end if;
   select * into invitation_row from public.invitations
@@ -146,14 +150,20 @@ begin
   if invitation_row.draft_version_id is null or invitation_row.draft_version_id <> p_expected_draft_version_id then
     raise exception 'Versi draft berubah. Muat ulang editor sebelum menerbitkan.' using errcode = '40001';
   end if;
+
   select * into entitlement_row from public.entitlements
   where user_id = invitation_row.owner_user_id and entitlement_key = 'invitation.publish'
     and value ->> 'invitation_id' = p_invitation_id::text and status = 'active'
     and source_type = 'order'
-    and exists (select 1 from public.orders o where o.id = source_id and o.invitation_id = p_invitation_id and o.status = 'paid')
+    and exists (
+      select 1 from public.orders o
+      where o.id = source_id and o.invitation_id = p_invitation_id
+        and o.status in ('paid', 'partially_refunded')
+    )
     and valid_from <= now() and valid_until > now()
   order by valid_until desc limit 1 for update;
   if not found then raise exception 'Pembayaran diperlukan sebelum undangan dapat diterbitkan' using errcode = '42501'; end if;
+
   select * into draft_row from public.invitation_versions
   where id = invitation_row.draft_version_id and invitation_id = p_invitation_id and state = 'draft'
   for update;
@@ -164,11 +174,13 @@ begin
     or octet_length(draft_row.document::text) > 1048576 then
     raise exception 'Dokumen belum memenuhi validasi publikasi' using errcode = '22023';
   end if;
+
   if invitation_row.slug is null then
     public_slug := 'undangan-' || substr(replace(gen_random_uuid()::text, '-', ''), 1, 12);
   else
     public_slug := invitation_row.slug;
   end if;
+  published_title := coalesce(nullif(trim(draft_row.document -> 'metadata' ->> 'title'), ''), invitation_row.title);
   select coalesce(max(version_no), 0) + 1 into next_version
   from public.invitation_versions where invitation_id = p_invitation_id;
   insert into public.invitation_versions(invitation_id, version_no, schema_version,
@@ -176,14 +188,14 @@ begin
   values (p_invitation_id, next_version, draft_row.schema_version,
     draft_row.document, draft_row.asset_manifest, 'published', current_user_id)
   returning id into new_version_id;
-  update public.invitations set slug = public_slug, status = 'active',
+  update public.invitations set title = published_title, slug = public_slug, status = 'active',
     active_from = entitlement_row.valid_from, active_until = entitlement_row.valid_until,
     published_version_id = new_version_id, updated_at = now()
   where id = p_invitation_id;
   insert into public.audit_logs(actor_user_id, action, target_type, target_id, before_data, after_data)
   values (current_user_id, 'publish', 'invitations', p_invitation_id,
     jsonb_build_object('published_version_id', invitation_row.published_version_id, 'status', invitation_row.status),
-    jsonb_build_object('published_version_id', new_version_id, 'status', 'active', 'slug', public_slug));
+    jsonb_build_object('published_version_id', new_version_id, 'status', 'active', 'slug', public_slug, 'title', published_title));
   return jsonb_build_object('invitation_id', p_invitation_id, 'slug', public_slug,
     'published_version_id', new_version_id, 'version_no', next_version,
     'active_until', entitlement_row.valid_until);
