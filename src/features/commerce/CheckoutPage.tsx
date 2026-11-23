@@ -7,6 +7,7 @@ type Invitation = {
   status: string;
   template_id: string | null;
   owner_user_id: string;
+  reseller_user_id: string | null;
 };
 
 type AddOn = {
@@ -50,6 +51,8 @@ export default function CheckoutPage({
   const [addOns, setAddOns] = useState<AddOn[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [coupon, setCoupon] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [attributing, setAttributing] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [loading, setLoading] = useState(true);
@@ -64,7 +67,7 @@ export default function CheckoutPage({
     const [invitationResult, addOnResult, orderResult] = await Promise.all([
       client
         .from("invitations")
-        .select("id,title,status,template_id,owner_user_id")
+        .select("id,title,status,template_id,owner_user_id,reseller_user_id")
         .eq("id", invitationId)
         .eq("owner_user_id", userId)
         .maybeSingle(),
@@ -114,6 +117,24 @@ export default function CheckoutPage({
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  async function applyReferralCode() {
+    if (!invitation || order || !referralCode.trim()) return;
+    setAttributing(true);
+    setError("");
+    setNotice("");
+    const { error: attributionError } = await client.rpc("attribute_invitation_to_reseller", {
+      p_invitation_id: invitation.id,
+      p_referral_code: referralCode.trim(),
+    });
+    if (attributionError) setError(attributionError.message);
+    else {
+      setReferralCode("");
+      setNotice("Atribusi reseller berhasil diterapkan pada undangan ini.");
+      await refresh();
+    }
+    setAttributing(false);
+  }
 
   async function createOrder() {
     if (!invitation || order) return;
@@ -253,6 +274,20 @@ export default function CheckoutPage({
             <p className="mt-4 text-sm text-[#887970]">Belum ada add-on aktif.</p>
           )}
 
+          <div className="mt-5 rounded-xl border border-[#f0e7e0] p-4">
+            <p className="text-sm font-semibold">Atribusi reseller (opsional)</p>
+            {invitation.reseller_user_id ? (
+              <p className="mt-1 text-sm text-[#76675f]">Undangan ini sudah terhubung dengan reseller. Atribusi ikut tersimpan pada pesanan.</p>
+            ) : (
+              <>
+                <label className="mt-2 block text-sm font-medium">
+                  Kode referral reseller
+                  <input value={referralCode} disabled={Boolean(order) || attributing} onChange={(event) => setReferralCode(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" placeholder="KODE RESELLER" />
+                </label>
+                <button type="button" disabled={attributing || Boolean(order) || !referralCode.trim()} onClick={() => void applyReferralCode()} className="mt-2 rounded-lg border border-[#ddcec3] px-4 py-2 text-sm font-semibold disabled:opacity-50">{attributing ? "Memeriksa..." : "Terapkan kode reseller"}</button>
+              </>
+            )}
+          </div>
           <label className="mt-5 block text-sm font-medium">
             Kode kupon (opsional)
             <input
