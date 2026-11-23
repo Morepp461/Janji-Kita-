@@ -20,11 +20,12 @@ export default function GuestPublicForms({ client, guestToken, slug }: {
 
   useEffect(() => {
     let active = true;
+    if (guestToken) void hashToken(guestToken).then((p_token_hash) => client.rpc("mark_guest_viewed", { p_token_hash }));
     void client.rpc("get_public_guestbook", { p_slug: slug }).then(({ data }) => {
       if (active) setEntries((data || []) as PublicEntry[]);
     });
     return () => { active = false; };
-  }, [client, slug]);
+  }, [client, guestToken, slug]);
 
   async function submitRsvp(event: FormEvent) {
     event.preventDefault();
