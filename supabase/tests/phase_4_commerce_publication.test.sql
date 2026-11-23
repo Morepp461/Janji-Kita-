@@ -21,7 +21,7 @@ select ok(not has_function_privilege('anon', 'public.create_order(uuid,jsonb,tex
 select ok(has_function_privilege('authenticated', 'public.publish_invitation(uuid,uuid)', 'execute'), 'RPC publikasi tersedia untuk pengguna');
 select ok(not has_function_privilege('anon', 'public.publish_invitation(uuid,uuid)', 'execute'), 'anon tidak dapat menerbitkan undangan');
 select ok(has_function_privilege('service_role', 'public.process_midtrans_notification(text,text,text,text,text,text,bigint,bigint,text,jsonb,boolean,timestamp with time zone)', 'execute'), 'webhook hanya dapat diproses service role');
-select ok(not has_function_privilege('authenticated', 'public.process_midtrans_notification(text,text,text,text,text,text,bigint,text,jsonb,boolean,timestamp with time zone)', 'execute'), 'pengguna tidak dapat memalsukan webhook');
+select ok(not has_function_privilege('authenticated', 'public.process_midtrans_notification(text,text,text,text,text,text,bigint,bigint,text,jsonb,boolean,timestamp with time zone)', 'execute'), 'pengguna tidak dapat memalsukan webhook');
 select ok(not has_function_privilege('anon', 'public.expire_invitations()', 'execute'), 'anon tidak dapat menjalankan job kedaluwarsa');
 
 insert into auth.users (
