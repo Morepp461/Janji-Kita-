@@ -708,6 +708,11 @@ alter table public.reseller_price_rules enable row level security;
 alter table public.reseller_clients enable row level security;
 alter table public.reseller_sales enable row level security;
 
+revoke all on table public.invitation_collaborators, public.collaborator_invites,
+  public.subscription_plans, public.subscriptions, public.subscription_events,
+  public.reseller_profiles, public.reseller_price_rules, public.reseller_clients,
+  public.reseller_sales from public, anon;
+
 create policy invitation_collaborators_read on public.invitation_collaborators
 for select to authenticated
 using (user_id = (select auth.uid()) or app_private.can_view_invitation(invitation_id));
