@@ -23,13 +23,13 @@ Catatan tata kelola: status perlindungan cabang `main` belum dapat diverifikasi 
 
 **SELESAI SEPENUHNYA PADA SUPABASE STAGING, SUPABASE PRODUCTION, DAN VERCEL PRODUCTION — 23 November 2026.**
 
-- Kolaborasi undangan mendukung peran editor dan pembaca, undangan email, kotak masuk undangan, pembatasan editor transaksional, dan tampilan baca-saja.
+- Kolaborasi undangan mendukung peran editor dan pembaca, undangan melalui email, kotak masuk undangan, pembatasan editor secara transaksional, serta tampilan baca-saja.
 - Paket Premium menyediakan batas kolaborator yang dapat diatur admin, hak akses berbasis langganan, sinkronisasi status, dan masa tenggang.
-- Reseller mendukung pendaftaran dan persetujuan, kode rujukan, aturan harga khusus reseller, data klien, pembuatan undangan atas nama klien, atribusi pemilik/pembuat/pembayar/reseller, serta laporan penjualan dan margin.
+- Program reseller mendukung pendaftaran dan persetujuan, kode rujukan, aturan harga khusus reseller, data klien, pembuatan undangan atas nama klien, pemisahan pemilik/pembuat/pembayar/reseller, serta laporan penjualan dan selisih harga.
 - Tiga migrasi Fase 6 diterapkan pada kedua project Supabase. Tabel baru memakai RLS dan tidak memberikan hak baca kepada peran anon.
-- CI lulus pemeriksaan aplikasi dan basis data: [run #45112026551](https://github.com/Morepp461/Janji-Kita-/actions/runs/45112026551).
-- [PR #19](https://github.com/Morepp461/Janji-Kita-/pull/19) digabung ke main pada commit \`32c8b69e82bd6e9b55c1542071a8ff899bbdd123\`.
-- Deployment Vercel production berstatus SIAP: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+- CI lulus pemeriksaan aplikasi dan basis data: [hasil CI #45112026551](https://github.com/Morepp461/Janji-Kita-/actions/runs/45112026551).
+- [Permintaan penggabungan #19](https://github.com/Morepp461/Janji-Kita-/pull/19) digabung ke cabang utama pada commit `32c8b69e82bd6e9b55c1542071a8ff899bbdd123`.
+- Penerapan Vercel production berstatus **SIAP**: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
 Paket Premium sengaja tetap nonaktif dan belum memiliki harga maupun penyedia pembayaran sampai konfigurasi komersial disetujui admin. Implementasi fase selesai, tetapi penjualan langganan otomatis belum dibuka.
 
