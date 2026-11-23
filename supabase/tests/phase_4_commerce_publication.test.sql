@@ -367,9 +367,9 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000405', true);
 select set_config('request.jwt.claims',
   '{"sub":"00000000-0000-0000-0000-000000000405","role":"authenticated"}', true);
-select is(public.has_permission('orders.read'), true,
+select is(app_private.has_permission('orders.read'), true,
   'finance memiliki izin baca laporan pesanan');
-select is(public.has_permission('commerce.manage'), false,
+select is(app_private.has_permission('commerce.manage'), false,
   'finance tidak memiliki izin mengubah harga');
 select ok((select count(*) from public.orders) >= 2,
   'finance dapat membaca seluruh pesanan untuk audit');
