@@ -65,9 +65,19 @@ select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',2,'{"mea
 select is((select response from public.rsvps r join public.guests g on g.id=r.guest_id where g.display_name='Tamu Fase Lima'),'yes','jawaban RSVP tersimpan');
 select is((select attendee_count from public.rsvps r join public.guests g on g.id=r.guest_id where g.display_name='Tamu Fase Lima'),2,'jumlah kehadiran tersimpan');
 select is((select status from public.guests where display_name='Tamu Fase Lima'),'responded','status tamu berubah setelah RSVP');
+select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'maybe',0,'{}'::jsonb)$q$,'perubahan RSVP kedua diterima');
+select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',1,'{}'::jsonb)$q$,'perubahan RSVP ketiga diterima');
+select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',1,'{}'::jsonb)$q$,'perubahan RSVP keempat diterima');
+select lives_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',1,'{}'::jsonb)$q$,'perubahan RSVP kelima diterima');
+select throws_ok($q$select public.submit_guest_rsvp(repeat('a',64),'yes',1,'{}'::jsonb)$q$,
+  'P0001','Terlalu banyak perubahan RSVP. Coba lagi nanti.','rate limit RSVP mencegah spam');
 
 select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Selamat menempuh hidup baru!')$q$,'tamu dapat mengirim ucapan');
 select is((select moderation_status from public.guestbook_entries limit 1),'pending','ucapan menunggu moderasi');
+select is((select count(*) from public.get_public_guestbook((select slug from public.invitations where title='Undangan Operasi Tamu'))),0::bigint,'ucapan pending tidak terlihat publik');
+update public.guestbook_entries set moderation_status='approved';
+select is((select count(*) from public.get_public_guestbook((select slug from public.invitations where title='Undangan Operasi Tamu'))),1::bigint,'ucapan yang disetujui tampil publik');
+select is((select moderated_by from public.guestbook_entries limit 1),'00000000-0000-0000-0000-000000000501'::uuid,'moderator dicatat otomatis');
 select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan kedua')$q$,'ucapan kedua diterima');
 select lives_ok($q$select public.submit_guestbook_entry(repeat('a',64),'Ucapan ketiga')$q$,'ucapan ketiga diterima');
 select throws_ok(
@@ -79,6 +89,7 @@ select throws_ok(
 select lives_ok($q$select public.issue_guest_ticket('00000000-0000-0000-0000-000000000503',repeat('b',64))$q$,'pemilik menerbitkan tiket');
 select is((select count(*) from public.tickets where guest_id='00000000-0000-0000-0000-000000000503'),1::bigint,'satu tiket diterbitkan per tamu');
 select is((select length(ticket_code) from public.tickets where guest_id='00000000-0000-0000-0000-000000000503'),12,'kode tiket acak dibuat');
+select is((public.check_in_ticket(repeat('f',64))->>'status'),'invalid','token tiket tidak valid ditolak');
 select is((public.check_in_ticket(repeat('b',64))->>'status'),'checked_in','tiket valid dapat check-in');
 select is((public.check_in_ticket(repeat('b',64))->>'status'),'duplicate','tiket yang sama ditolak sebagai duplikat');
 select is((select count(*) from public.checkins where ticket_id=(select id from public.tickets where guest_id='00000000-0000-0000-0000-000000000503')),1::bigint,'check-in hanya tercatat sekali');
