@@ -66,6 +66,11 @@ export default function ResellerWorkspace({
   const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
   const [templates, setTemplates] = useState<CatalogOption[]>([]);
   const [addOns, setAddOns] = useState<CatalogOption[]>([]);
+  const [categories, setCategories] = useState<CatalogOption[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [invitationTitle, setInvitationTitle] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [ruleType, setRuleType] = useState<"template" | "add_on">("template");
   const [ruleReference, setRuleReference] = useState("");
   const [ruleTier, setRuleTier] = useState("standard");
@@ -99,16 +104,18 @@ export default function ResellerWorkspace({
     setProfile(nextProfile);
     setApplications((applicationsResult.data || []) as Application[]);
     if (isAdmin || nextProfile?.status === "approved") {
-      const [ruleResult, templateResult, addOnResult] = await Promise.all([
+      const [ruleResult, templateResult, addOnResult, categoryResult] = await Promise.all([
         client.from("reseller_price_rules").select("*").order("valid_from", { ascending: false }),
         client.from("templates").select("id,title").eq("status", "published").order("title"),
         client.from("add_ons").select("id,code,name_i18n").eq("is_active", true).order("code"),
+        client.from("categories").select("id,slug,name_i18n").eq("is_active", true).order("sort_order"),
       ]);
-      const catalogError = ruleResult.error || templateResult.error || addOnResult.error;
+      const catalogError = ruleResult.error || templateResult.error || addOnResult.error || categoryResult.error;
       if (catalogError) setError(catalogError.message);
       setPriceRules((ruleResult.data || []) as PriceRule[]);
       setTemplates((templateResult.data || []) as CatalogOption[]);
       setAddOns((addOnResult.data || []) as CatalogOption[]);
+      setCategories((categoryResult.data || []) as CatalogOption[]);
     }
     if (nextProfile?.status === "approved") {
       const [clientResult, orderResult, saleResult] = await Promise.all([
@@ -158,6 +165,23 @@ export default function ResellerWorkspace({
       setNotice("Pendaftaran reseller berhasil dikirim untuk ditinjau.");
       await refresh();
     }
+    setSaving(false);
+  }
+
+
+  async function createInvitationForClient(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    setNotice("");
+    const { data, error: rpcError } = await client.rpc("create_reseller_invitation_draft", {
+      p_client_id: selectedClientId,
+      p_title: invitationTitle.trim(),
+      p_event_category_id: selectedCategoryId,
+      p_template_id: selectedTemplateId || null,
+    });
+    if (rpcError) setError(rpcError.message);
+    else if (data) window.location.assign("/editor/" + data);
     setSaving(false);
   }
 
