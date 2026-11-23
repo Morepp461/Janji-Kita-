@@ -23,7 +23,9 @@ select ok(exists (select 1 from pg_constraint where conname = 'seating_assignmen
 select ok(exists (select 1 from pg_constraint where conname = 'seating_assignments_table_invitation_fk' and contype = 'f'), 'penempatan meja terikat pada undangan yang sama');
 select ok((select pg_get_constraintdef(oid) like '%seating%' from pg_constraint where conrelid = 'public.guest_public_rate_limits'::regclass and conname = 'guest_public_rate_limits_action_check'), 'aksi seating tercakup dalam pembatasan permintaan tamu');
 select ok(has_function_privilege('anon', 'public.get_public_guest_seating(text)', 'execute'), 'tamu dapat meminta informasi meja melalui token personal');
-select ok(not (select prosecdef from pg_proc where oid = 'public.get_public_guest_seating(text)'::regprocedure), 'RPC publik memakai security invoker');
+select ok((select prosecdef from pg_proc where oid = 'public.get_public_guest_seating(text)'::regprocedure), 'RPC publik memakai security definer dengan validasi token');
+select ok(not has_schema_privilege('anon', 'app_private', 'usage'), 'anon tidak mendapat akses ke schema privat');
+select ok(not has_function_privilege('anon', 'app_private.get_public_guest_seating_internal(text)', 'execute'), 'anon tidak dapat memanggil helper privat secara langsung');
 select ok((select prosecdef from pg_proc where oid = 'app_private.get_public_guest_seating_internal(text)'::regprocedure), 'helper privat memeriksa token dengan security definer');
 select is(pg_get_function_result('public.get_public_guest_seating(text)'::regprocedure), 'TABLE(table_label text, seat_label text)', 'RPC hanya mengembalikan label meja dan kursi');
 select ok((select pg_get_constraintdef(oid) like '%seating%' from pg_constraint where conrelid = 'public.guest_public_rate_limits'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%action%'), 'rate limiter mendukung action seating');
