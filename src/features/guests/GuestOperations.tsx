@@ -60,7 +60,10 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
   const [personalLink, setPersonalLink] = useState("");
   const [checkinToken, setCheckinToken] = useState("");
   const [checkinResult, setCheckinResult] = useState<{ status: string; guest_name?: string } | null>(null);\n  const [scanning, setScanning] = useState(false);\n  const [scannerMessage, setScannerMessage] = useState("");\n  const videoRef = useRef<HTMLVideoElement | null>(null);\n  const streamRef = useRef<MediaStream | null>(null);
-
+  const [scanning, setScanning] = useState(false);
+  const [scannerMessage, setScannerMessage] = useState("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
