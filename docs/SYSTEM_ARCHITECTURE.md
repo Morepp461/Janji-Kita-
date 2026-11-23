@@ -143,6 +143,14 @@ Jobs must be idempotent and observable. If free hosting lacks reliable scheduled
 - Audit logs for admin, payment, role, consent, and publication actions.
 - Backup, restore, incident and key rotation procedures.
 
+### Fase 7 — Admin, Analytics, and Localization
+- Admin operations use permission-gated RPCs for template moderation, consent review, locale defaults, and aggregate analytics. Existing CRUD panels remain the source for categories/styles, pricing, coupons, roles, subscriptions, and reseller operations.
+- New template submissions and new template versions are stored as drafts. Customer-source templates require an approved consent linked to the same invitation before publication. Consent withdrawal or rejection archives linked published templates.
+- Consent is recorded separately from purchase terms through an authenticated RPC and stores the owner, invitation, order, consent text version, scope, and timestamps. Owners can withdraw their own consent; administrators can review but cannot grant consent on a user's behalf.
+- Analytics events are written through a strict allowlist RPC. Only route metadata is accepted; guest PII, contact details, and invitation document content are not collected. Admin analytics reads aggregated metrics through a permission-checked function.
+- Locale catalog and timezone choices are managed through RLS-protected configuration. Public clients receive only active locale and approved timezone options. Dashboard language is independent from invitation content locale/timezone.
+- Administrative changes to templates, consent, media status, locale catalog, and system settings are recorded in append-only audit logs. System setting values are excluded from audit payloads; secrets remain in provider secret stores.
+
 ## 11. Performance and Reliability
 - Lazy-load editor panels, fonts, galleries, video, and animation.
 - Responsive image variants and modern formats.
