@@ -29,7 +29,7 @@ jobs:
       - name: Pasang dependensi
         run: npm ci --no-audit --no-fund
       - name: Format sementara dan simpan perubahan Fase 7
-        if: github.event_name == 'pull_request' && github.head_ref == 'phase-7-admin-analytics-localization'
+        if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'phase-7-')
         run: |
           npx prettier --write "src/**/*.{ts,tsx,css}"
           git config user.name "github-actions[bot]"
