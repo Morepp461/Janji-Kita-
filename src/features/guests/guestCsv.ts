@@ -87,7 +87,11 @@ export function exportGuestsCsv(rows: Array<Record<string, unknown>>): string {
     "jumlah_hadir",
     "check_in",
   ];
-  const quote = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+  const quote = (value: unknown) => {
+    let text = String(value ?? "");
+    if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+    return '"' + text.replace(/"/g, '""') + '"';
+  };
   const lines = rows.map((row) =>
     [
       row.display_name,
