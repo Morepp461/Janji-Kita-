@@ -69,7 +69,6 @@ export default function CheckoutPage({
         .from("invitations")
         .select("id,title,status,template_id,owner_user_id,reseller_user_id")
         .eq("id", invitationId)
-        .eq("owner_user_id", userId)
         .maybeSingle(),
       client
         .from("add_ons")
@@ -81,7 +80,7 @@ export default function CheckoutPage({
         .from("orders")
         .select("id,order_number,status,subtotal,discount_total,tax_total,grand_total,currency")
         .eq("invitation_id", invitationId)
-        .eq("owner_user_id", userId)
+        .eq("payer_user_id", userId)
         .eq("status", "pending")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
@@ -90,7 +89,7 @@ export default function CheckoutPage({
     ]);
     if (invitationResult.error || !invitationResult.data) {
       setError(
-        invitationResult.error?.message || "Undangan tidak ditemukan atau bukan milik akun ini.",
+        invitationResult.error?.message || "Undangan tidak ditemukan atau akun ini tidak memiliki akses.",
       );
     } else {
       setInvitation(invitationResult.data as Invitation);
