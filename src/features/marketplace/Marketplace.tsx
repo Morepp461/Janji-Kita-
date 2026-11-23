@@ -75,6 +75,7 @@ export default function Marketplace({
   const [templateCategory, setTemplateCategory] = useState("");
   const [templateStyle, setTemplateStyle] = useState("");
   const [templatePrice, setTemplatePrice] = useState("0");
+  const [templateSourceType, setTemplateSourceType] = useState<"first_party" | "customer">("first_party");
   const [templateDocument, setTemplateDocument] = useState(() =>
     JSON.stringify(createBlankInvitationDocument("Nama Acara"), null, 2),
   );
@@ -311,6 +312,7 @@ export default function Marketplace({
         p_category_id: templateCategory,
         p_style_id: templateStyle,
         p_base_price: Math.max(0, Math.round(Number(templatePrice) || 0)),
+        p_source_type: templateSourceType,
         p_document: parsed,
         p_thumbnail_asset_id: thumbnailAssetId,
       });
@@ -687,6 +689,9 @@ export default function Marketplace({
                   onChange={(event) => setTemplateDescription(event.target.value)}
                 />
               </label>
+              {templateSourceType === "customer" && (
+                <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">Template pelanggan akan tetap menjadi draft. Admin harus meninjau dan menautkan persetujuan marketplace yang aktif sebelum dapat menerbitkannya.</p>
+              )}
               {templateFile && (
                 <label className="text-sm font-medium md:col-span-2">
                   Catatan lisensi/sumber gambar
