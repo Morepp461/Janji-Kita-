@@ -133,9 +133,6 @@ export default function PhaseSevenDashboard({
   const [settings, setSettings] = useState<SettingRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [timezoneText, setTimezoneText] = useState("Asia/Jakarta, Asia/Makassar, Asia/Jayapura, Asia/Singapore, UTC");
-  const [settingKey, setSettingKey] = useState("");
-  const [settingDescription, setSettingDescription] = useState("");
-  const [settingValue, setSettingValue] = useState("{}");
   const [auditFilter, setAuditFilter] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -317,47 +314,6 @@ export default function PhaseSevenDashboard({
           { onConflict: "key" },
         ),
       "Daftar zona waktu berhasil disimpan.",
-    );
-  }
-
-  async function saveSetting(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const key = settingKey.trim().toLowerCase();
-    if (!/^[a-z][a-z0-9_.-]{1,119}$/.test(key) || /(secret|token|password|private.?key|server.?key|credential)/i.test(key)) {
-      setError("Kunci tidak valid atau berisi nama kredensial terlarang. Simpan rahasia di secret manager.");
-      return;
-    }
-    let value: unknown;
-    try {
-      value = JSON.parse(settingValue);
-    } catch {
-      setError("Nilai pengaturan harus berupa JSON yang valid.");
-      return;
-    }
-    await runAction(
-      () =>
-        client.from("system_settings").upsert(
-          {
-            key,
-            value,
-            updated_by: userId,
-            description: settingDescription.trim(),
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "key" },
-        ),
-      "Pengaturan sistem berhasil disimpan.",
-    );
-    setSettingKey("");
-    setSettingDescription("");
-    setSettingValue("{}");
-  }
-
-  async function deleteSetting(key: string) {
-    if (!window.confirm(`Hapus pengaturan “${key}”?`)) return;
-    await runAction(
-      () => client.from("system_settings").delete().eq("key", key),
-      "Pengaturan sistem berhasil dihapus.",
     );
   }
 
@@ -623,36 +579,28 @@ export default function PhaseSevenDashboard({
             )}
 
             {tab === "settings" && (
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                <section className={cardClass}>
-                  <h2 className="font-semibold">Pengaturan aman</h2>
-                  <p className="mt-1 text-sm text-[#76675f]">Hanya konfigurasi operasional non-rahasia. Kunci API, token, dan kredensial wajib disimpan pada secret manager.</p>
-                  <div className="mt-4 divide-y divide-[#f0e7e0]">
-                    {settings.map((item) => (
-                      <div key={item.key} className="py-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="break-all text-sm font-semibold">{item.key}</p>
-                            <p className="mt-1 text-xs text-[#887970]">{item.description}</p>
-                            <pre className="mt-2 max-h-32 overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">{JSON.stringify(item.value, null, 2)}</pre>
-                          </div>
-                          {item.key !== "localization.timezones" && <button className="text-xs font-semibold text-red-700 underline" type="button" disabled={saving} onClick={() => void deleteSetting(item.key)}>Hapus</button>}
-                        </div>
-                      </div>
-                    ))}
-                    {!settings.length && <p className="py-4 text-sm text-[#887970]">Belum ada pengaturan khusus.</p>}
-                  </div>
-                </section>
-                <section className={cardClass}>
-                  <h2 className="font-semibold">Tambah / ubah pengaturan</h2>
-                  <form onSubmit={(event) => void saveSetting(event)} className="mt-4 space-y-3">
-                    <label className="block text-sm">Kunci<input required value={settingKey} onChange={(event) => setSettingKey(event.target.value)} placeholder="contoh: retention.audit_days" className={inputClass} /></label>
-                    <label className="block text-sm">Deskripsi<input required maxLength={500} value={settingDescription} onChange={(event) => setSettingDescription(event.target.value)} className={inputClass} /></label>
-                    <label className="block text-sm">Nilai JSON<textarea required rows={7} value={settingValue} onChange={(event) => setSettingValue(event.target.value)} className={inputClass} /></label>
-                    <button className={primaryClass} disabled={saving}>Simpan pengaturan</button>
-                  </form>
-                </section>
-              </div>
+              <section className={cardClass}>
+                <h2 className="font-semibold">Pengaturan sistem non-rahasia</h2>
+                <p className="mt-1 text-sm text-[#76675f]">
+                  Nilai konfigurasi yang dipakai aplikasi. Pengaturan zona waktu dikelola pada tab Bahasa & zona waktu.
+                  Kredensial dan rahasia hanya boleh disimpan pada secret manager.
+                </p>
+                <div className="mt-4 divide-y divide-[#f0e7e0]">
+                  {settings.map((item) => (
+                    <article key={item.key} className="py-3">
+                      <p className="break-all text-sm font-semibold">{item.key}</p>
+                      <p className="mt-1 text-xs text-[#887970]">{item.description}</p>
+                      <pre className="mt-2 max-h-32 overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">
+                        {JSON.stringify(item.value, null, 2)}
+                      </pre>
+                      <p className="mt-1 text-xs text-[#887970]">Diperbarui: {dateTime(item.updated_at)}</p>
+                    </article>
+                  ))}
+                  {!settings.length && (
+                    <p className="py-4 text-sm text-[#887970]">Belum ada pengaturan sistem.</p>
+                  )}
+                </div>
+              </section>
             )}
 
             {tab === "audit" && (
