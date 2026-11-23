@@ -46,6 +46,19 @@ function safeStyle(style: Record<string, unknown> = {}): CSSProperties {
     result.fontSize = Math.min(96, Math.max(10, result.fontSize));
   if (typeof result.maxWidth === "number")
     result.maxWidth = Math.min(1200, Math.max(0, result.maxWidth));
+  const animationNames: Record<string, string> = {
+    "fade-in": "jkFadeIn",
+    "rise-in": "jkRiseIn",
+    "soft-zoom": "jkSoftZoom",
+    float: "jkFloat",
+  };
+  const preset = style.animationPreset;
+  if (typeof preset === "string" && animationNames[preset]) {
+    result.animationName = animationNames[preset];
+    result.animationDuration = String(Math.min(1800, Math.max(300, Number(style.animationDurationMs) || 650))) + "ms";
+    result.animationTimingFunction = "ease-out";
+    result.animationFillMode = "both";
+  }
   return result as CSSProperties;
 }
 
@@ -242,7 +255,8 @@ function renderNode(
           className="my-3 inline-flex rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white"
           href={url}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
+          style={style}
         >
           {typeof props.label === "string" ? props.label : "Buka tautan"}
         </a>
@@ -268,7 +282,9 @@ function renderNode(
                     : "Informasi tempat duduk"}
           </h3>
           <p className="mt-1 text-xs text-[#887970]">
-            Komponen ini akan aktif pada fase operasional tamu.
+            {node.type === "SeatingInfo"
+              ? "Informasi meja dan tempat duduk dikelola oleh penyelenggara. Hubungi penyelenggara untuk detail penempatan."
+              : "Komponen ini akan menampilkan data tamu sesuai pengaturan undangan."}
           </p>
         </section>
       );
