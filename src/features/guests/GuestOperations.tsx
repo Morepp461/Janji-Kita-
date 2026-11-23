@@ -13,7 +13,7 @@ type Guest = {
   status: string;
   rsvps?: { response: string; attendee_count: number }[] | null;
   tickets?: { ticket_code: string; status: string }[] | null;
-  checkins?: { checked_in_at: string; method: string }[] | null;
+  tickets?: { ticket_code: string; status: string; checkins?: { checked_in_at: string; method: string }[] | null }[] | null;
 };
 
 type GuestbookEntry = {
@@ -69,7 +69,7 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
     setError("");
     const [invitationResult, guestResult, entryResult] = await Promise.all([
       client.from("invitations").select("title,slug,status").eq("id", invitationId).maybeSingle(),
-      client.from("guests").select("id,display_name,email,phone,guest_group,plus_one_allowed,status,rsvps(response,attendee_count),tickets(ticket_code,status),checkins(checked_in_at,method)").eq("invitation_id", invitationId).order("display_name"),
+      client.from("guests").select("id,display_name,email,phone,guest_group,plus_one_allowed,status,rsvps(response,attendee_count),tickets(ticket_code,status,checkins(checked_in_at,method))").eq("invitation_id", invitationId).order("display_name"),
       client.from("guestbook_entries").select("id,display_name,message,moderation_status,created_at").eq("invitation_id", invitationId).order("created_at", { ascending: false }).limit(100),
     ]);
     if (invitationResult.error) setError(invitationResult.error.message);
@@ -94,7 +94,7 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
     confirmed: guests.filter((guest) => guest.rsvps?.[0]?.response === "yes").length,
     declined: guests.filter((guest) => guest.rsvps?.[0]?.response === "no").length,
     pending: guests.filter((guest) => !guest.rsvps?.length).length,
-    checkedIn: guests.filter((guest) => guest.status === "checked_in" || guest.checkins?.length).length,
+    checkedIn: guests.filter((guest) => guest.status === "checked_in" || guest.tickets?.some((ticket) => ticket.checkins?.length)).length,
   }), [guests]);
 
   async function saveGuest(event: FormEvent) {
@@ -254,7 +254,7 @@ export default function GuestOperations({ client, invitationId }: { client: Supa
     const rows = guests.map((guest) => ({
       ...guest, rsvp_response: guest.rsvps?.[0]?.response || "",
       attendee_count: guest.rsvps?.[0]?.attendee_count ?? "",
-      checked_in_at: guest.checkins?.[0]?.checked_in_at || "",
+      checked_in_at: guest.tickets?.[0]?.checkins?.[0]?.checked_in_at || "",
     }));
     const blob = new Blob(["\\uFEFF", exportGuestsCsv(rows)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
