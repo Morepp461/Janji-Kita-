@@ -126,13 +126,13 @@ select throws_ok(
   'pesanan belum dibayar tidak dapat menerbitkan undangan'
 );
 
+reset role;
 insert into public.payment_attempts(order_id, provider, provider_order_id, status,
   amount, currency, idempotency_key)
 select id, 'midtrans', order_number, 'pending', grand_total, currency,
   'midtrans:' || id::text
 from public.orders where idempotency_key = 'phase4-idempotency-key-0001';
 
-reset role;
 set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 select lives_ok(
