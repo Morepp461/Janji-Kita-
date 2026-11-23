@@ -9,7 +9,6 @@ permissions:
 
 jobs:
   format:
-    if: github.event.pull_request.head.ref == 'feat/phase-8-advanced-imports-experience'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
