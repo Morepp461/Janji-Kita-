@@ -72,6 +72,33 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Gerbang sebelum menerima pembayaran nyata:** transaksi sandbox end-to-end melalui akun merchant belum diverifikasi karena kredensial `MIDTRANS_SERVER_KEY` belum dapat diverifikasi melalui akses yang tersedia. Pembayaran production tetap dinonaktifkan dan fungsi production menolak seluruh transaksi. Sebelum menerima uang sungguhan, lakukan transaksi sandbox, verifikasi callback/webhook dan rekonsiliasi, serta penuhi persetujuan merchant production sesuai spesifikasi monetisasi. Simpan kunci hanya pada Supabase Function Secrets, bukan pada variabel `VITE_` atau chat.
 
+### Kesiapan onboarding merchant Midtrans — 23 November 2026
+
+**Status: DITUNDA sampai produk dapat diverifikasi.** Fase 4 secara teknis telah selesai, tetapi penyelesaian fase teknis tidak berarti produk sudah siap untuk verifikasi merchant atau menerima pembayaran nyata.
+
+Kondisi saat checkpoint:
+- Produk belum memiliki katalog/template undangan yang siap ditawarkan dan didemonstrasikan kepada calon pelanggan.
+- Website production sudah tersedia, tetapi halaman staging/website yang diberikan untuk verifikasi merchant harus benar-benar dapat diakses dan menjelaskan produk, harga, cara pemesanan, serta alur pembayaran.
+- Pendaftaran merchant Midtrans tidak dilanjutkan dulu. Jangan mengirim formulir dengan deskripsi produk yang belum tersedia atau menyatakan fitur yang belum bisa digunakan sebagai sudah aktif.
+- Pilihan metode pembayaran dan dokumen merchant mengikuti hasil verifikasi serta persyaratan Midtrans. Jangan menganggap seluruh metode otomatis tersedia setelah akun dibuat.
+
+**Checklist sebelum melanjutkan pendaftaran merchant:**
+1. Marketplace memiliki beberapa template undangan yang benar-benar dapat dipilih.
+2. Pengunjung dapat melihat preview/contoh undangan dan penjelasan fitur yang tersedia.
+3. Harga template, kanvas kosong, dan add-on sudah ditampilkan secara konsisten dengan konfigurasi checkout.
+4. Alur pelanggan dari memilih template, membuat draft, memilih add-on, checkout, hingga publikasi dapat didemonstrasikan; pembayaran sandbox tetap menjadi tahap pengujian terpisah.
+5. Halaman informasi bisnis, kontak dukungan, kebijakan privasi, syarat layanan, dan kebijakan pembatalan/refund sudah tersedia sesuai kebutuhan operasional.
+6. URL yang dikirim ke Midtrans dapat diakses oleh reviewer dan tidak membutuhkan login untuk melihat informasi produk yang relevan.
+7. Data badan usaha/perorangan dan dokumen identitas/pajak disiapkan sesuai persyaratan merchant Midtrans yang berlaku. Jangan menggunakan identitas atau dokumen pihak lain tanpa dasar dan persetujuan yang sah.
+
+**Urutan kerja saat dilanjutkan:**
+- Selesaikan kesiapan produk dan konten website terlebih dahulu; tidak perlu menunggu seluruh roadmap P1/P2 selesai.
+- Setelah checklist di atas terpenuhi, lanjutkan pendaftaran merchant dengan data yang benar.
+- Setelah akun merchant tersedia, konfigurasi kredensial sandbox hanya di Supabase Function Secrets pada project staging, lalu jalankan E2E checkout, callback/webhook, dan rekonsiliasi.
+- Pembayaran production tetap terkunci sampai pengujian sandbox, persetujuan merchant production, dan seluruh launch gate pada `docs/MONETIZATION_SPECIFICATION.md` terpenuhi.
+
+**Checkpoint berikutnya:** ketika melanjutkan JanjiKita, baca bagian ini sebelum mengerjakan integrasi merchant. Jangan mengulang pendaftaran Midtrans sebelum website dan katalog produk siap diverifikasi.
+
 **Checkpoint: 22 November 2026**
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
