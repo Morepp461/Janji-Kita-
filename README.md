@@ -11,9 +11,9 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 | Fase 2 — Marketplace dan inti undangan | **Selesai sepenuhnya di staging dan production** |
 | Fase 3 — Editor visual | **Selesai sepenuhnya di staging dan production** |
 | Fase 4 — Commerce dan publikasi | **Selesai sepenuhnya di staging dan production** |
-| Fase 5 — Operasi tamu | Implementasi kode selesai; menunggu CI akhir dan penerapan terverifikasi di kedua lingkungan |
+| Fase 5 — Operasi tamu | **Selesai sepenuhnya di staging dan production** |
 
-**Checkpoint dokumentasi:** 23 November 2026.
+**Checkpoint dokumentasi:** 23 November 2026. Fase 5 telah diterapkan dan diverifikasi pada kedua lingkungan.
 
 ### Fase 1 — Identitas dan administrasi
 
@@ -76,12 +76,12 @@ Ruang lingkup implementasi:
 - Dashboard kehadiran menampilkan total tamu, konfirmasi hadir, penolakan, RSVP tertunda, dan jumlah check-in.
 - RLS membatasi data tamu, RSVP, tiket, check-in, serta moderasi buku tamu kepada pemilik undangan. Pengiriman publik dilakukan melalui RPC terkontrol.
 
-**Kriteria selesai Fase 5:** data tamu privat; tiket tidak valid/duplikat ditolak; RSVP dibatasi lajunya; impor CSV melaporkan kesalahan per baris; CI, pengujian staging, dan penerapan production lulus. Status akhir akan dicatat setelah seluruh pemeriksaan tersebut terverifikasi.
+**Fase 5 selesai sepenuhnya pada 23 November 2026.** Migrasi `phase_5_guest_operations` berhasil diterapkan pada Supabase staging dan production. Pemeriksaan kedua lingkungan mengonfirmasi enam tabel operasi tamu memiliki RLS aktif, peran anon tidak dapat membaca daftar tamu/tiket atau melakukan check-in, RPC publik yang diperlukan tersedia, dan seluruh tabel baru masih kosong sehingga data lama tidak tersentuh. CI lulus seluruh pemeriksaan web, build, migrasi lokal, database lint, serta pengujian pgTAP: [run #45098327492](https://github.com/Morepp461/Janji-Kita-/actions/runs/45098327492).
 
 ## Keputusan dan catatan operasional
 
 - **Pengecualian backup/restore — disetujui pemilik proyek pada 23 November 2026:** backup production dilewati pada seluruh fase karena paket Supabase Free dan akses integrasi yang tersedia tidak menyediakan jalur backup manual. Pemilik menerima risiko kehilangan data. Migrasi harus ditinjau sebagai migrasi aditif dan pemulihan mengandalkan corrective/forward migration. Restore tidak diklaim telah diuji.
-- Security Advisor production sebelumnya mencatat peringatan `Leaked Password Protection Disabled`. Peringatan tersebut sudah ada sebelum Fase 5 dan tidak diubah dalam ruang lingkup fase ini.
+- Security Advisor production tetap mencatat peringatan `Leaked Password Protection Disabled` yang sudah ada sebelum Fase 5. Fase 5 menambah RPC `SECURITY DEFINER` yang memang diperlukan untuk RSVP, guestbook, status tautan, dan check-in; seluruhnya memakai `search_path` tetap serta pemeriksaan token/pemilik. Tabel `guest_public_rate_limits` sengaja tidak memiliki kebijakan akses dan tidak diberi hak akses kepada peran klien. Peringatan linter terkait pola ini bersifat informatif/terencana.
 - Gerbang pembayaran nyata belum dibuka. Transaksi sandbox end-to-end melalui akun merchant masih memerlukan verifikasi kredensial `MIDTRANS_SERVER_KEY`, callback/webhook, rekonsiliasi, dan persetujuan merchant. Rahasia hanya boleh disimpan pada Supabase Function Secrets, bukan di browser atau variabel `VITE_`.
 - Penerapan preview Vercel tetap nonaktif. Deployment aplikasi mengikuti cabang `main`.
 
