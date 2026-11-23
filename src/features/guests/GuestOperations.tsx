@@ -676,8 +676,8 @@ export default function GuestOperations({
                       </p>
                       <p className="mt-1 text-xs text-[#76675f]">
                         {moneylessStatus[guest.status] || guest.status} · RSVP:{" "}
-                        {responseLabel[firstRelation(guest.rsvps)?.response || ""] || "Belum ada"} · Tiket:{" "}
-                        {firstRelation(guest.tickets)?.status || "Belum dibuat"}
+                        {responseLabel[firstRelation(guest.rsvps)?.response || ""] || "Belum ada"} ·
+                        Tiket: {firstRelation(guest.tickets)?.status || "Belum dibuat"}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
