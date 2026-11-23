@@ -45,7 +45,7 @@ export function parseGuestCsv(content: string): { rows: GuestCsvRow[]; issues: G
 }
 export function exportGuestsCsv(rows: Array<Record<string, unknown>>): string {
   const headers = ["nama", "email", "telepon", "kelompok", "boleh_plus_one", "status", "rsvp", "jumlah_hadir", "check_in"];
-  const quote = (value: unknown) => \`"\${String(value ?? "").replace(/"/g, '""')}"\`;
+  const quote = (value: unknown) => '"' + String(value ?? "").replace(/"/g, '""') + '"';
   const lines = rows.map((row) => [row.display_name, row.email, row.phone, row.guest_group,
     row.plus_one_allowed ? "Ya" : "Tidak", row.status, row.rsvp_response, row.attendee_count, row.checked_in_at].map(quote).join(","));
   return [headers.map(quote).join(","), ...lines].join("\r\n");
