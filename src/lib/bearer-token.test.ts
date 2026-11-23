@@ -26,9 +26,8 @@ describe("isStagingSupabaseUrl", () => {
 
   it("rejects production, lookalike hosts, and invalid URLs", () => {
     expect(isStagingSupabaseUrl("https://fpgkajbebikrebqiqlvq.supabase.co")).toBe(false);
-    expect(
-      isStagingSupabaseUrl("https://kcdydzdwfgdccbqbqcof.supabase.co.attacker.test"),
-    ).toBe(false);
+    const lookalikeUrl = "https://kcdydzdwfgdccbqbqcof.supabase.co.attacker.test";
+    expect(isStagingSupabaseUrl(lookalikeUrl)).toBe(false);
     expect(isStagingSupabaseUrl(undefined)).toBe(false);
     expect(isStagingSupabaseUrl("not-a-url")).toBe(false);
   });
