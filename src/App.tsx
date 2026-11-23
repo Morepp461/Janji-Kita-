@@ -326,8 +326,7 @@ export default function App() {
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
   if (pathname === "/settings/consents") return <ConsentSettings client={client} />;
-  if (pathname === "/admin/operations" && isAdmin)
-    return <PhaseSevenDashboard client={client} />;
+  if (pathname === "/admin/operations" && isAdmin) return <PhaseSevenDashboard client={client} />;
   const isFinance = roles.includes("finance");
   const isSuperAdmin = roles.includes("super_admin");
   const checkoutMatch = pathname.match(/^\/checkout\/([0-9a-f-]+)\/?$/i);
