@@ -175,8 +175,8 @@ export default function GuestOperations({
     () => ({
       total: guests.length,
       confirmed: guests.filter((guest) => firstRelation(guest.rsvps)?.response === "yes").length,
-      declined: guests.filter((guest) => guest.rsvps?.[0]?.response === "no").length,
-      pending: guests.filter((guest) => !guest.rsvps?.length).length,
+      declined: guests.filter((guest) => firstRelation(guest.rsvps)?.response === "no").length,
+      pending: guests.filter((guest) => !firstRelation(guest.rsvps)).length,
       checkedIn: guests.filter(
         (guest) =>
           guest.status === "checked_in" ||
