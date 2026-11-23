@@ -23,20 +23,17 @@ create table public.system_settings (
     and key !~* '(secret|token|password|private.?key|server.?key|credential)'
   ),
   value jsonb not null,
-  updated_by uuid not null references public.profiles(id),
+  updated_by uuid references public.profiles(id),
   updated_at timestamptz not null default now(),
   description text not null default '' check (length(description) <= 500)
 );
 insert into public.system_settings(key, value, updated_by, description)
-select
+values (
   'localization.timezones',
   '["Asia/Jakarta","Asia/Makassar","Asia/Jayapura","Asia/Singapore","UTC"]'::jsonb,
-  p.id,
+  null,
   'Daftar zona waktu yang dapat dipilih pengguna dan undangan.'
-from public.profiles p
-where exists (select 1 from public.user_roles ur where ur.user_id = p.id and ur.role = 'super_admin')
-order by p.created_at
-limit 1
+)
 on conflict (key) do nothing;
 
 create table public.consent_records (
@@ -206,8 +203,8 @@ begin
   select value into allowed_timezones from public.system_settings
   where key = 'localization.timezones';
   if not exists (
-    select 1 from jsonb_array_elements_text(coalesce(allowed_timezones, '["Asia/Jakarta","Asia/Makassar","Asia/Jayapura","UTC"]'::jsonb)) zone
-    where zone = p_timezone
+    select 1 from jsonb_array_elements_text(coalesce(allowed_timezones, '["Asia/Jakarta","Asia/Makassar","Asia/Jayapura","UTC"]'::jsonb)) as zones(timezone)
+    where timezone = p_timezone
   ) then
     raise exception 'Zona waktu undangan tidak tersedia';
   end if;
