@@ -5,7 +5,7 @@ create table public.locales (
   name text not null check (length(trim(name)) between 1 and 80),
   native_name text not null check (length(trim(native_name)) between 1 and 80),
   is_active boolean not null default true,
-  is_default boolean not null default false,
+  is_default boolean not null default false check (not is_default or is_active),
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -65,7 +65,7 @@ create table public.analytics_events (
   invitation_id uuid references public.invitations(id) on delete set null,
   session_id text check (session_id is null or length(session_id) <= 128),
   properties jsonb not null default '{}'::jsonb
-    check (jsonb_typeof(properties) = 'object' and jsonb_object_length(properties) <= 10),
+    check (jsonb_typeof(properties) = 'object'),
   occurred_at timestamptz not null default now()
 );
 create index analytics_events_occurred_idx on public.analytics_events(occurred_at desc);
@@ -89,34 +89,18 @@ alter table public.analytics_events enable row level security;
 revoke all on public.locales, public.system_settings, public.consent_records, public.analytics_events from public;
 revoke all on public.locales, public.system_settings, public.consent_records, public.analytics_events from anon;
 grant select on public.locales to anon, authenticated;
-grant select, insert, update, delete on public.locales to authenticated;
-grant select, insert, update, delete on public.system_settings to authenticated;
+grant select on public.system_settings to authenticated;
+revoke insert, update, delete on public.locales, public.system_settings from authenticated;
+revoke insert, update, delete on public.templates, public.template_versions from authenticated;
+grant select on public.templates, public.template_versions to authenticated;
 grant select on public.consent_records, public.analytics_events to authenticated;
 
 create policy locales_read_active on public.locales
   for select to anon, authenticated using (is_active);
 create policy locales_admin_select on public.locales
   for select to authenticated using (app_private.has_permission('locales.manage'));
-create policy locales_admin_insert on public.locales
-  for insert to authenticated with check (app_private.has_permission('locales.manage'));
-create policy locales_admin_update on public.locales
-  for update to authenticated
-  using (app_private.has_permission('locales.manage'))
-  with check (app_private.has_permission('locales.manage'));
-create policy locales_admin_delete on public.locales
-  for delete to authenticated using (app_private.has_permission('locales.manage'));
-
 create policy system_settings_admin_select on public.system_settings
   for select to authenticated using (app_private.has_permission('settings.manage'));
-create policy system_settings_admin_insert on public.system_settings
-  for insert to authenticated with check (app_private.has_permission('settings.manage'));
-create policy system_settings_admin_update on public.system_settings
-  for update to authenticated
-  using (app_private.has_permission('settings.manage'))
-  with check (app_private.has_permission('settings.manage'));
-create policy system_settings_admin_delete on public.system_settings
-  for delete to authenticated using (app_private.has_permission('settings.manage'));
-
 create policy consent_records_owner_select on public.consent_records
   for select to authenticated using (user_id = (select auth.uid()));
 create policy consent_records_admin_select on public.consent_records
@@ -558,8 +542,9 @@ create or replace function public.admin_create_template(
 )
 returns uuid
 language plpgsql
+security definer
 set search_path = public, app_private, pg_temp
-as $$
+as $
 declare
   current_user_id uuid := auth.uid();
   new_template_id uuid;
@@ -621,8 +606,9 @@ create or replace function public.admin_create_template(
 )
 returns uuid
 language sql
+security definer
 set search_path = public, app_private, pg_temp
-as $$
+as $
   select public.admin_create_template(
     p_slug, p_title, p_description, p_category_id, p_style_id,
     p_base_price, p_document, p_thumbnail_asset_id, 'first_party'
@@ -639,8 +625,9 @@ create or replace function public.admin_create_template_version(
 )
 returns uuid
 language plpgsql
+security definer
 set search_path = public, app_private, pg_temp
-as $$
+as $
 declare
   current_user_id uuid := auth.uid();
   next_version integer;
