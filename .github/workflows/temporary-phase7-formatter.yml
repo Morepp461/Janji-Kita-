@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   format:
+    if: github.event.pull_request.head.ref == 'phase-7-admin-analytics-localization'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
