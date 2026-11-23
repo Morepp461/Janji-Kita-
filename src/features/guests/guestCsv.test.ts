@@ -25,7 +25,7 @@ describe("guest CSV", () => {
   });
 
   it("menolak header tanpa kolom nama", () => {
-    expect(parseGuestCsv("email,telepon\na@b.co,0812").issues[0].message).toContain("kolom wajib");
+    expect(parseGuestCsv("email,telepon\na@b.co,0812").issues[0].message).toContain("Kolom wajib");
   });
 
   it("mengutip nilai ekspor untuk CSV yang valid", () => {
