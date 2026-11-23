@@ -11,16 +11,28 @@ type Guest = {
   guest_group: string | null;
   plus_one_allowed: boolean;
   status: string;
-  rsvps?: { response: string; attendee_count: number } | { response: string; attendee_count: number }[] | null;
-  tickets?: {
-    ticket_code: string;
-    status: string;
-    checkins?: { checked_in_at: string; method: string } | { checked_in_at: string; method: string }[] | null;
-  } | {
-    ticket_code: string;
-    status: string;
-    checkins?: { checked_in_at: string; method: string } | { checked_in_at: string; method: string }[] | null;
-  }[] | null;
+  rsvps?:
+    | { response: string; attendee_count: number }
+    | { response: string; attendee_count: number }[]
+    | null;
+  tickets?:
+    | {
+        ticket_code: string;
+        status: string;
+        checkins?:
+          | { checked_in_at: string; method: string }
+          | { checked_in_at: string; method: string }[]
+          | null;
+      }
+    | {
+        ticket_code: string;
+        status: string;
+        checkins?:
+          | { checked_in_at: string; method: string }
+          | { checked_in_at: string; method: string }[]
+          | null;
+      }[]
+    | null;
 };
 
 type GuestbookEntry = {
@@ -45,7 +57,7 @@ type BarcodeDetectorLike = {
 type BarcodeDetectorConstructor = new (options: { formats: string[] }) => BarcodeDetectorLike;
 
 function firstRelation<T>(relation: T | T[] | null | undefined): T | undefined {
-  return Array.isArray(relation) ? relation[0] : relation ?? undefined;
+  return Array.isArray(relation) ? relation[0] : (relation ?? undefined);
 }
 
 const token = () => {
@@ -167,7 +179,8 @@ export default function GuestOperations({
       pending: guests.filter((guest) => !guest.rsvps?.length).length,
       checkedIn: guests.filter(
         (guest) =>
-          guest.status === "checked_in" || Boolean(firstRelation(firstRelation(guest.tickets)?.checkins)),
+          guest.status === "checked_in" ||
+          Boolean(firstRelation(firstRelation(guest.tickets)?.checkins)),
       ).length,
     }),
     [guests],
