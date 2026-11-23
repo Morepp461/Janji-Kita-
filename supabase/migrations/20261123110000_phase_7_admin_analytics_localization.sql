@@ -74,6 +74,7 @@ create index analytics_events_user_time_idx on public.analytics_events(user_id, 
   where user_id is not null;
 
 alter table public.templates
+  add column source_type text not null default 'first_party' check (source_type in ('first_party', 'customer')),
   add column source_invitation_id uuid references public.invitations(id) on delete set null,
   add column source_consent_id uuid references public.consent_records(id) on delete set null,
   add column moderation_note text check (moderation_note is null or length(moderation_note) <= 1000),
@@ -351,8 +352,8 @@ begin
   if p_status = 'published' and template_row.current_version_id is null then
     raise exception 'Template belum memiliki versi yang dapat diterbitkan';
   end if;
-  if template_row.source_invitation_id is not null and template_row.source_consent_id is null then
-    raise exception 'Template dari undangan pelanggan wajib memiliki persetujuan';
+  if template_row.source_type = 'customer' and (template_row.source_invitation_id is null or template_row.source_consent_id is null) then
+    raise exception 'Template dari pelanggan wajib ditautkan ke persetujuan aktif';
   end if;
   if template_row.source_consent_id is not null then
     select * into consent_row from public.consent_records
@@ -508,6 +509,7 @@ create trigger templates_audit_phase7
 
 
 -- Template baru dan versi baru wajib melewati antrean moderasi sebelum terlihat di marketplace.
+drop function if exists public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid);
 create or replace function public.admin_create_template(
   p_slug text,
   p_title text,
@@ -516,7 +518,8 @@ create or replace function public.admin_create_template(
   p_style_id uuid,
   p_base_price bigint,
   p_document jsonb,
-  p_thumbnail_asset_id uuid default null
+  p_thumbnail_asset_id uuid default null,
+  p_source_type text default 'first_party'
 )
 returns uuid
 language plpgsql
@@ -536,6 +539,9 @@ begin
   if jsonb_typeof(p_document) <> 'object' or coalesce((p_document ->> 'schemaVersion')::integer, 0) <> 1 then
     raise exception 'Dokumen template harus memakai schemaVersion 1' using errcode = '22023';
   end if;
+  if p_source_type not in ('first_party', 'customer') then
+    raise exception 'Sumber desain template tidak valid' using errcode = '22023';
+  end if;
   if not exists (select 1 from public.categories where id = p_category_id and is_active)
     or not exists (select 1 from public.design_styles where id = p_style_id and is_active) then
     raise exception 'Kategori atau gaya desain tidak tersedia' using errcode = '22023';
@@ -543,10 +549,10 @@ begin
 
   insert into public.templates (
     slug, title, description, category_id, style_id, base_price, status,
-    thumbnail_asset_id, created_by
+    thumbnail_asset_id, created_by, source_type
   ) values (
     p_slug, trim(p_title), coalesce(p_description, ''), p_category_id, p_style_id,
-    greatest(coalesce(p_base_price, 0), 0), 'draft', p_thumbnail_asset_id, current_user_id
+    greatest(coalesce(p_base_price, 0), 0), 'draft', p_thumbnail_asset_id, current_user_id, p_source_type
   ) returning id into new_template_id;
 
   insert into public.template_versions (
@@ -563,8 +569,8 @@ begin
   return new_template_id;
 end;
 $$;
-revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) from public, anon;
-grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) to authenticated;
+revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid,text) from public, anon;
+grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid,text) to authenticated;
 
 create or replace function public.admin_create_template_version(
   p_template_id uuid,
@@ -623,3 +629,43 @@ create trigger media_assets_audit_phase7
     or old.visibility is distinct from new.visibility
   )
   execute function public.audit_phase7_admin_change();
+
+
+create or replace function public.admin_link_template_consent(
+  p_template_id uuid,
+  p_invitation_id uuid,
+  p_consent_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, app_private, pg_temp
+as $$
+begin
+  if not app_private.has_permission('templates.manage') then
+    raise exception 'Tidak memiliki izin mengelola template';
+  end if;
+  if not exists (
+    select 1 from public.consent_records
+    where id = p_consent_id and invitation_id = p_invitation_id
+      and consent_type = 'marketplace_template'
+      and granted and withdrawn_at is null
+      and metadata ->> 'moderation_status' = 'approved'
+  ) then
+    raise exception 'Persetujuan belum disetujui, tidak aktif, atau tidak cocok dengan undangan';
+  end if;
+  update public.templates
+  set source_type = 'customer',
+      source_invitation_id = p_invitation_id,
+      source_consent_id = p_consent_id,
+      status = 'draft',
+      moderation_note = 'Persetujuan ditautkan; menunggu moderasi template',
+      moderated_by = null,
+      moderated_at = null,
+      updated_at = now()
+  where id = p_template_id;
+  if not found then raise exception 'Template tidak ditemukan'; end if;
+end;
+$$;
+revoke all on function public.admin_link_template_consent(uuid,uuid,uuid) from public, anon;
+grant execute on function public.admin_link_template_consent(uuid,uuid,uuid) to authenticated;
