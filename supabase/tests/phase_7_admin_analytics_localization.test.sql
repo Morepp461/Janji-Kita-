@@ -7,6 +7,7 @@ select has_table('public', 'consent_records', 'tabel persetujuan marketplace ter
 select has_table('public', 'analytics_events', 'tabel peristiwa analitik tersedia');
 select has_column('public', 'templates', 'source_invitation_id', 'template menyimpan sumber undangan');
 select has_column('public', 'templates', 'source_consent_id', 'template menyimpan referensi persetujuan');
+select has_column('public', 'templates', 'source_type', 'template membedakan desain first-party dan pelanggan');
 
 select ok((select relrowsecurity from pg_class where oid = 'public.locales'::regclass), 'RLS bahasa aktif');
 select ok((select relrowsecurity from pg_class where oid = 'public.system_settings'::regclass), 'RLS pengaturan sistem aktif');
@@ -24,6 +25,8 @@ select ok(has_function_privilege('authenticated', 'public.record_marketplace_con
 select ok(has_function_privilege('authenticated', 'public.withdraw_marketplace_consent(uuid)', 'execute'), 'pemilik dapat mencabut persetujuan melalui RPC');
 select ok(has_function_privilege('authenticated', 'public.admin_review_marketplace_consent(uuid,text,text)', 'execute'), 'RPC moderasi persetujuan tersedia');
 select ok(has_function_privilege('authenticated', 'public.admin_set_template_moderation(uuid,text,text)', 'execute'), 'RPC moderasi template tersedia');
+select ok(has_function_privilege('authenticated', 'public.admin_link_template_consent(uuid,uuid,uuid)', 'execute'), 'RPC penautan persetujuan ke template tersedia');
+select ok(has_function_privilege('authenticated', 'public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid)', 'execute'), 'signature lama pembuatan template tetap kompatibel');
 select ok(has_function_privilege('authenticated', 'public.admin_get_analytics_summary(integer)', 'execute'), 'RPC ringkasan analitik tersedia');
 select ok(has_function_privilege('authenticated', 'public.track_analytics_event(text,uuid,jsonb)', 'execute'), 'RPC pencatatan analitik tersedia');
 select ok(has_function_privilege('authenticated', 'public.update_invitation_localization(uuid,text,text)', 'execute'), 'RPC lokalisasi undangan tersedia');
