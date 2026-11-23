@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import InvitationDocumentView from "../invitations/InvitationDocumentView";
+import PhaseEightPanel from "./PhaseEightPanel";
 import {
   isInvitationDocument,
   type InvitationDocument,
@@ -135,7 +136,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
   const [history, setHistory] = useState<Snapshot[]>([]);
   const [future, setFuture] = useState<Snapshot[]>([]);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
-  const [activeTab, setActiveTab] = useState<"content" | "style" | "layout" | "responsive">(
+  const [activeTab, setActiveTab] = useState<"content" | "style" | "layout" | "responsive" | "motion">(
     "content",
   );
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -750,6 +751,11 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           >
             {statusLabel[saveState]}
           </span>
+          {ownerUserId === userId && (
+            <a href="#phase-eight" className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold">
+              Fitur lanjutan
+            </a>
+          )}
           <a
             href={`/invitations/${invitationId}/collaborators`}
             className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
@@ -1002,7 +1008,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                   selected.type}
               </p>
               <div className="mb-3 flex gap-1">
-                {(["content", "style", "layout", "responsive"] as const).map((tab) => (
+                {(["content", "style", "layout", "responsive", "motion"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -1014,7 +1020,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                         ? "Gaya"
                         : tab === "layout"
                           ? "Tata letak"
-                          : "Responsif"}
+                          : tab === "responsive"
+                            ? "Responsif"
+                            : "Gerak"}
                   </button>
                 ))}
               </div>
@@ -1165,6 +1173,49 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                   </label>
                   <p className="text-[11px] text-[#887970]">
                     Pengaturan berlaku pada pratinjau dan halaman undangan.
+                  </p>
+                </div>
+              )}
+              {activeTab === "motion" && (
+                <div className="space-y-3">
+                  <label className="block text-xs font-medium">
+                    Preset animasi
+                    <select
+                      value={String(selected.style?.animationPreset || "none")}
+                      onChange={(event) =>
+                        updateSelected(
+                          { animationPreset: event.target.value === "none" ? null : event.target.value },
+                          "style",
+                        )
+                      }
+                      className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white p-2"
+                    >
+                      <option value="none">Tanpa animasi</option>
+                      <option value="fade-in">Muncul perlahan</option>
+                      <option value="rise-in">Naik perlahan</option>
+                      <option value="soft-zoom">Perbesar lembut</option>
+                      <option value="float">Mengambang lembut</option>
+                    </select>
+                  </label>
+                  <label className="block text-xs font-medium">
+                    Durasi ({Number(selected.style?.animationDurationMs || 650)} ms)
+                    <input
+                      type="range"
+                      min="300"
+                      max="1800"
+                      step="50"
+                      value={Number(selected.style?.animationDurationMs || 650)}
+                      onChange={(event) =>
+                        updateSelected(
+                          { animationDurationMs: Math.min(1800, Math.max(300, Number(event.target.value))) },
+                          "style",
+                        )
+                      }
+                      className="mt-2 w-full"
+                    />
+                  </label>
+                  <p className="text-[11px] leading-5 text-[#887970]">
+                    Preset aman tanpa skrip. Animasi otomatis dinonaktifkan ketika perangkat meminta pengurangan gerakan.
                   </p>
                 </div>
               )}
@@ -1337,6 +1388,16 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           </div>
         </aside>
       </div>
+      {canManage && document && (
+        <PhaseEightPanel
+          client={client}
+          invitationId={invitationId}
+          ownerUserId={ownerUserId}
+          userId={userId}
+          invitationDocument={document}
+          onDocumentChange={commit}
+        />
+      )}
     </main>
   );
 }
