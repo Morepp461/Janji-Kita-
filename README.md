@@ -53,6 +53,23 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Rilis production:** [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) telah digabung ke `main` pada commit `5a2a003436cce8a5fb31064985255f23148ab068`. Deployment Vercel production berstatus **READY**: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app). Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek, bukan hanya satu rilis. Pemilik menerima risiko kehilangan data karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Restore tidak diklaim telah diuji; pemulihan mengandalkan corrective/forward migration. Satu peringatan Security Advisor production yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 3.
 
+**Fase 4 — Commerce dan Publication: implementasi kode serta basis data staging selesai; verifikasi sandbox end-to-end masih menunggu kredensial sandbox Midtrans.**
+
+**Checkpoint: 23 November 2026**
+
+- Admin dapat mengatur harga template, harga kanvas kosong, add-on, serta kupon persentase/nominal dengan masa berlaku dan batas penggunaan.
+- Checkout membuat snapshot harga di server. Perubahan harga setelah pesanan dibuat tidak mengubah nilai pesanan lama. Kupon dihitung dan direservasi secara transaksional, termasuk batas penggunaan per akun dan kompatibilitas reseller.
+- Integrasi Midtrans hanya memakai endpoint sandbox. Edge Function pembuatan sesi pembayaran memerlukan autentikasi; webhook memverifikasi signature dan status transaksi langsung ke Midtrans sebelum mengubah status pesanan.
+- Pemrosesan pembayaran idempoten, menolak nominal yang tidak cocok, menyimpan event webhook teredaksi, mengabaikan notifikasi terlambat yang mencoba menurunkan status pembayaran, dan mencatat nominal refund.
+- Pembayaran sukses membuat entitlement publikasi selama 30 hari. Perpanjangan menambah masa aktif; renderer publik menolak undangan kedaluwarsa. Refund penuh mencabut entitlement dan menangguhkan undangan; refund sebagian dicatat tanpa otomatis mematikan entitlement.
+- Publikasi dan pembaruan membuat versi immutable lalu memindahkan pointer publik dalam satu transaksi. Perubahan draft aktif tidak mengubah judul/konten yang sedang tayang sebelum publikasi berhasil.
+- Dashboard finance bersifat baca-saja untuk peran finance/admin, menampilkan nilai order, diskon, refund, event pembayaran teredaksi, serta menyediakan rekonsiliasi transaksi pending.
+- Seluruh **63 pengujian pgTAP Fase 4 lulus pada Supabase staging**, termasuk snapshot harga, batas kupon, pesanan tanpa pembayaran, webhook duplikat/terlambat, refund sebagian/penuh, entitlement, publikasi atomik, akses finance, dan expiry renderer.
+- Migrasi Fase 4 serta tiga Edge Function telah diterapkan pada Supabase staging. Pembayaran production tetap dinonaktifkan.
+- **Fase 4 belum dinyatakan selesai sepenuhnya:** `MIDTRANS_SERVER_KEY` sandbox belum tersedia pada secret Edge Functions staging, sehingga checkout Midtrans sandbox nyata, webhook dari gateway, dan rekonsiliasi end-to-end belum dapat dibuktikan. Jangan menaruh kunci ini pada variabel `VITE_` atau mengirimkannya melalui chat; simpan hanya pada Supabase Function Secrets.
+- URL webhook staging: `https://kcdydzdwfgdccbqbqcof.supabase.co/functions/v1/midtrans-webhook`. Setelah secret sandbox dikonfigurasi, lakukan transaksi sandbox dan pastikan callback kembali ke aplikasi serta dashboard finance merekonsiliasi statusnya.
+- Migrasi production, penggabungan ke `main`, dan deployment Vercel production belum dilakukan. Roadmap mensyaratkan sandbox E2E, rekonsiliasi, refund, dan persetujuan pemilik sebelum rilis production.
+
 **Checkpoint: 22 November 2026**
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
