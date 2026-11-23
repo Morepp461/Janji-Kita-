@@ -9,6 +9,7 @@ import PublicInvitation from "./features/invitations/PublicInvitation";
 import CheckoutPage from "./features/commerce/CheckoutPage";
 import OrdersPage from "./features/commerce/OrdersPage";
 import InvitationEditor from "./features/editor/InvitationEditor";
+import GuestOperations from "./features/guests/GuestOperations";
 import { getSupabaseClient } from "./lib/supabase";
 
 type Profile = {
@@ -244,6 +245,9 @@ export default function App() {
       <InvitationEditor client={client} invitationId={editorMatch[1]} userId={session.user.id} />
     );
   }
+
+  const guestMatch = pathname.match(/^\\/invitations\\/([0-9a-f-]+)\\/guests\\/?$/i);
+  if (guestMatch) return <GuestOperations client={client} invitationId={guestMatch[1]} />;
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
   const isFinance = roles.includes("finance");
