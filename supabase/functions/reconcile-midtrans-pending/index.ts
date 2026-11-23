@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
+import { extractBearerToken } from "../_shared/bearer-token.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
