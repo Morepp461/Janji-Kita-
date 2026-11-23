@@ -574,9 +574,9 @@ export default function ResellerWorkspace({
                 >
                   <h2 className="font-semibold">Buat undangan untuk klien</h2>
                   <p className="mt-1 text-xs leading-5 text-[#887970]">
-                    Klien harus memiliki akun Janji Kita terverifikasi dengan email yang sama seperti
-                    catatan klien. Klien menjadi pemilik, sedangkan reseller menjadi pembuat dan
-                    pengelola.
+                    Klien harus memiliki akun Janji Kita terverifikasi dengan email yang sama
+                    seperti catatan klien. Klien menjadi pemilik, sedangkan reseller menjadi pembuat
+                    dan pengelola.
                   </p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <label className="text-sm font-medium">
