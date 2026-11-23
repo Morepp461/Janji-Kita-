@@ -395,6 +395,15 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     }
     const result = data as { slug: string; active_until: string };
     setPublishedUrl(`/i/${result.slug}`);
+    const { data: refreshedInvitation } = await client
+      .from("invitations")
+      .select("updated_at")
+      .eq("id", invitationId)
+      .maybeSingle();
+    if (refreshedInvitation?.updated_at) {
+      setBaseUpdatedAt(refreshedInvitation.updated_at);
+      updatedAtRef.current = refreshedInvitation.updated_at;
+    }
     setMessage(`Undangan berhasil diterbitkan. Masa aktif sampai ${new Date(result.active_until).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}.`);
     setPublishing(false);
   }
