@@ -95,6 +95,9 @@ Deno.serve(async (request: Request) => {
         continue;
       }
 
+      const refundAmount = verified.refund_amount == null
+        ? null
+        : Math.round(Number.parseFloat(String(verified.refund_amount)));
       const transactionId = String(verified.transaction_id ?? attempt.provider_order_id);
       const statusCode = String(verified.status_code ?? "");
       const transactionStatus = String(verified.transaction_status ?? "pending");
@@ -108,6 +111,7 @@ Deno.serve(async (request: Request) => {
         p_payment_type: String(verified.payment_type ?? ""),
         p_status_code: statusCode,
         p_gross_amount: amount,
+        p_refund_amount: refundAmount,
         p_event_key: eventKey,
         p_payload_redacted: {
           source: "reconciliation",
@@ -118,6 +122,7 @@ Deno.serve(async (request: Request) => {
           payment_type: verified.payment_type ?? null,
           status_code: statusCode,
           gross_amount: verified.gross_amount ?? null,
+          refund_amount: verified.refund_amount ?? null,
           transaction_time: transactionTime,
           currency: "IDR",
         },
