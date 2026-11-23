@@ -206,7 +206,7 @@ declare
 begin
   if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}$'
      or p_response not in ('yes','no','maybe')
-     or p_attendee_count < 0 or p_attendee_count > 2
+     or p_attendee_count is null or p_attendee_count < 0 or p_attendee_count > 2
      or jsonb_typeof(coalesce(p_answers, '{}'::jsonb)) <> 'object' then
     raise exception 'Data RSVP tidak valid';
   end if;
@@ -220,7 +220,7 @@ begin
     and i.published_version_id is not null
     and i.active_from <= now() and i.active_until > now();
   if not found then raise exception 'Undangan tidak aktif'; end if;
-  if p_attendee_count > case when guest_row.plus_one_allowed then 2 else 1 end then
+  if not guest_row.plus_one_allowed and p_attendee_count > 1 then
     raise exception 'Jumlah kehadiran melebihi izin tamu';
   end if;
   if not public.consume_guest_rate_limit(p_token_hash, 'rsvp', 5) then
