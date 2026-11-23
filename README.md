@@ -81,19 +81,19 @@ Ruang lingkup implementasi:
 
 ### Fase 6 — Kolaborasi, Premium, dan Reseller
 
-- Kolaborasi undangan mendukung peran editor dan pembaca, undangan melalui email, kotak masuk undangan, penerimaan/pencabutan akses, serta mode baca-saja untuk pembaca.
-- Batas editor akun reguler ditegakkan secara transaksional. Paket Premium menyediakan batas kolaborator yang dapat dikonfigurasi admin, entitlement, sinkronisasi status langganan, dan masa tenggang pembayaran.
-- Pengelolaan langganan memakai adapter provider yang idempoten. Paket premium_monthly tetap nonaktif dan belum memiliki harga/provider sampai konfigurasi merchant disetujui admin. Fitur Premium sudah tersedia secara teknis, tetapi penjualan langganan otomatis belum dibuka.
-- Reseller mendukung pendaftaran, persetujuan admin, tingkat harga, kode referral, aturan harga wholesale, data klien, pengarsipan klien, serta pencatatan penjualan dan margin.
+- Kolaborasi undangan mendukung peran editor dan pembaca, undangan melalui email, kotak masuk undangan, penerimaan dan pencabutan akses, serta tampilan baca-saja untuk pembaca.
+- Batas editor akun reguler ditegakkan secara transaksional. Paket Premium menyediakan batas kolaborator yang dapat diatur admin, hak akses berbasis langganan, sinkronisasi status, dan masa tenggang pembayaran.
+- Pengelolaan langganan memakai penghubung penyedia pembayaran yang idempoten. Paket premium_monthly tetap nonaktif dan belum memiliki harga maupun penyedia pembayaran sampai konfigurasi komersial disetujui admin. Fitur Premium telah tersedia secara teknis, tetapi penjualan langganan otomatis belum dibuka.
+- Program reseller mendukung pendaftaran, persetujuan admin, tingkat harga, kode rujukan, aturan harga khusus reseller, data klien, pengarsipan klien, serta pencatatan penjualan dan selisih harga.
 - Reseller dapat membuat dan mengelola undangan atas nama klien yang memiliki akun terverifikasi. Pemilik, pembuat, pembayar, dan reseller disimpan sebagai identitas terpisah.
-- Checkout memakai harga wholesale ketika reseller menjadi pembayar. Pembayaran langsung oleh klien tetap memakai harga retail dan menyimpan atribusi referral. Laporan margin merupakan catatan penjualan, bukan klaim payout.
-- RLS membatasi tabel kolaborasi, langganan, klien, aturan harga, dan penjualan. Peran anon tidak memiliki hak baca pada tabel privat fase ini. Autosave tetap berjalan sebagai SECURITY INVOKER.
-- Tiga migrasi Fase 6 diterapkan pada Supabase staging dan production. RLS, fungsi inti, dan hak akses anonim diverifikasi pada kedua lingkungan.
-- CI lulus seluruh pemeriksaan format, lint, TypeScript, unit test, build production, migrasi lokal, database lint, dan pengujian pgTAP: [run #45112026551](https://github.com/Morepp461/Janji-Kita-/actions/runs/45112026551).
-- [PR #19](https://github.com/Morepp461/Janji-Kita-/pull/19) digabung ke main pada commit `32c8b69e82bd6e9b55c1542071a8ff899bbdd123`.
-- Deployment Vercel production berstatus READY pada commit yang sama: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+- Pembayaran yang dilakukan reseller memakai harga khusus reseller. Pembayaran langsung oleh klien tetap memakai harga normal dan menyimpan atribusi reseller. Laporan selisih penjualan merupakan catatan, bukan bukti pencairan komisi.
+- Kebijakan keamanan tingkat baris (RLS) membatasi tabel kolaborasi, langganan, klien, aturan harga, dan penjualan. Peran anon tidak memiliki hak baca pada tabel privat fase ini. Autosave tetap berjalan dengan hak pemanggil (SECURITY INVOKER).
+- Tiga migrasi Fase 6 diterapkan pada Supabase staging dan production. Kebijakan akses, fungsi inti, dan hak akses anonim diverifikasi pada kedua lingkungan.
+- CI lulus seluruh pemeriksaan format, lint, tipe TypeScript, pengujian unit, kompilasi produksi, migrasi lokal, pemeriksaan skema basis data, dan pengujian pgTAP: [hasil CI #45112026551](https://github.com/Morepp461/Janji-Kita-/actions/runs/45112026551).
+- [Permintaan penggabungan #19](https://github.com/Morepp461/Janji-Kita-/pull/19) digabung ke cabang utama pada commit `32c8b69e82bd6e9b55c1542071a8ff899bbdd123`.
+- Penerapan Vercel production berstatus **SIAP** pada commit yang sama: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
-**Fase 6 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi staging/production, pengujian akses, dan deployment production telah selesai. Konfigurasi harga dan provider Premium sengaja tetap nonaktif sampai admin menyelesaikan persetujuan komersial.
+**Fase 6 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi staging/production, pengujian akses, dan penerapan production telah selesai. Konfigurasi harga dan penyedia pembayaran Premium sengaja tetap nonaktif sampai admin menyelesaikan persetujuan komersial.
 
 ## Keputusan dan catatan operasional
 
