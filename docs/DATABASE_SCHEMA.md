@@ -218,7 +218,7 @@ Index `(invitation_id,sort_order)`.
 - RLS hanya mengizinkan pemilik undangan membaca dan mengelola penempatan.
 
 ### RPC informasi tempat duduk publik
-- `public.get_public_guest_seating(p_token_hash text)` adalah `SECURITY INVOKER` dan hanya mengembalikan `table_label` serta `seat_label`.
+- `public.get_public_guest_seating(p_token_hash text)` adalah pengecualian token-tamu yang memakai `SECURITY DEFINER` dengan `search_path` tetap; fungsi hanya mengembalikan `table_label` serta `seat_label`.
 - Helper `app_private.get_public_guest_seating_internal` memvalidasi hash token 64 karakter, status/masa aktif undangan, versi publikasi, dan rate limit sebelum membaca penempatan.
 - Token mentah tidak disimpan atau dikembalikan. Akses publik tidak mengekspos nama, email, nomor telepon, atau data RSVP.
 - `guest_public_rate_limits.action` mencakup `rsvp`, `guestbook`, dan `seating`; tabel rate limit tetap tidak dapat diakses langsung oleh peran klien.
