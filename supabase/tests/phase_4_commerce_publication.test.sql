@@ -125,6 +125,16 @@ select is(
   'pending',
   'pesanan menunggu verifikasi gateway'
 );
+select is(
+  (public.create_order(
+    (select id from public.invitations where title = 'Undangan Commerce Fase 4'),
+    '[{"id":"00000000-0000-0000-0000-000000000404","quantity":2}]'::jsonb,
+    'FASE4HEMAT',
+    'phase4-idempotency-key-0001'
+  ) ->> 'order_id')::uuid,
+  (select id from public.orders where idempotency_key = 'phase4-idempotency-key-0001'),
+  'kunci idempotensi mengembalikan pesanan yang sama'
+);
 
 select throws_ok(
   $phase4$select public.publish_invitation(
@@ -288,6 +298,17 @@ select lives_ok(
     '00000000-0000-0000-0000-000000000402'
   )$phase4$,
   'draft kedua tersedia untuk uji refund penuh'
+);
+select throws_ok(
+  $phase4$select public.create_order(
+    (select id from public.invitations where title = 'Undangan Refund Penuh'),
+    '[]'::jsonb,
+    'FASE4HEMAT',
+    'phase4-coupon-limit-key-0001'
+  )$phase4$,
+  '22023',
+  'Batas penggunaan kupon untuk akun ini sudah tercapai',
+  'batas penggunaan kupon per akun ditegakkan di server'
 );
 select lives_ok(
   $phase4$select public.create_order(
