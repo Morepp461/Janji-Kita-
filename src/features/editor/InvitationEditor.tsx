@@ -111,6 +111,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
   const [title, setTitle] = useState("");
   const [ownerUserId, setOwnerUserId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
+  const [canManage, setCanManage] = useState(false);
   const [document, setDocument] = useState<InvitationDocument | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
@@ -159,7 +160,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setLoading(true);
       const { data: invitation, error: invitationError } = await client
         .from("invitations")
-        .select("id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id")
+        .select("id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id,reseller_user_id")
         .eq("id", invitationId)
         .maybeSingle();
       if (!active) return;
@@ -171,9 +172,23 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setOwnerUserId(invitation.owner_user_id);
       let canEditCurrent = invitation.owner_user_id === userId;
       let readOnlyCurrent = false;
+      let canManageCurrent = invitation.owner_user_id === userId;
       if (invitation.owner_user_id === userId) {
         setReadOnly(false);
-      } else {
+      } else if (invitation.reseller_user_id === userId) {
+        const { data: resellerProfile } = await client
+          .from("reseller_profiles")
+          .select("status")
+          .eq("user_id", userId)
+          .eq("status", "approved")
+          .maybeSingle();
+        if (resellerProfile) {
+          canEditCurrent = true;
+          canManageCurrent = true;
+          setReadOnly(false);
+        }
+      }
+      if (!canEditCurrent) {
         const { data: membership, error: membershipError } = await client
           .from("invitation_collaborators")
           .select("role,status")
@@ -190,6 +205,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         canEditCurrent = membership.role === "editor";
         setReadOnly(readOnlyCurrent);
       }
+      setCanManage(canManageCurrent);
       if (!["draft", "active", "expired"].includes(invitation.status)) {
         setMessage("Status undangan ini tidak dapat disunting.");
         setLoading(false);
@@ -680,14 +696,16 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           >
             Kolaborasi
           </a>
-          {ownerUserId === userId && (
+          {canManage && (
             <>
-              <a
-                href={`/invitations/${invitationId}/guests`}
-                className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
-              >
-                Tamu & RSVP
-              </a>
+              {ownerUserId === userId && (
+                <a
+                  href={`/invitations/${invitationId}/guests`}
+                  className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+                >
+                  Tamu & RSVP
+                </a>
+              )}
               <a
                 href={`/checkout/${invitationId}`}
                 className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
