@@ -25,6 +25,7 @@ type CatalogOption = {
   title?: string;
   code?: string;
   name_i18n?: Record<string, string>;
+  slug?: string;
 };
 type ClientRow = { id: string; name: string; email: string; phone: string | null; status: string };
 type OrderRow = {
@@ -452,6 +453,15 @@ export default function ResellerWorkspace({
                             {rule.valid_until
                               ? " – " + new Date(rule.valid_until).toLocaleDateString("id-ID")
                               : " – seterusnya"}
+                            {!rule.valid_until && (
+                              <button
+                                disabled={saving}
+                                onClick={() => void deactivateRule(rule.id)}
+                                className="ml-3 rounded-lg border border-[#ddcec3] px-2 py-1 text-xs"
+                              >
+                                Nonaktifkan
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -558,6 +568,85 @@ export default function ResellerWorkspace({
                     Klien dapat memasukkan kode ini saat checkout untuk mencatat atribusi reseller.
                   </p>
                 </section>
+                <form
+                  onSubmit={createInvitationForClient}
+                  className="rounded-2xl border border-[#eaded5] bg-white p-5"
+                >
+                  <h2 className="font-semibold">Buat undangan untuk klien</h2>
+                  <p className="mt-1 text-xs leading-5 text-[#887970]">
+                    Klien harus memiliki akun Janji Kita terverifikasi dengan email yang sama seperti
+                    catatan klien. Klien menjadi pemilik, sedangkan reseller menjadi pembuat dan
+                    pengelola.
+                  </p>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <label className="text-sm font-medium">
+                      Klien
+                      <select
+                        required
+                        value={selectedClientId}
+                        onChange={(event) => setSelectedClientId(event.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5"
+                      >
+                        <option value="">Pilih klien</option>
+                        {clients
+                          .filter((item) => item.status === "active")
+                          .map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name} · {item.email}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label className="text-sm font-medium">
+                      Judul undangan
+                      <input
+                        required
+                        maxLength={160}
+                        value={invitationTitle}
+                        onChange={(event) => setInvitationTitle(event.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5"
+                        placeholder="Pernikahan ..."
+                      />
+                    </label>
+                    <label className="text-sm font-medium">
+                      Kategori acara
+                      <select
+                        required
+                        value={selectedCategoryId}
+                        onChange={(event) => setSelectedCategoryId(event.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5"
+                      >
+                        <option value="">Pilih kategori</option>
+                        {categories.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.name_i18n?.["id-ID"] || item.slug}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="text-sm font-medium">
+                      Template (opsional)
+                      <select
+                        value={selectedTemplateId}
+                        onChange={(event) => setSelectedTemplateId(event.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5"
+                      >
+                        <option value="">Kanvas kosong</option>
+                        {templates.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.title}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <button
+                    disabled={saving || clients.every((item) => item.status !== "active")}
+                    className="mt-4 rounded-xl bg-[#754b3b] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    Buat undangan klien
+                  </button>
+                </form>
                 <section className="grid gap-3 sm:grid-cols-3">
                   <article className="rounded-2xl border border-[#eaded5] bg-white p-5">
                     <p className="text-sm text-[#76675f]">Klien aktif</p>
@@ -697,12 +786,27 @@ export default function ResellerWorkspace({
                   ) : (
                     <div className="mt-3 divide-y divide-[#f0e7e0]">
                       {clients.map((item) => (
-                        <div key={item.id} className="py-3">
-                          <p className="font-medium">{item.name}</p>
-                          <p className="text-xs text-[#887970]">
-                            {item.email}
-                            {item.phone ? " · " + item.phone : ""}
-                          </p>
+                        <div
+                          key={item.id}
+                          className="flex flex-wrap items-center justify-between gap-3 py-3"
+                        >
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            <p className="text-xs text-[#887970]">
+                              {item.email}
+                              {item.phone ? " · " + item.phone : ""} ·{" "}
+                              {item.status === "active" ? "Aktif" : "Diarsipkan"}
+                            </p>
+                          </div>
+                          {item.status === "active" && (
+                            <button
+                              disabled={saving}
+                              onClick={() => void archiveClient(item.id)}
+                              className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+                            >
+                              Arsipkan
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
