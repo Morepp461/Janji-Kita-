@@ -86,7 +86,9 @@ export default function CheckoutPage({
         .maybeSingle(),
     ]);
     if (invitationResult.error || !invitationResult.data) {
-      setError(invitationResult.error?.message || "Undangan tidak ditemukan atau bukan milik akun ini.");
+      setError(
+        invitationResult.error?.message || "Undangan tidak ditemukan atau bukan milik akun ini.",
+      );
     } else {
       setInvitation(invitationResult.data as Invitation);
     }
@@ -153,14 +155,22 @@ export default function CheckoutPage({
   }
 
   if (loading) {
-    return <main className="grid min-h-screen place-items-center text-sm text-[#76675f]">Memuat checkout...</main>;
+    return (
+      <main className="grid min-h-screen place-items-center text-sm text-[#76675f]">
+        Memuat checkout...
+      </main>
+    );
   }
 
   if (!invitation) {
     return (
       <main className="mx-auto max-w-xl p-8">
-        <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>
-        <a href="/" className="mt-4 inline-block text-sm underline">Kembali ke ruang kerja</a>
+        <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </p>
+        <a href="/" className="mt-4 inline-block text-sm underline">
+          Kembali ke ruang kerja
+        </a>
       </main>
     );
   }
@@ -170,47 +180,78 @@ export default function CheckoutPage({
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a36d55]">Janji Kita · Checkout</p>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#a36d55]">
+              Janji Kita · Checkout
+            </p>
             <h1 className="mt-2 text-2xl font-semibold">Publikasi undangan</h1>
             <p className="mt-1 text-sm text-[#76675f]">{invitation.title}</p>
           </div>
-          <a href={`/editor/${invitation.id}`} className="text-sm font-semibold text-[#754b3b] underline">Kembali ke editor</a>
+          <a
+            href={`/editor/${invitation.id}`}
+            className="text-sm font-semibold text-[#754b3b] underline"
+          >
+            Kembali ke editor
+          </a>
         </header>
 
         {(notice || error) && (
-          <p role={error ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>
+          <p
+            role={error ? "alert" : "status"}
+            className={`rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}
+          >
             {error || notice}
           </p>
         )}
 
         <section className="rounded-2xl border border-[#eaded5] bg-white p-5 sm:p-7">
           <h2 className="font-semibold">Add-on opsional</h2>
-          <p className="mt-1 text-sm text-[#76675f]">Harga dan ketersediaan ditentukan admin. Add-on hanya aktif setelah pembayaran diverifikasi.</p>
+          <p className="mt-1 text-sm text-[#76675f]">
+            Harga dan ketersediaan ditentukan admin. Add-on hanya aktif setelah pembayaran
+            diverifikasi.
+          </p>
           {addOns.length ? (
             <div className="mt-4 divide-y divide-[#f0e7e0]">
               {addOns.map((item) => (
-                <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div
+                  key={item.id}
+                  className="flex flex-wrap items-center justify-between gap-3 py-3"
+                >
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{item.name_i18n?.["id-ID"] || item.code}</p>
-                    <p className="text-xs text-[#887970]">{item.description_i18n?.["id-ID"] || "Add-on undangan"}</p>
+                    <p className="text-xs text-[#887970]">
+                      {item.description_i18n?.["id-ID"] || "Add-on undangan"}
+                    </p>
                     <p className="mt-1 text-sm font-semibold">{money(item.price, item.currency)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <label className="sr-only" htmlFor={`qty-${item.id}`}>Jumlah {item.name_i18n?.["id-ID"] || item.code}</label>
+                    <label className="sr-only" htmlFor={`qty-${item.id}`}>
+                      Jumlah {item.name_i18n?.["id-ID"] || item.code}
+                    </label>
                     <select
                       id={`qty-${item.id}`}
                       value={quantities[item.id] || 0}
                       disabled={Boolean(order)}
-                      onChange={(event) => setQuantities((current) => ({ ...current, [item.id]: Number(event.target.value) }))}
+                      onChange={(event) =>
+                        setQuantities((current) => ({
+                          ...current,
+                          [item.id]: Number(event.target.value),
+                        }))
+                      }
                       className="rounded-lg border border-[#ddcec3] bg-white px-3 py-2 text-sm"
                     >
-                      {[0, 1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value === 0 ? "Tidak dipilih" : value}</option>)}
+                      {[0, 1, 2, 3, 4, 5].map((value) => (
+                        <option key={value} value={value}>
+                          {value === 0 ? "Tidak dipilih" : value}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
               ))}
             </div>
-          ) : <p className="mt-4 text-sm text-[#887970]">Belum ada add-on aktif.</p>}
+          ) : (
+            <p className="mt-4 text-sm text-[#887970]">Belum ada add-on aktif.</p>
+          )}
 
           <label className="mt-5 block text-sm font-medium">
             Kode kupon (opsional)
@@ -225,7 +266,8 @@ export default function CheckoutPage({
             />
           </label>
           <p className="mt-3 text-xs leading-5 text-[#887970]">
-            Total final dihitung dan disimpan di server. Draft tetap gratis untuk dibuat dan diedit, tetapi undangan publik memerlukan pembayaran yang sudah diverifikasi.
+            Total final dihitung dan disimpan di server. Draft tetap gratis untuk dibuat dan diedit,
+            tetapi undangan publik memerlukan pembayaran yang sudah diverifikasi.
           </p>
           <button
             type="button"
@@ -233,7 +275,11 @@ export default function CheckoutPage({
             onClick={() => void createOrder()}
             className="mt-5 w-full rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {creating ? "Membuat pesanan..." : order ? "Pesanan sudah dibuat" : "Hitung total dan buat pesanan"}
+            {creating
+              ? "Membuat pesanan..."
+              : order
+                ? "Pesanan sudah dibuat"
+                : "Hitung total dan buat pesanan"}
           </button>
         </section>
 
@@ -241,16 +287,32 @@ export default function CheckoutPage({
           <section className="rounded-2xl border border-[#eaded5] bg-white p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-[#a36d55]">Ringkasan server</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#a36d55]">
+                  Ringkasan server
+                </p>
                 <h2 className="mt-1 text-lg font-semibold">{order.order_number}</h2>
               </div>
-              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">Menunggu pembayaran</span>
+              <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
+                Menunggu pembayaran
+              </span>
             </div>
             <dl className="mt-5 space-y-2 text-sm">
-              <div className="flex justify-between gap-3"><dt className="text-[#76675f]">Subtotal</dt><dd>{money(order.subtotal, order.currency)}</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-[#76675f]">Diskon</dt><dd>−{money(order.discount_total, order.currency)}</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-[#76675f]">Pajak/biaya</dt><dd>{money(order.tax_total, order.currency)}</dd></div>
-              <div className="mt-3 flex justify-between border-t border-[#eaded5] pt-3 text-base font-bold"><dt>Total</dt><dd>{money(order.grand_total, order.currency)}</dd></div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-[#76675f]">Subtotal</dt>
+                <dd>{money(order.subtotal, order.currency)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-[#76675f]">Diskon</dt>
+                <dd>−{money(order.discount_total, order.currency)}</dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-[#76675f]">Pajak/biaya</dt>
+                <dd>{money(order.tax_total, order.currency)}</dd>
+              </div>
+              <div className="mt-3 flex justify-between border-t border-[#eaded5] pt-3 text-base font-bold">
+                <dt>Total</dt>
+                <dd>{money(order.grand_total, order.currency)}</dd>
+              </div>
             </dl>
             <button
               type="button"
@@ -260,7 +322,10 @@ export default function CheckoutPage({
             >
               {paying ? "Menyiapkan pembayaran..." : "Lanjutkan ke Midtrans Sandbox"}
             </button>
-            <a href={`/orders?order_id=${order.order_id}`} className="mt-4 block text-center text-sm font-semibold text-[#754b3b] underline">
+            <a
+              href={`/orders?order_id=${order.order_id}`}
+              className="mt-4 block text-center text-sm font-semibold text-[#754b3b] underline"
+            >
               Lihat status pesanan
             </a>
           </section>
