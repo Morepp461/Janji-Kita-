@@ -475,8 +475,25 @@ select is(
 );
 select is(
   (select status from public.invitations where title = 'Undangan Order Kedaluwarsa'),
+  'draft',
+  'pembayaran terverifikasi tidak menerbitkan undangan secara otomatis'
+);
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000401","role":"authenticated"}', true);
+select lives_ok(
+  $phase4$select public.publish_invitation(
+    (select id from public.invitations where title = 'Undangan Order Kedaluwarsa'),
+    (select draft_version_id from public.invitations where title = 'Undangan Order Kedaluwarsa')
+  )$phase4$,
+  'pemilik dapat menerbitkan setelah settlement terlambat terverifikasi'
+);
+select is(
+  (select status from public.invitations where title = 'Undangan Order Kedaluwarsa'),
   'active',
-  'undangan diaktifkan setelah settlement terverifikasi'
+  'publikasi mengaktifkan undangan setelah entitlement tersedia'
 );
 reset role;
 
