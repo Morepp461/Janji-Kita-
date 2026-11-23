@@ -449,6 +449,35 @@ select is(
   'expired',
   'job expiry menutup payment attempt yang belum dibayar'
 );
+select is(
+  public.process_midtrans_notification(
+    (select order_number from public.orders where idempotency_key = 'phase4-expiring-order-key'),
+    'midtrans-late-settlement', 'settlement', '', 'qris', '200', 10000, null,
+    'midtrans-late-settlement:200:settlement:2026-11-23T00:09:00Z',
+    '{"order_id":"redacted","transaction_status":"settlement"}'::jsonb,
+    true, now()
+  ) ->> 'order_status',
+  'paid',
+  'webhook settlement terverifikasi memulihkan pesanan yang baru saja expired'
+);
+select is(
+  (select status from public.payment_attempts where order_id =
+    (select id from public.orders where idempotency_key = 'phase4-expiring-order-key')),
+  'settlement',
+  'payment attempt diperbarui setelah settlement terlambat terverifikasi'
+);
+select is(
+  (select status from public.entitlements
+    where entitlement_key = 'invitation.publish'
+      and value ->> 'invitation_id' = (select id::text from public.invitations where title = 'Undangan Order Kedaluwarsa')),
+  'active',
+  'entitlement diberikan setelah gateway mengonfirmasi pembayaran'
+);
+select is(
+  (select status from public.invitations where title = 'Undangan Order Kedaluwarsa'),
+  'active',
+  'undangan diaktifkan setelah settlement terverifikasi'
+);
 reset role;
 
 set local role anon;
