@@ -17,6 +17,8 @@ select ok((select relrowsecurity from pg_class where oid = 'public.analytics_eve
 select ok(has_table_privilege('anon', 'public.locales', 'select'), 'publik hanya dapat membaca daftar bahasa aktif melalui RLS');
 select ok(not has_table_privilege('anon', 'public.system_settings', 'select'), 'anon tidak dapat membaca pengaturan internal');
 select ok(not has_table_privilege('anon', 'public.consent_records', 'select'), 'anon tidak dapat membaca persetujuan');
+select ok(has_column_privilege('authenticated', 'public.consent_records', 'id', 'select'), 'pemilik dapat membaca kolom riwayat persetujuan');
+select ok(not has_column_privilege('authenticated', 'public.consent_records', 'metadata', 'select'), 'metadata moderasi hanya dapat dibaca admin melalui RPC');
 select ok(not has_table_privilege('anon', 'public.analytics_events', 'select'), 'anon tidak dapat membaca peristiwa analitik');
 select ok(not has_table_privilege('authenticated', 'public.system_settings', 'update'), 'pengaturan sistem hanya dapat diubah melalui RPC tervalidasi');
 select ok(not has_table_privilege('authenticated', 'public.locales', 'update'), 'katalog bahasa hanya dapat diubah melalui RPC tervalidasi');
@@ -29,6 +31,8 @@ select ok(not has_function_privilege('anon', 'public.record_marketplace_consent(
 select ok(has_function_privilege('authenticated', 'public.record_marketplace_consent(uuid,uuid,text)', 'execute'), 'pengguna terautentikasi dapat memberi persetujuan melalui RPC');
 select ok(has_function_privilege('authenticated', 'public.withdraw_marketplace_consent(uuid)', 'execute'), 'pemilik dapat mencabut persetujuan melalui RPC');
 select ok(has_function_privilege('authenticated', 'public.admin_review_marketplace_consent(uuid,text,text)', 'execute'), 'RPC moderasi persetujuan tersedia');
+select ok(has_function_privilege('authenticated', 'public.admin_list_marketplace_consents()', 'execute'), 'RPC daftar persetujuan admin tersedia');
+select ok(not has_function_privilege('anon', 'public.admin_list_marketplace_consents()', 'execute'), 'anon tidak dapat membaca daftar persetujuan admin');
 select ok(has_function_privilege('authenticated', 'public.admin_set_template_moderation(uuid,text,text)', 'execute'), 'RPC moderasi template tersedia');
 select ok(has_function_privilege('authenticated', 'public.admin_link_template_consent(uuid,uuid,uuid)', 'execute'), 'RPC penautan persetujuan ke template tersedia');
 select ok(not has_function_privilege('anon', 'public.admin_link_template_consent(uuid,uuid,uuid)', 'execute'), 'anon tidak dapat menautkan persetujuan ke template');
