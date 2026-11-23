@@ -52,8 +52,9 @@ insert into public.template_versions (
 update public.templates set current_version_id = '00000000-0000-0000-0000-000000000403',
   status = 'published' where id = '00000000-0000-0000-0000-000000000402';
 
-insert into public.add_ons(code, name_i18n, price, currency, billing_type, is_active)
-values ('phase4-addon', '{"id-ID":"Add-on Uji"}'::jsonb, 2500, 'IDR', 'quantity', true);
+insert into public.add_ons(id, code, name_i18n, price, currency, billing_type, is_active)
+values ('00000000-0000-0000-0000-000000000404', 'phase4-addon',
+  '{"id-ID":"Add-on Uji"}'::jsonb, 2500, 'IDR', 'quantity', true);
 insert into public.coupons(code, discount_type, discount_value, starts_at, ends_at,
   max_redemptions, per_user_limit, is_active, rules)
 values ('FASE4HEMAT', 'percent', 10, now() - interval '1 day', now() + interval '1 day',
@@ -76,7 +77,7 @@ select lives_ok(
 select lives_ok(
   $phase4$select public.create_order(
     (select id from public.invitations where title = 'Undangan Commerce Fase 4'),
-    '[{"id":"' || (select id::text from public.add_ons where code = 'phase4-addon') || '","quantity":2}]'::jsonb,
+    '[{"id":"00000000-0000-0000-0000-000000000404","quantity":2}]'::jsonb,
     'FASE4HEMAT',
     'phase4-idempotency-key-0001'
   )$phase4$,
