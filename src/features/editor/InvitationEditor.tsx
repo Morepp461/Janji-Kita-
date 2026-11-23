@@ -209,7 +209,8 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         setLoading(false);
         return;
       }
-      const snapshot = { document: version.document, title: invitation.title };
+      const draftTitle = (version.document as unknown as { metadata?: { title?: string } }).metadata?.title;
+      const snapshot = { document: version.document, title: draftTitle || invitation.title };
       setTitle(snapshot.title);
       titleRef.current = snapshot.title;
       setDocument(snapshot.document);
