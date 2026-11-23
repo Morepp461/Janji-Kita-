@@ -128,7 +128,7 @@ create policy analytics_events_admin_select on public.analytics_events
 insert into public.role_permissions(role, permission_key)
 select roles.role, permissions.permission_key
 from (values ('admin'), ('super_admin')) as roles(role)
-cross join (values ('analytics.read'), ('consent.read'), ('settings.manage'), ('locales.manage')) as permissions(permission_key)
+cross join (values ('analytics.read'), ('consent.read'), ('consent.manage'), ('settings.manage'), ('locales.manage')) as permissions(permission_key)
 where not exists (
   select 1 from public.role_permissions existing
   where existing.role = roles.role and existing.permission_key = permissions.permission_key
@@ -308,7 +308,7 @@ security definer
 set search_path = public, app_private, pg_temp
 as $$
 begin
-  if not app_private.has_permission('consent.read') then
+  if not app_private.has_permission('consent.manage') then
     raise exception 'Tidak memiliki izin meninjau persetujuan marketplace';
   end if;
   if p_decision not in ('approved', 'rejected') then
