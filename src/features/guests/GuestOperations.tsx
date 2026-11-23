@@ -399,13 +399,20 @@ export default function GuestOperations({
       if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
       return '"' + text.replace(/"/g, '""') + '"';
     };
-    const rows = entries.map((entry) => [entry.display_name, entry.message, entry.moderation_status, entry.created_at]
-      .map(quote).join(','));
-    const csv = [['nama', 'ucapan', 'status', 'tanggal'].map(quote).join(','), ...rows].join('\r\n');
+    const rows = entries.map((entry) =>
+      [entry.display_name, entry.message, entry.moderation_status, entry.created_at]
+        .map(quote)
+        .join(","),
+    );
+    const csv = [["nama", "ucapan", "status", "tanggal"].map(quote).join(","), ...rows].join(
+      "\r\n",
+    );
     const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
-    anchor.href = url; anchor.download = `ucapan-${invitation?.slug || invitationId}.csv`; anchor.click();
+    anchor.href = url;
+    anchor.download = `ucapan-${invitation?.slug || invitationId}.csv`;
+    anchor.click();
     URL.revokeObjectURL(url);
   }
 
@@ -786,7 +793,11 @@ export default function GuestOperations({
               ref={videoRef}
               muted
               playsInline
-              className={scanning ? "mt-3 aspect-video w-full max-w-lg rounded-xl bg-black object-cover" : "hidden"}
+              className={
+                scanning
+                  ? "mt-3 aspect-video w-full max-w-lg rounded-xl bg-black object-cover"
+                  : "hidden"
+              }
             />
             {scannerMessage && <p className="mt-2 text-sm text-[#76675f]">{scannerMessage}</p>}
             {checkinResult && (
@@ -819,7 +830,15 @@ export default function GuestOperations({
 
         {activeTab === "guestbook" && (
           <section className="rounded-2xl border border-[#eaded5] bg-white p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Moderasi buku tamu</h2><button onClick={() => void exportGuestbookCsv()} className="rounded-xl border border-[#ddcec3] px-3 py-2 text-xs font-semibold">Ekspor ucapan CSV</button></div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Moderasi buku tamu</h2>
+              <button
+                onClick={() => void exportGuestbookCsv()}
+                className="rounded-xl border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+              >
+                Ekspor ucapan CSV
+              </button>
+            </div>
             <p className="mt-1 text-sm text-[#76675f]">
               Ucapan baru masuk sebagai menunggu persetujuan dan tidak tampil di halaman publik
               sebelum disetujui.
