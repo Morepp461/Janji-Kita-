@@ -109,7 +109,7 @@
 
 ## 8. Fase 6 — Kolaborasi, Premium, dan Reseller
 
-<badge>SELESAI SEPENUHNYA — 23 NOVEMBER 2026</badge>
+**SELESAI SEPENUHNYA — 23 NOVEMBER 2026**
 
 **Ketergantungan:** role Fase 1 dan commerce Fase 4.
 
