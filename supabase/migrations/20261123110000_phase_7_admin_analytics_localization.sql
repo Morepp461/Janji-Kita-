@@ -765,13 +765,13 @@ begin
   if not app_private.has_permission('settings.manage') then
     raise exception 'Tidak memiliki izin mengelola pengaturan sistem';
   end if;
-  if jsonb_typeof(p_timezones) <> 'array' then
+  if p_timezones is null or jsonb_typeof(p_timezones) <> 'array' then
     raise exception 'Daftar zona waktu harus berupa array';
   end if;
   timezone_count := jsonb_array_length(p_timezones);
   if timezone_count < 1 or timezone_count > 40
-    or exists (select 1 from jsonb_array_elements(p_timezones) item where jsonb_typeof(item) <> 'string')
-    or (select count(distinct value) from jsonb_array_elements_text(p_timezones) values(value)) <> timezone_count then
+    or exists (select 1 from jsonb_array_elements(p_timezones) as items(value) where jsonb_typeof(items.value) <> 'string')
+    or (select count(distinct value) from jsonb_array_elements_text(p_timezones) as timezone_values(value)) <> timezone_count then
     raise exception 'Daftar zona waktu tidak valid';
   end if;
   if exists (
