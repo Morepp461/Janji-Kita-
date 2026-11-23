@@ -229,8 +229,8 @@ select is(
 );
 select lives_ok(
   $phase4$select public.publish_invitation(
-    (select id from public.invitations where title = 'Undangan Commerce Fase 4 Diperbarui'),
-    (select draft_version_id from public.invitations where title = 'Undangan Commerce Fase 4 Diperbarui')
+    (select id from public.invitations where title = 'Undangan Commerce Fase 4'),
+    (select draft_version_id from public.invitations where title = 'Undangan Commerce Fase 4')
   )$phase4$,
   'pemilik dapat menerbitkan pembaruan secara atomik'
 );
