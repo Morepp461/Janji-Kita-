@@ -53,6 +53,13 @@ select has_trigger('public', 'invitations', 'invitations_apply_owner_localizatio
 select has_trigger('public', 'profiles', 'profiles_validate_localization', 'preferensi akun divalidasi');
 select has_trigger('public', 'invitations', 'invitations_validate_localization', 'preferensi undangan divalidasi');
 select has_trigger('public', 'media_assets', 'media_assets_audit_phase7', 'perubahan status media diaudit');
+select ok(not (select prosecdef from pg_proc where oid = 'public.admin_get_analytics_summary(integer)'::regprocedure), 'RPC publik analitik berjalan sebagai invoker');
+select ok((select prosecdef from pg_proc where oid = 'app_private.admin_get_analytics_summary(integer)'::regprocedure), 'implementasi analitik privat berjalan sebagai definer');
+select ok(not (select prosecdef from pg_proc where oid = 'public.get_public_localization_config()'::regprocedure), 'konfigurasi lokalisasi publik berjalan sebagai invoker');
+select ok(has_column_privilege('anon', 'public.system_settings', 'value', 'select'), 'anon hanya dapat membaca nilai konfigurasi zona waktu publik');
+select ok(not has_column_privilege('anon', 'public.system_settings', 'updated_by', 'select'), 'anon tidak dapat membaca metadata admin pengaturan sistem');
+select has_index('public', 'analytics_events', 'analytics_events_invitation_occurred_idx', 'indeks relasi analitik ke undangan tersedia');
+select has_index('public', 'templates', 'templates_source_consent_id_idx', 'indeks sumber persetujuan template tersedia');
 
 select * from finish();
 rollback;
