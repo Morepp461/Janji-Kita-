@@ -48,6 +48,8 @@ select is((select count(*)::integer from public.locales where is_default), 1, 't
 select ok(exists(select 1 from public.role_permissions where role = 'admin' and permission_key = 'analytics.read'), 'admin memiliki izin analitik');
 select ok(exists(select 1 from public.role_permissions where role = 'admin' and permission_key = 'consent.manage'), 'admin memiliki izin moderasi persetujuan');
 select ok(exists(select 1 from public.role_permissions where role = 'super_admin' and permission_key = 'locales.manage'), 'super admin memiliki izin lokalisasi');
+select has_trigger('public', 'profiles', 'profiles_apply_default_locale', 'bahasa bawaan diterapkan pada akun baru');
+select has_trigger('public', 'invitations', 'invitations_apply_owner_localization', 'preferensi akun diterapkan pada undangan baru');
 select has_trigger('public', 'profiles', 'profiles_validate_localization', 'preferensi akun divalidasi');
 select has_trigger('public', 'invitations', 'invitations_validate_localization', 'preferensi undangan divalidasi');
 select has_trigger('public', 'media_assets', 'media_assets_audit_phase7', 'perubahan status media diaudit');
