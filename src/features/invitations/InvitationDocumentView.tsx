@@ -57,6 +57,8 @@ function safeStyle(style: Record<string, unknown> = {}): CSSProperties {
     result.animationName = animationNames[preset];
     result.animationDuration =
       String(Math.min(1800, Math.max(300, Number(style.animationDurationMs) || 650))) + "ms";
+    const delay = style.animationTrigger === "after-delay" ? Number(style.animationDelayMs) || 0 : 0;
+    result.animationDelay = String(Math.min(5000, Math.max(0, delay))) + "ms";
     result.animationTimingFunction = "ease-out";
     result.animationFillMode = "both";
   }
