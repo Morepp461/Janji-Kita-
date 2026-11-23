@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import CommerceAdmin from "./features/admin/CommerceAdmin";
+import FinanceDashboard from "./features/admin/FinanceDashboard";
 import AuthPage from "./features/auth/AuthPage";
 import Marketplace from "./features/marketplace/Marketplace";
 import PublicInvitation from "./features/invitations/PublicInvitation";
@@ -245,6 +246,7 @@ export default function App() {
   }
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
+  const isFinance = roles.includes("finance");
   const isSuperAdmin = roles.includes("super_admin");
   const checkoutMatch = pathname.match(/^\\/checkout\\/([0-9a-f-]+)\\/?$/i);
   if (checkoutMatch) {
@@ -252,6 +254,7 @@ export default function App() {
   }
   if (pathname === "/orders") return <OrdersPage client={client} />;
   if (pathname === "/admin/commerce" && isAdmin) return <CommerceAdmin client={client} />;
+  if (pathname === "/finance/orders" && (isAdmin || isFinance)) return <FinanceDashboard client={client} />;
   if (pathname === "/templates" || templateSlug) {
     return (
       <Marketplace
