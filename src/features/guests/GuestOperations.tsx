@@ -12,7 +12,6 @@ type Guest = {
   plus_one_allowed: boolean;
   status: string;
   rsvps?: { response: string; attendee_count: number }[] | null;
-  tickets?: { ticket_code: string; status: string }[] | null;
   tickets?:
     | {
         ticket_code: string;
