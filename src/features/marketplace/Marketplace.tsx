@@ -671,6 +671,17 @@ export default function Marketplace({
                 />
               </label>
               <label className="text-sm font-medium">
+                Sumber desain
+                <select
+                  value={templateSourceType}
+                  onChange={(event) => setTemplateSourceType(event.target.value as "first_party" | "customer")}
+                  className="mt-1 w-full rounded-lg border border-[#ddcec3] px-3 py-2"
+                >
+                  <option value="first_party">Desain milik Janji Kita</option>
+                  <option value="customer">Desain pelanggan (wajib persetujuan)</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium">
                 Gambar pratinjau (opsional)
                 <input
                   type="file"
