@@ -219,6 +219,7 @@ Unique `(invitation_id,guest_id)`.
 - `code text PK`, `name text`, `native_name text`
 - `is_active bool`, `is_default bool`, `sort_order int`, timestamps
 - Exactly one active locale is the default. Only locales with shipped translation bundles may be enabled.
+- Mutations use permission-checked RPCs; a locale cannot be disabled while referenced by an account or invitation.
 
 ### `reseller_profiles`
 - `id uuid PK`, `user_id uuid UNIQUE FK profiles`
@@ -240,6 +241,7 @@ Rules must resolve deterministically and be snapshotted into order.
 - `withdrawn_at timestamptz NULL`, `metadata jsonb`
 Index `(invitation_id,consent_type,granted)` and `(user_id,created_at)`.
 - Consent records include the text version, user, invitation, optional order, grant timestamp, and withdrawal timestamp. Marketplace consent is optional and separate from purchase terms. Withdrawal archives linked customer-source templates.
+- Owners receive column-level read access to their consent history; moderation metadata is returned only by the admin-only review RPC.
 
 ### `audit_logs`
 - `id uuid PK`, `actor_user_id uuid NULL FK profiles`
@@ -252,13 +254,13 @@ Append-only; redact secrets and unnecessary PII.
 - `id uuid PK`, `event_name text`, `user_id uuid NULL FK profiles`
 - `invitation_id uuid NULL FK invitations`, `session_id text NULL`
 - `properties jsonb`, `occurred_at timestamptz`
-- Browser writes are accepted only through a validated RPC and an allowlist of event names/properties. Admin reads require `analytics.read`.
+- Browser writes are accepted only through a validated RPC and an allowlist of event names and route labels. Dynamic invitation IDs/slugs and guest PII are not stored. Admin reads require `analytics.read`.
 Partition/retention policy as volume grows; avoid collecting guest PII.
 
 ### `system_settings`
 - `key text PK`, `value jsonb NOT NULL`, `updated_by uuid NULL FK profiles`
 - `updated_at timestamptz`, `description text`.
-- Keys resembling secrets, tokens, passwords, or credentials are rejected. Admin writes require `settings.manage` and are audited.
+- Keys resembling secrets, tokens, passwords, or credentials are rejected. Reads are admin-only; writes use the permission-checked timezone configuration RPC and are audited. Generic direct REST mutations are revoked.
 Sensitive settings should be stored in secret manager, not this table.
 
 ## 6. RLS and Authorization Matrix
@@ -278,7 +280,7 @@ Default-deny RLS. Enable RLS on all user-facing tables.
 | System settings | none | none | none | `settings.manage` |
 | Consent records | read own; withdraw through RPC | none | none | `consent.read` |
 | Analytics events | none | none | none | `analytics.read` |
-| Locale catalog | read active | read active | read active | `locales.manage` |
+| Locale catalog | read active | read active | read active | `locales.manage` (RPC-only mutations) |
 
 ### RLS policy requirements
 - Invitation owner: `owner_user_id = auth.uid()`.
