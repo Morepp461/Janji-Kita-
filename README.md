@@ -16,7 +16,7 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 | Fase 7 — Operasional admin, analitik, dan lokalisasi | **Selesai sepenuhnya di staging dan production** |
 | Fase 8 — Impor dan pengalaman lanjutan | **Selesai sepenuhnya di staging dan production** |
 
-**Checkpoint dokumentasi:** 23 November 2026. Fase 8 telah diterapkan dan diverifikasi pada Supabase staging, Supabase production, serta Vercel production. Implementasi Fase 0–7 tetap menjadi checkpoint sebelumnya.
+**Checkpoint dokumentasi:** 23 November 2026. Fase 8 selesai sepenuhnya dan menjadi checkpoint terbaru: kode telah digabung ke `main`, CI lulus, enam migrasi telah diterapkan pada Supabase staging/production, dan Vercel production berstatus SIAP pada commit `9d34283e92f62564dd987459e03c9675bfe050c3`.
 
 ### Fase 1 — Identitas dan administrasi
 
@@ -131,7 +131,7 @@ Ruang lingkup implementasi:
 ## Keputusan dan catatan operasional
 
 - **Pengecualian backup/restore — disetujui pemilik proyek pada 23 November 2026:** backup production dilewati pada seluruh fase karena paket Supabase Free dan akses integrasi yang tersedia tidak menyediakan jalur backup manual. Pemilik menerima risiko kehilangan data. Migrasi harus ditinjau sebagai migrasi aditif dan pemulihan mengandalkan corrective/forward migration. Restore tidak diklaim telah diuji.
-- Security Advisor production tetap mencatat peringatan `Leaked Password Protection Disabled` yang sudah ada sebelum Fase 5. Fase 5 menambah RPC `SECURITY DEFINER` yang memang diperlukan untuk RSVP, guestbook, status tautan, dan check-in; seluruhnya memakai `search_path` tetap serta pemeriksaan token/pemilik. Tabel `guest_public_rate_limits` sengaja tidak memiliki kebijakan akses dan tidak diberi hak akses kepada peran klien. Peringatan linter terkait pola ini bersifat informatif/terencana.
+- Security Advisor production tetap mencatat peringatan `Leaked Password Protection Disabled` yang sudah ada sebelum Fase 5. Fase 5 menambah RPC `SECURITY DEFINER` yang memang diperlukan untuk RSVP, guestbook, status tautan, dan check-in; seluruhnya memakai `search_path` tetap serta pemeriksaan token/pemilik. Fase 8 menambah pengecualian token-gated `public.get_public_guest_seating`: token SHA-256 divalidasi, rate limit diterapkan, `search_path` tetap, dan hanya label meja/kursi yang dikembalikan. Helper berada di `app_private` dan skema tersebut tetap tidak dapat diakses anon. Tabel `guest_public_rate_limits` sengaja tidak memiliki kebijakan akses dan tidak diberi hak akses langsung kepada peran klien. Peringatan linter untuk RPC token-gated ini bersifat terencana.
 - Gerbang pembayaran nyata belum dibuka. Transaksi sandbox end-to-end melalui akun merchant masih memerlukan verifikasi kredensial `MIDTRANS_SERVER_KEY`, callback/webhook, rekonsiliasi, dan persetujuan merchant. Rahasia hanya boleh disimpan pada Supabase Function Secrets, bukan di browser atau variabel `VITE_`.
 - Penerapan preview Vercel tetap nonaktif. Deployment aplikasi mengikuti cabang `main`.
 
