@@ -534,8 +534,8 @@ create or replace function public.admin_create_template(
   p_style_id uuid,
   p_base_price bigint,
   p_document jsonb,
-  p_thumbnail_asset_id uuid default null,
-  p_source_type text default 'first_party'
+  p_thumbnail_asset_id uuid,
+  p_source_type text
 )
 returns uuid
 language plpgsql
@@ -586,7 +586,32 @@ begin
 end;
 $$;
 revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid,text) from public, anon;
+
 grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid,text) to authenticated;
+
+-- Kompatibilitas untuk pemanggil lama: template tanpa sumber eksplisit dianggap first-party.
+create or replace function public.admin_create_template(
+  p_slug text,
+  p_title text,
+  p_description text,
+  p_category_id uuid,
+  p_style_id uuid,
+  p_base_price bigint,
+  p_document jsonb,
+  p_thumbnail_asset_id uuid default null
+)
+returns uuid
+language sql
+set search_path = public, app_private, pg_temp
+as $
+  select public.admin_create_template(
+    p_slug, p_title, p_description, p_category_id, p_style_id,
+    p_base_price, p_document, p_thumbnail_asset_id, 'first_party'
+  );
+$;
+revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) from public, anon;
+grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) to authenticated;
+
 
 create or replace function public.admin_create_template_version(
   p_template_id uuid,
