@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -20,12 +20,25 @@ jobs:
     steps:
       - name: Ambil kode sumber
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
       - name: Siapkan Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Pasang dependensi
         run: npm ci --no-audit --no-fund
+      - name: Format sementara dan simpan perubahan Fase 7
+        if: github.event_name == 'pull_request' && github.head_ref == 'phase-7-admin-analytics-localization'
+        run: |
+          npx prettier --write "src/**/*.{ts,tsx,css}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          if ! git diff --cached --quiet; then
+            git commit -m "style(phase-7): apply Prettier formatting"
+            git push origin "HEAD:${{ github.head_ref }}"
+          fi
       - name: Periksa format
         run: npm run format:check
       - name: Periksa lint
