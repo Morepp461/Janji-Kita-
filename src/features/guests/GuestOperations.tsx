@@ -394,7 +394,11 @@ export default function GuestOperations({
   }
 
   async function exportGuestbookCsv() {
-    const quote = (value: unknown) => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+    const quote = (value: unknown) => {
+      let text = String(value ?? "");
+      if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
     const rows = entries.map((entry) => [entry.display_name, entry.message, entry.moderation_status, entry.created_at]
       .map(quote).join(','));
     const csv = [['nama', 'ucapan', 'status', 'tanggal'].map(quote).join(','), ...rows].join('\r\n');
