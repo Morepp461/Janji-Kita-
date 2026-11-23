@@ -92,6 +92,8 @@ select is((select length(ticket_code) from public.tickets where guest_id='000000
 select is((public.check_in_ticket(repeat('f',64))->>'status'),'invalid','token tiket tidak valid ditolak');
 select is((public.check_in_ticket(repeat('b',64))->>'status'),'checked_in','tiket valid dapat check-in');
 select is((public.check_in_ticket(repeat('b',64))->>'status'),'duplicate','tiket yang sama ditolak sebagai duplikat');
+select throws_ok($q$select public.issue_guest_ticket('00000000-0000-0000-0000-000000000503',repeat('d',64))$q$,
+  'P0001','Tiket sudah digunakan dan tidak dapat diterbitkan ulang','tiket yang sudah digunakan tidak dapat diterbitkan ulang');
 select is((select count(*) from public.checkins where ticket_id=(select id from public.tickets where guest_id='00000000-0000-0000-0000-000000000503')),1::bigint,'check-in hanya tercatat sekali');
 select is((select status from public.guests where id='00000000-0000-0000-0000-000000000503'),'checked_in','status tamu diperbarui');
 select is((public.check_in_guest_manually('00000000-0000-0000-0000-000000000504')->>'status'),'checked_in','check-in manual tersedia');
