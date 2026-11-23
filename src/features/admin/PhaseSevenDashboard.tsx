@@ -7,6 +7,7 @@ type TemplateRow = {
   title: string;
   status: "draft" | "published" | "archived";
   current_version_id: string | null;
+  source_type: "first_party" | "customer";
   source_invitation_id: string | null;
   source_consent_id: string | null;
   moderation_note: string | null;
@@ -144,7 +145,7 @@ export default function PhaseSevenDashboard({
         client
           .from("templates")
           .select(
-            "id,slug,title,status,current_version_id,source_invitation_id,source_consent_id,moderation_note,moderated_at",
+            "id,slug,title,status,current_version_id,source_type,source_invitation_id,source_consent_id,moderation_note,moderated_at",
           )
           .order("updated_at", { ascending: false }),
         client
@@ -229,6 +230,19 @@ export default function PhaseSevenDashboard({
     await runAction(
       () => client.from("media_assets").update({ processing_status: status, updated_at: new Date().toISOString() }).eq("id", item.id),
       status === "quarantined" ? "Aset berhasil dikarantina." : "Status aset berhasil dipulihkan.",
+    );
+  }
+
+  async function linkTemplateConsent(item: TemplateRow, consentId: string) {
+    const consent = consents.find((entry) => entry.id === consentId);
+    if (!consent) return;
+    await runAction(
+      () => client.rpc("admin_link_template_consent", {
+        p_template_id: item.id,
+        p_invitation_id: consent.invitation_id,
+        p_consent_id: consent.id,
+      }),
+      "Persetujuan berhasil ditautkan ke template.",
     );
   }
 
@@ -377,6 +391,7 @@ export default function PhaseSevenDashboard({
   }, [audit, auditFilter]);
 
   const activeConsents = consents.filter((item) => item.granted && !item.withdrawn_at);
+  const approvedConsents = activeConsents.filter((item) => item.metadata.moderation_status === "approved");
   const eventEntries = Object.entries(summary.events_by_name || {}).sort((a, b) => b[1] - a[1]);
   const tabs: Array<[Tab, string]> = [
     ["analytics", "Analitik"],
@@ -487,14 +502,24 @@ export default function PhaseSevenDashboard({
                     <article key={item.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
                       <div className="min-w-0">
                         <p className="font-semibold">{item.title}</p>
-                        <p className="mt-1 break-all text-xs text-[#887970]">{item.slug} · {item.status} · versi {item.current_version_id ? "tersedia" : "belum tersedia"}</p>
+                        <p className="mt-1 break-all text-xs text-[#887970]">{item.slug} · {item.status} · {item.source_type === "customer" ? "desain pelanggan" : "desain Janji Kita"} · versi {item.current_version_id ? "tersedia" : "belum tersedia"}</p>
                         {item.source_invitation_id && <p className="mt-1 break-all text-xs text-[#887970]">Sumber undangan: {item.source_invitation_id}</p>}
                         {item.source_consent_id && <p className="mt-1 break-all text-xs text-[#887970]">Persetujuan: {item.source_consent_id}</p>}
+                        {item.source_type === "customer" && !item.source_consent_id && (
+                          <label className="mt-2 block max-w-xl text-xs font-semibold text-[#76675f]">
+                            Tautkan persetujuan yang sudah disetujui
+                            <select className={inputClass} value="" disabled={saving || !approvedConsents.length} onChange={(event) => void linkTemplateConsent(item, event.target.value)}>
+                              <option value="">Pilih persetujuan marketplace</option>
+                              {approvedConsents.map((consent) => <option key={consent.id} value={consent.id}>{consent.invitation_id} · {consent.id}</option>)}
+                            </select>
+                            {!approvedConsents.length && <span className="mt-1 block font-normal">Belum ada persetujuan aktif yang disetujui.</span>}
+                          </label>
+                        )}
                         {item.moderation_note && <p className="mt-1 text-xs text-[#76675f]">Catatan: {item.moderation_note}</p>}
                         {item.moderated_at && <p className="mt-1 text-xs text-[#887970]">Ditinjau: {dateTime(item.moderated_at)}</p>}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {item.status !== "published" && <button className={primaryClass} disabled={saving || !item.current_version_id} onClick={() => void moderateTemplate(item, "published")} type="button">Terbitkan</button>}
+                        {item.status !== "published" && <button className={primaryClass} disabled={saving || !item.current_version_id || (item.source_type === "customer" && !approvedConsents.some((consent) => consent.id === item.source_consent_id))} onClick={() => void moderateTemplate(item, "published")} type="button">Terbitkan</button>}
                         {item.status !== "draft" && <button className={buttonClass} disabled={saving} onClick={() => void moderateTemplate(item, "draft")} type="button">Kembalikan ke draft</button>}
                         {item.status !== "archived" && <button className={buttonClass} disabled={saving} onClick={() => void moderateTemplate(item, "archived")} type="button">Arsipkan</button>}
                       </div>
