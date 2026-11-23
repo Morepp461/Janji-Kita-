@@ -118,13 +118,13 @@ Ruang lingkup implementasi:
 - Matriks kompatibilitas menjelaskan dukungan Canva, Figma, PSD, AI, Affinity, PPTX, SVG, PDF, PNG, dan JPG. Integrasi Canva/Figma tetap nonaktif sampai API resmi mendapat persetujuan.
 - PNG/JPG dioptimalkan menjadi WebP dan disimpan sebagai aset privat. SVG dibatasi melalui allowlist, disanitasi, lalu dirasterisasi. PDF hanya dipratinjau secara lokal. PSD, AI, Affinity, dan PPTX belum diunggah karena parser belum tersedia; laporan impor menyertakan fallback ekspor.
 - Laporan impor mencatat format sumber, jumlah objek yang dapat diedit, elemen yang diratakan/dilewati, peringatan, dan fallback.
-- Perencana tempat duduk mengelola meja, kapasitas, dan penempatan tamu. Database memeriksa kapasitas secara transaksional, mengikat tamu/meja ke undangan yang sama, dan membatasi informasi meja/kursi publik melalui token personal yang di-hash serta RPC dengan rate limit.
+- Perencana tempat duduk mengelola meja, kapasitas, dan penempatan tamu. Database memeriksa kapasitas secara transaksional, mengikat tamu/meja ke undangan yang sama, dan membatasi informasi meja/kursi publik melalui token personal yang di-hash serta RPC dengan rate limit. Foreign key penempatan memakai indeks komposit; indeks tunggal yang redundan dihapus.
 - Livestream memakai tautan HTTPS eksternal. Penyematan provider dan integrasi API tidak diaktifkan tanpa persetujuan resmi.
 - Editor menyediakan preset animasi fade-in, rise-in, soft-zoom, dan float, termasuk durasi, pemicu, jeda, serta dukungan reduced-motion.
 - Tidak ada dependency baru. Berkas impor tidak dijalankan sebagai kode dan format yang belum didukung tidak diunggah.
-- QA/CI lulus: format, lint, TypeScript, 33 unit test, build production, migrasi lokal, database lint, dan **344 pengujian pgTAP lintas fase**: [CI run #45121083472](https://github.com/Morepp461/Janji-Kita-/actions/runs/45121083472).
-- [PR #24](https://github.com/Morepp461/Janji-Kita-/pull/24) digabung ke `main` pada commit `bf2dcae437e6da98da894b790b2dcc4090c17f82`.
-- Migrasi Fase 8 diterapkan dan diverifikasi pada Supabase staging serta production. Vercel production berstatus **SIAP** pada commit tersebut: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+- QA/CI lulus: format, lint, TypeScript, 33 unit test, build production, migrasi lokal, database lint, dan **346 pengujian pgTAP lintas fase**: [CI run #45121512808](https://github.com/Morepp461/Janji-Kita-/actions/runs/45121512808). Performance Advisor tidak lagi melaporkan foreign key seating tanpa indeks pendukung.
+- [PR #24](https://github.com/Morepp461/Janji-Kita-/pull/24) dan tindak lanjut indeks [PR #26](https://github.com/Morepp461/Janji-Kita-/pull/26) telah digabung ke `main`. Commit rilis terakhir: `9d34283e92f62564dd987459e03c9675bfe050c3`.
+- Enam migrasi Fase 8 diterapkan dan diverifikasi pada Supabase staging serta production. Vercel production berstatus **SIAP** pada commit terakhir: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
 **Fase 8 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi dan verifikasi Supabase staging/production, serta deployment Vercel production telah selesai. Fase 8 menjadi checkpoint terbaru proyek.
 
