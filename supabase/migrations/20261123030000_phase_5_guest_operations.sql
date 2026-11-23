@@ -51,7 +51,7 @@ create table public.tickets (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
   guest_id uuid not null references public.guests(id) on delete cascade,
-  ticket_code text not null unique default upper(encode(gen_random_bytes(6), 'hex')),
+  ticket_code text not null unique default upper(encode(extensions.gen_random_bytes(6), 'hex')),
   token_hash text not null unique,
   status text not null default 'valid' check (status in ('valid','used','revoked')),
   issued_at timestamptz not null default now(),
@@ -214,6 +214,24 @@ begin
 end;
 $$;
 
+create or replace function public.get_public_guestbook(p_slug text)
+returns table(display_name text, message text, created_at timestamptz)
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $
+  select e.display_name, e.message, e.created_at
+  from public.guestbook_entries e
+  join public.invitations i on i.id = e.invitation_id
+  where i.slug = p_slug and i.status = 'active'
+    and i.published_version_id is not null
+    and i.active_from <= now() and i.active_until > now()
+    and e.moderation_status = 'approved'
+  order by e.created_at desc
+  limit 50;
+$;
+
 create or replace function public.issue_guest_ticket(p_guest_id uuid, p_token_hash text)
 returns jsonb
 language plpgsql
@@ -232,7 +250,7 @@ begin
   insert into public.tickets(invitation_id, guest_id, token_hash)
   values (guest_row.invitation_id, guest_row.id, p_token_hash)
   on conflict (guest_id) do update set token_hash = excluded.token_hash,
-    ticket_code = upper(encode(gen_random_bytes(6), 'hex')),
+    ticket_code = upper(encode(extensions.gen_random_bytes(6), 'hex')),
     status = 'valid', issued_at = now(), used_at = null
   returning * into ticket_row;
   return jsonb_build_object('id', ticket_row.id, 'ticket_code', ticket_row.ticket_code, 'status', ticket_row.status);
@@ -284,7 +302,7 @@ begin
     and i.status = 'active' and i.active_until > now();
   if not found then return jsonb_build_object('status', 'invalid'); end if;
   insert into public.tickets(invitation_id, guest_id, token_hash)
-  values (guest_row.invitation_id, guest_row.id, encode(gen_random_bytes(32), 'hex'))
+  values (guest_row.invitation_id, guest_row.id, encode(extensions.gen_random_bytes(32), 'hex'))
   on conflict (guest_id) do nothing;
   select * into ticket_row from public.tickets where guest_id = guest_row.id for update;
   if ticket_row.status <> 'valid' then
@@ -299,6 +317,13 @@ begin
 end;
 $$;
 
+grant select, insert, update, delete on public.guests to authenticated;
+grant select on public.rsvps to authenticated;
+grant select, update, delete on public.guestbook_entries to authenticated;
+grant select on public.tickets, public.checkins to authenticated;
+
+revoke all on function public.get_public_guestbook(text) from public;
+grant execute on function public.get_public_guestbook(text) to anon, authenticated;
 revoke all on function public.submit_guest_rsvp(text,text,integer,jsonb) from public;
 revoke all on function public.submit_guestbook_entry(text,text) from public;
 revoke all on function public.issue_guest_ticket(uuid,text) from public, anon;
