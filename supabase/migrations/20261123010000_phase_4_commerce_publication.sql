@@ -165,7 +165,8 @@ create trigger payment_attempts_set_updated_at before update on public.payment_a
 create trigger entitlements_set_updated_at before update on public.entitlements
   for each row execute function public.set_updated_at();
 
-alter table public.commerce_settings enable row level security;\nalter table public.add_ons enable row level security;
+alter table public.commerce_settings enable row level security;
+alter table public.add_ons enable row level security;
 alter table public.invitation_add_ons enable row level security;
 alter table public.coupons enable row level security;
 alter table public.orders enable row level security;
