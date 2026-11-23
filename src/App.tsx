@@ -31,6 +31,7 @@ export default function App() {
   const client = getSupabaseClient();
   const pathname = window.location.pathname;
   const [session, setSession] = useState<Session | null>(null);
+  const currentUserId = session?.user?.id;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +136,7 @@ export default function App() {
   }, [client, session]);
 
   useEffect(() => {
-    if (!client || !session?.user) return;
+    if (!client || !currentUserId) return;
     const eventName = pathname.startsWith("/admin")
       ? "admin_view"
       : pathname.startsWith("/editor/")
@@ -152,7 +153,7 @@ export default function App() {
       p_invitation_id: null,
       p_properties: { route: pathname.split("?")[0].slice(0, 120) },
     });
-  }, [client, session?.user?.id, pathname]);
+  }, [client, currentUserId, pathname]);
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -326,7 +327,7 @@ export default function App() {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
   if (pathname === "/settings/consents") return <ConsentSettings client={client} />;
   if (pathname === "/admin/operations" && isAdmin)
-    return <PhaseSevenDashboard client={client} userId={session.user.id} />;
+    return <PhaseSevenDashboard client={client} />;
   const isFinance = roles.includes("finance");
   const isSuperAdmin = roles.includes("super_admin");
   const checkoutMatch = pathname.match(/^\/checkout\/([0-9a-f-]+)\/?$/i);
