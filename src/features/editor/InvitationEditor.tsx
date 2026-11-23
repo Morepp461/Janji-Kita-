@@ -157,9 +157,8 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setLoading(true);
       const { data: invitation, error: invitationError } = await client
         .from("invitations")
-        .select("id,title,status,draft_version_id,updated_at")
+        .select("id,title,status,draft_version_id,updated_at,owner_user_id")
         .eq("id", invitationId)
-        .eq("owner_user_id", userId)
         .maybeSingle();
       if (!active) return;
       if (invitationError || !invitation) {
@@ -480,7 +479,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       }
       const bucket = "user-uploads-private";
       const objectPath =
-        userId +
+        invitation.owner_user_id +
         "/" +
         invitationId +
         "/" +
@@ -498,7 +497,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       const { data: asset, error: assetError } = await client
         .from("media_assets")
         .insert({
-          owner_user_id: userId,
+          owner_user_id: invitation.owner_user_id,
           storage_bucket: bucket,
           object_path: objectPath,
           media_type: mediaType,
