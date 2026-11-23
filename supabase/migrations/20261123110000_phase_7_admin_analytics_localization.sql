@@ -873,3 +873,51 @@ end;
 $$;
 revoke all on function public.admin_list_marketplace_consents() from public, anon;
 grant execute on function public.admin_list_marketplace_consents() to authenticated;
+
+
+create or replace function public.apply_default_locale_on_profile_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  default_locale text;
+begin
+  if new.preferred_locale is null or new.preferred_locale = 'id-ID' then
+    select code into default_locale from public.locales
+    where is_default and is_active
+    limit 1;
+    if default_locale is not null then new.preferred_locale := default_locale; end if;
+  end if;
+  return new;
+end;
+$$;
+create trigger profiles_apply_default_locale
+  before insert on public.profiles
+  for each row execute function public.apply_default_locale_on_profile_insert();
+
+create or replace function public.apply_owner_localization_on_invitation_insert()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  owner_locale text;
+  owner_timezone text;
+begin
+  select preferred_locale, timezone into owner_locale, owner_timezone
+  from public.profiles where id = new.owner_user_id;
+  if new.locale is null or new.locale = 'id-ID' then
+    new.locale := coalesce(owner_locale, new.locale, 'id-ID');
+  end if;
+  if new.timezone is null or new.timezone = 'Asia/Jakarta' then
+    new.timezone := coalesce(owner_timezone, new.timezone, 'Asia/Jakarta');
+  end if;
+  return new;
+end;
+$$;
+create trigger invitations_apply_owner_localization
+  before insert on public.invitations
+  for each row execute function public.apply_owner_localization_on_invitation_insert();
