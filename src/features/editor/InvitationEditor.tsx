@@ -573,8 +573,19 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       <main className="min-h-screen bg-[#fffaf6] px-4 py-6 text-[#30251f]">
         <div className="mx-auto max-w-5xl">
           <header className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eaded5] bg-white p-4">
-            <div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#a36d55]">Janji Kita · Pratinjau kolaborator</p><h1 className="mt-1 text-lg font-semibold">{title}</h1><p className="text-xs text-[#887970]">Akses pembaca · tidak dapat mengubah dokumen</p></div>
-            <a href={`/invitations/${invitationId}/collaborators`} className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold">Kolaborasi</a>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-[#a36d55]">
+                Janji Kita · Pratinjau kolaborator
+              </p>
+              <h1 className="mt-1 text-lg font-semibold">{title}</h1>
+              <p className="text-xs text-[#887970]">Akses pembaca · tidak dapat mengubah dokumen</p>
+            </div>
+            <a
+              href={`/invitations/${invitationId}/collaborators`}
+              className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold"
+            >
+              Kolaborasi
+            </a>
           </header>
           <InvitationDocumentView document={document} client={client} />
         </div>

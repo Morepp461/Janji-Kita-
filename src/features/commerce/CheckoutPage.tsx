@@ -277,14 +277,31 @@ export default function CheckoutPage({
           <div className="mt-5 rounded-xl border border-[#f0e7e0] p-4">
             <p className="text-sm font-semibold">Atribusi reseller (opsional)</p>
             {invitation.reseller_user_id ? (
-              <p className="mt-1 text-sm text-[#76675f]">Undangan ini sudah terhubung dengan reseller. Atribusi ikut tersimpan pada pesanan.</p>
+              <p className="mt-1 text-sm text-[#76675f]">
+                Undangan ini sudah terhubung dengan reseller. Atribusi ikut tersimpan pada pesanan.
+              </p>
             ) : (
               <>
                 <label className="mt-2 block text-sm font-medium">
                   Kode referral reseller
-                  <input value={referralCode} disabled={Boolean(order) || attributing} onChange={(event) => setReferralCode(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3" placeholder="KODE RESELLER" />
+                  <input
+                    value={referralCode}
+                    disabled={Boolean(order) || attributing}
+                    onChange={(event) => setReferralCode(event.target.value.toUpperCase())}
+                    maxLength={20}
+                    autoComplete="off"
+                    className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
+                    placeholder="KODE RESELLER"
+                  />
                 </label>
-                <button type="button" disabled={attributing || Boolean(order) || !referralCode.trim()} onClick={() => void applyReferralCode()} className="mt-2 rounded-lg border border-[#ddcec3] px-4 py-2 text-sm font-semibold disabled:opacity-50">{attributing ? "Memeriksa..." : "Terapkan kode reseller"}</button>
+                <button
+                  type="button"
+                  disabled={attributing || Boolean(order) || !referralCode.trim()}
+                  onClick={() => void applyReferralCode()}
+                  className="mt-2 rounded-lg border border-[#ddcec3] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                >
+                  {attributing ? "Memeriksa..." : "Terapkan kode reseller"}
+                </button>
               </>
             )}
           </div>
