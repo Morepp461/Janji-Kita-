@@ -65,7 +65,7 @@ export default function GuestPublicForms({ client, guestToken, slug }: {
         <button disabled={busy} className="mt-4 rounded-xl bg-[#754b3b] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">Kirim ucapan</button>
       </form>
     </div>}
-    {(notice || error) && <p role="status" className={\`rounded-xl p-3 text-sm \${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}\`}>{error || notice}</p>}
+    {(notice || error) && <p role="status" className={error ? "rounded-xl p-3 text-sm bg-red-50 text-red-700" : "rounded-xl p-3 text-sm bg-green-50 text-green-800"}>{error || notice}</p>}
     <div className="rounded-2xl border border-[#eaded5] bg-white p-5">
       <h2 className="text-xl font-semibold">Ucapan tamu</h2>
       <div className="mt-3 divide-y divide-[#f0e8e2]">
