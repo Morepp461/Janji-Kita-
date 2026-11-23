@@ -4,86 +4,86 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 ## Status proyek
 
-**Fase 0: selesai sepenuhnya.**
+| Fase | Status |
+|---|---|
+| Fase 0 — Fondasi proyek | **Selesai sepenuhnya** |
+| Fase 1 — Identitas dan administrasi | **Selesai sepenuhnya di staging dan production** |
+| Fase 2 — Marketplace dan inti undangan | **Selesai sepenuhnya di staging dan production** |
+| Fase 3 — Editor visual | **Selesai sepenuhnya di staging dan production** |
+| Fase 4 — Commerce dan publikasi | **Selesai sepenuhnya di staging dan production** |
+| Fase 5 — Operasi tamu | Implementasi kode selesai; menunggu CI akhir dan penerapan terverifikasi di kedua lingkungan |
 
-**Fase 1: selesai sepenuhnya pada staging dan production.**
+**Checkpoint dokumentasi:** 23 November 2026.
 
-**Checkpoint: 23 November 2026**
+### Fase 1 — Identitas dan administrasi
 
-- Implementasi autentikasi: pendaftaran, masuk, pemulihan kata sandi, profil, preferensi bahasa/zona waktu, dan pengelolaan sesi.
-- Model role/permission server-side, bootstrap super admin melalui service role, dan pengelolaan peran melalui RPC yang diaudit.
-- Panel admin untuk CRUD kategori/gaya desain, feature flags, audit log, dan pengelolaan peran.
-- Migrasi fase 1 diterapkan pada Supabase staging dan production; masing-masing memiliki 8 kategori dan 10 gaya desain awal.
-- Seluruh 7 tabel fase 1 memakai RLS di staging dan production. Pada checkpoint fase 1, Security Advisor tidak menemukan temuan; pemeriksaan fase 2 mencatat satu peringatan Auth yang sudah ada pada production: `Leaked Password Protection Disabled`.
-- Pengujian pgTAP mencakup isolasi profil/peran antar pengguna, hak akses, dan pembatasan fungsi RPC.
-- Seluruh pemeriksaan CI lulus: format, lint, tipe, pengujian unit, build, migrasi lokal, lint basis data, dan pgTAP ([hasil CI #76](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050908634)).
-- Implementasi digabung melalui [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10) ke `main` pada commit `8aff277b1ebb88838b2c6c8c2745065428928e13`.
+- Autentikasi mencakup pendaftaran, masuk, pemulihan kata sandi, profil, preferensi bahasa/zona waktu, dan pengelolaan sesi.
+- Role dan permission diperiksa di sisi server. Bootstrap super admin menggunakan service role dan perubahan peran melalui RPC yang diaudit.
+- Panel admin menyediakan CRUD kategori/gaya desain, feature flags, audit log, dan pengelolaan peran.
+- Migrasi diterapkan pada Supabase staging dan production. Masing-masing lingkungan memiliki 8 kategori dan 10 gaya desain awal.
+- Seluruh 7 tabel Fase 1 memakai RLS. Pengujian pgTAP mencakup isolasi profil/peran, hak akses, dan pembatasan RPC.
+- CI lulus: [run #45050908634](https://github.com/Morepp461/Janji-Kita-/actions/runs/45050908634). Implementasi digabung melalui [PR #10](https://github.com/Morepp461/Janji-Kita-/pull/10) pada commit `8aff277b1ebb88838b2c6c8c2745065428928e13`.
+- Deployment Vercel production berstatus READY. Penerapan preview tetap nonaktif.
 
-**Rilis production:** Keempat migrasi Fase 1 telah diterapkan dan diverifikasi pada Supabase production. Organisasi Supabase menggunakan paket Free sehingga backup otomatis harian tidak tersedia; backup manual tidak dapat dijalankan melalui akses yang tersedia. Sesuai persetujuan pemilik, migrasi dilanjutkan setelah verifikasi bahwa production belum memiliki akun pengguna maupun objek Storage. Deployment Vercel production untuk commit Fase 1 berstatus **READY**. Penerapan preview tetap nonaktif.
+### Fase 2 — Marketplace dan inti undangan
 
-**Fase 2: selesai sepenuhnya pada Supabase staging dan production.**
-
-**Checkpoint: 23 November 2026**
-
-- Marketplace mendukung pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail template melalui rute `/templates/:slug`, serta pratinjau desktop dan ponsel.
-- Draft undangan dapat dibuat dari template atau kanvas kosong, dibuka kembali, dan dipratinjau.
-- Versi template dan versi undangan terbit bersifat immutable; perubahan versi template tidak mengubah snapshot draft yang sudah dibuat.
+- Marketplace mendukung pencarian, filter kategori/gaya, pengurutan, pemuatan bertahap, detail template, serta pratinjau desktop dan ponsel.
+- Draft dapat dibuat dari template atau kanvas kosong, dibuka kembali, dan dipratinjau.
+- Versi template dan versi undangan terbit bersifat immutable. Perubahan template tidak mengubah snapshot draft yang sudah dibuat.
 - Rute publik hanya mengembalikan undangan aktif dengan versi terbit. Peran anon tidak dapat membaca kolom internal pemilik.
-- Tiga migrasi Fase 2 diterapkan pada staging dan production. Riwayat production: `20261122192144`, `20261122192146`, dan `20261122192149`.
-- Lima tabel Fase 2 di production memakai RLS; dua bucket Storage telah tersedia. Tidak ada data uji pada tabel Fase 2.
+- Tiga migrasi diterapkan pada staging dan production. Lima tabel Fase 2 memakai RLS dan dua bucket Storage tersedia.
 - Data pemilik tetap utuh: 1 akun Auth, 1 profil, dan 0 objek Storage.
-- CI kode Fase 2 lulus pada [run #45059131777](https://github.com/Morepp461/Janji-Kita-/actions/runs/45059131777), termasuk 40 pengujian pgTAP, lint skema, format, lint, typecheck, unit test, dan build production.
-- [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12) telah digabung ke `main` pada commit `be079cad82866c77da301aaacede000287f6db8b`.
-- Deployment Vercel production berstatus **READY**: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+- CI lulus dengan 40 pengujian pgTAP: [run #45059131777](https://github.com/Morepp461/Janji-Kita-/actions/runs/45059131777). [PR #12](https://github.com/Morepp461/Janji-Kita-/pull/12) digabung pada commit `be079cad82866c77da301aaacede000287f6db8b`.
+- Deployment Vercel production: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
-**Keputusan rilis:** Pemilik menyetujui pengecualian backup/restore untuk rilis ini karena backup tidak tersedia melalui paket/akses yang digunakan. Risiko kehilangan data diterima; migrasi bersifat aditif dan rencana pemulihan menggunakan corrective/forward migration. Restore tidak diklaim telah diuji. Satu peringatan Security Advisor yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 2. Deployment preview tetap nonaktif.
+### Fase 3 — Editor visual
 
-**Fase 3: selesai pada Supabase staging dan production — 23 November 2026.**
-
-- Editor visual tersedia melalui rute `/editor/:id` untuk draft milik pengguna yang sedang masuk.
+- Editor tersedia melalui rute `/editor/:id` untuk draft milik pengguna yang masuk.
 - Registry menyediakan komponen tata letak, teks, media, acara, tamu, sosial, dan dekorasi.
-- Panel properti mendukung pengeditan konten, gaya, tata letak, dan visibilitas responsif desktop/ponsel.
+- Panel properti mendukung konten, gaya, tata letak, dan visibilitas responsif desktop/ponsel.
 - Operasi lapisan mencakup tambah, pilih, urutkan, duplikat, kunci/buka kunci, sembunyikan/tampilkan, hapus, serta undo/redo.
-- Pratinjau editor menggunakan renderer undangan yang sama dengan halaman publik; validasi memeriksa judul, struktur komponen, konten wajib, aset gambar, dan tautan HTTPS.
-- Autosave memakai RPC dengan pemeriksaan versi dasar untuk menolak konflik. Perubahan lokal disimpan sebagai pemulihan saat offline atau refresh.
-- Unggahan aset privat memvalidasi MIME/signature dan ukuran, membaca metadata media, serta mengoptimalkan gambar menjadi WebP sebelum disimpan. Metadata aset dibatasi pada folder pemilik.
-- Dua migrasi Fase 3 diterapkan pada staging dan production. Riwayat production: `20261122234541` dan `20261122234549`. RLS tetap aktif, akses simpan hanya untuk pengguna terautentikasi, dan smoke test production lulus.
-- Pemeriksaan staging mengonfirmasi RPC, bucket privat, RLS, dan satu kebijakan INSERT aset tanpa tumpang tindih. Performance Advisor tidak lagi melaporkan kebijakan INSERT ganda; temuan indeks FK dan unused index yang sudah ada tetap dicatat sebagai pekerjaan optimasi terpisah.
-- CI Fase 3 lulus: format, lint, typecheck, unit test, build production, migrasi lokal, lint basis data, dan pgTAP. [Lihat CI Fase 3](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
+- Pratinjau memakai renderer undangan yang sama dengan halaman publik. Validasi memeriksa judul, struktur komponen, konten wajib, aset gambar, dan tautan HTTPS.
+- Autosave memakai RPC dengan pemeriksaan versi untuk menolak konflik. Perubahan lokal disimpan untuk pemulihan saat offline atau refresh.
+- Unggahan aset privat memvalidasi MIME/signature dan ukuran, membaca metadata media, mengoptimalkan gambar menjadi WebP, serta membatasi metadata aset ke folder pemilik.
+- Dua migrasi diterapkan pada staging dan production. RLS aktif, akses simpan hanya untuk pengguna terautentikasi, dan smoke test production lulus.
+- CI lulus: [run #45063740422](https://github.com/Morepp461/Janji-Kita-/actions/runs/45063740422).
+- [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) digabung pada commit `5a2a003436cce8a5fb31064985255f23148ab068`. Deployment Vercel production: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app).
 
-**Rilis production:** [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) telah digabung ke `main` pada commit `5a2a003436cce8a5fb31064985255f23148ab068`. Deployment Vercel production berstatus **READY**: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app). Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek, bukan hanya satu rilis. Pemilik menerima risiko kehilangan data karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Restore tidak diklaim telah diuji; pemulihan mengandalkan corrective/forward migration. Satu peringatan Security Advisor production yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 3.
-
-**Fase 4 — Commerce dan Publication: SELESAI SEPENUHNYA PADA STAGING DAN PRODUCTION — 23 November 2026.**
-
-**Checkpoint:** implementasi, pengujian, migrasi, dan Edge Functions telah diterapkan pada kedua project Supabase.
+### Fase 4 — Commerce dan publikasi
 
 - Admin dapat mengatur harga template, harga kanvas kosong, add-on, serta kupon persentase/nominal dengan masa berlaku dan batas penggunaan.
-- Checkout membuat snapshot harga di server. Perubahan harga setelah pesanan dibuat tidak mengubah nilai pesanan lama. Kupon dihitung dan dibatasi secara transaksional, termasuk batas penggunaan per akun.
-- Midtrans sandbox adapter membuat sesi pembayaran di server. Webhook memverifikasi signature dan status transaksi langsung ke gateway sebelum mengubah status pesanan.
+- Checkout membuat snapshot harga di server. Perubahan harga tidak mengubah pesanan lama. Kupon dibatasi secara transaksional, termasuk batas penggunaan per akun.
+- Adapter Midtrans sandbox membuat sesi pembayaran di server. Webhook memverifikasi tanda tangan dan status transaksi langsung ke gateway sebelum mengubah status pesanan.
 - Pemrosesan pembayaran idempoten, memeriksa nominal, menyimpan event webhook teredaksi, menangani settlement terlambat, dan mencatat refund.
-- Pembayaran sukses membuat entitlement publikasi 30 hari. Perpanjangan menambah masa aktif; renderer menolak undangan kedaluwarsa. Refund penuh mencabut entitlement; refund sebagian dicatat tanpa otomatis mematikan entitlement.
-- Publikasi dan pembaruan membuat versi immutable lalu memindahkan pointer publik dalam satu transaksi. Perubahan draft tidak mengganti versi publik sebelum publikasi berhasil.
+- Pembayaran sukses membuat entitlement publikasi 30 hari. Perpanjangan menambah masa aktif; renderer menolak undangan kedaluwarsa. Refund penuh mencabut entitlement.
+- Publikasi dan pembaruan membuat versi immutable lalu memindahkan pointer publik dalam satu transaksi.
 - Dashboard finance bersifat baca-saja untuk peran finance/admin. Job `pg_cron` memperbarui status undangan dan entitlement kedaluwarsa setiap 15 menit.
-- **15 migrasi Fase 4 diterapkan pada Supabase staging dan production.** Pemeriksaan production memastikan tabel commerce tersedia, RLS aktif pada seluruh tabel commerce, akses baca anon ditolak untuk order/payment attempts, dan job expiry aktif.
-- Tiga Edge Functions aktif pada kedua project: `create-midtrans-payment`, `midtrans-webhook`, dan `reconcile-midtrans-pending`. Pembayaran sandbox dibatasi ke project staging; project production ditolak oleh guard di sisi server.
-- **74 pengujian pgTAP Fase 4 lulus pada staging.** CI [run #45090335232](https://github.com/Morepp461/Janji-Kita-/actions/runs/45090335232) lulus seluruh pemeriksaan web dan database: format, lint, typecheck, unit test, build, reset migrasi, lint skema, dan 169 pengujian pgTAP lintas fase.
-- Regresi editor Fase 3: 18 pengujian lulus pada staging setelah kontrak autosave dipertahankan menggunakan SECURITY INVOKER.
-- Konfigurasi Vercel production tetap menunjuk ke Supabase production; deployment preview tetap nonaktif dan deployment aplikasi mengikuti cabang `main`.
+- **15 migrasi** diterapkan pada staging dan production. Tiga Edge Functions aktif pada kedua project: `create-midtrans-payment`, `midtrans-webhook`, dan `reconcile-midtrans-pending`.
+- **74 pengujian pgTAP Fase 4 lulus pada staging.** CI lulus seluruh pemeriksaan aplikasi dan basis data: [run #45090335232](https://github.com/Morepp461/Janji-Kita-/actions/runs/45090335232).
+- Pembayaran sandbox dibatasi ke staging. Production menolak transaksi sampai gerbang merchant dan pembayaran nyata disetujui.
 
-**Gerbang sebelum menerima pembayaran nyata:** transaksi sandbox end-to-end melalui akun merchant belum diverifikasi karena kredensial `MIDTRANS_SERVER_KEY` belum dapat diverifikasi melalui akses yang tersedia. Pembayaran production tetap dinonaktifkan dan fungsi production menolak seluruh transaksi. Sebelum menerima uang sungguhan, lakukan transaksi sandbox, verifikasi callback/webhook dan rekonsiliasi, serta penuhi persetujuan merchant production sesuai spesifikasi monetisasi. Simpan kunci hanya pada Supabase Function Secrets, bukan pada variabel `VITE_` atau chat.
+### Fase 5 — Operasi tamu
 
-**Checkpoint: 22 November 2026**
+Ruang lingkup implementasi:
 
-- PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
-- Pemeriksaan CI sebelum penggabungan berhasil: [format, lint, tipe, pengujian unit, build, migrasi, dan RLS](https://github.com/Morepp461/Janji-Kita-/actions/runs/45046403758).
-- Penerapan production Vercel untuk commit `83c6891` berstatus **READY**.
-- Project Supabase staging dan production terpisah; riwayat migrasi keduanya selaras dengan berkas migrasi repository, termasuk seluruh migrasi Fase 1.
-- Pemeriksaan Security Advisor pada kedua project Supabase tidak menemukan masalah.
-- Penerapan preview dinonaktifkan. Penerapan aplikasi hanya melalui cabang `main`.
+- CRUD tamu, pencarian, filter, serta deteksi duplikat email/nomor telepon.
+- Impor CSV dengan laporan kesalahan per baris dan ekspor CSV daftar tamu maupun buku tamu.
+- Tautan personal dengan token acak; basis data hanya menyimpan hash token.
+- RSVP publik, kebijakan plus-one di sisi server, status undangan dibuka, dan pembatasan laju RSVP.
+- Guestbook publik hanya menampilkan ucapan yang disetujui. Pemilik dapat memoderasi dan mengekspor ucapan.
+- Tiket QR dibuat secara lokal. QR hanya berisi token acak, bukan data pribadi.
+- Check-in QR melalui kamera, validasi tiket, penolakan tiket tidak valid/duplikat, dan check-in manual sebagai fallback.
+- Dashboard kehadiran menampilkan total tamu, konfirmasi hadir, penolakan, RSVP tertunda, dan jumlah check-in.
+- RLS membatasi data tamu, RSVP, tiket, check-in, serta moderasi buku tamu kepada pemilik undangan. Pengiriman publik dilakukan melalui RPC terkontrol.
 
-Alamat aplikasi production: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app).
+**Kriteria selesai Fase 5:** data tamu privat; tiket tidak valid/duplikat ditolak; RSVP dibatasi lajunya; impor CSV melaporkan kesalahan per baris; CI, pengujian staging, dan penerapan production lulus. Status akhir akan dicatat setelah seluruh pemeriksaan tersebut terverifikasi.
 
-**Catatan tata kelola:** status perlindungan cabang `main` belum dapat diverifikasi melalui integrasi GitHub yang tersedia. Pastikan aturan cabang mewajibkan pemeriksaan `Pemeriksaan kualitas web` dan `Pengujian migrasi dan RLS Supabase` sebelum perubahan berikutnya digabungkan.
+## Keputusan dan catatan operasional
+
+- **Pengecualian backup/restore — disetujui pemilik proyek pada 23 November 2026:** backup production dilewati pada seluruh fase karena paket Supabase Free dan akses integrasi yang tersedia tidak menyediakan jalur backup manual. Pemilik menerima risiko kehilangan data. Migrasi harus ditinjau sebagai migrasi aditif dan pemulihan mengandalkan corrective/forward migration. Restore tidak diklaim telah diuji.
+- Security Advisor production sebelumnya mencatat peringatan `Leaked Password Protection Disabled`. Peringatan tersebut sudah ada sebelum Fase 5 dan tidak diubah dalam ruang lingkup fase ini.
+- Gerbang pembayaran nyata belum dibuka. Transaksi sandbox end-to-end melalui akun merchant masih memerlukan verifikasi kredensial `MIDTRANS_SERVER_KEY`, callback/webhook, rekonsiliasi, dan persetujuan merchant. Rahasia hanya boleh disimpan pada Supabase Function Secrets, bukan di browser atau variabel `VITE_`.
+- Penerapan preview Vercel tetap nonaktif. Deployment aplikasi mengikuti cabang `main`.
 
 ## Dokumentasi
 
@@ -105,7 +105,7 @@ Dokumen sumber utama dan spesifikasi implementasi tersedia di folder [docs/](./d
 - Git
 - Docker Desktop/Engine untuk Supabase lokal
 - Supabase CLI
-- Akun Supabase dengan project staging dan production terpisah
+- Project Supabase staging dan production yang terpisah
 - Akun Vercel untuk penerapan production
 
 ## Menjalankan aplikasi
@@ -129,7 +129,7 @@ supabase test db
 supabase stop
 ```
 
-Migrasi berada di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan project staging dan production. Uji migrasi pada lingkungan lokal terlebih dahulu, lalu terapkan ke staging. Production harus menggunakan project Supabase terpisah dan hanya menerima migrasi yang sudah ditinjau serta disetujui. Backup/restore wajib dilakukan kecuali pemilik memberikan pengecualian tertulis. Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk semua fase proyek selama keterbatasan paket/akses masih berlaku. Risiko kehilangan data diterima; restore tidak diklaim telah diuji dan pemulihan mengandalkan corrective/forward migration. Catatan keputusan ada di `docs/DEVELOPMENT_ROADMAP.md`.
+Migrasi berada di `supabase/migrations/`. PostgreSQL lokal menggunakan versi utama 17 agar sesuai dengan staging dan production. Uji migrasi pada lingkungan lokal terlebih dahulu, lalu terapkan ke staging. Production hanya menerima migrasi yang sudah ditinjau dan disetujui. Pengecualian backup/restore berlaku untuk seluruh fase selama keterbatasan paket/akses masih berlaku; risiko kehilangan data diterima dan restore tidak diklaim telah diuji.
 
 ## Pemeriksaan kualitas
 
@@ -142,19 +142,18 @@ npm run build
 npm run check
 ```
 
-GitHub Actions menjalankan pemeriksaan aplikasi web dan basis data. Wajibkan pemeriksaan `Pemeriksaan kualitas web` serta `Pengujian migrasi dan RLS Supabase` pada aturan perlindungan cabang `main` agar perubahan tidak dapat digabungkan sebelum keduanya lulus.
+GitHub Actions menjalankan pemeriksaan aplikasi web dan basis data. Aturan perlindungan cabang `main` harus mewajibkan pemeriksaan `Pemeriksaan kualitas web` dan `Pengujian migrasi dan RLS Supabase` sebelum perubahan digabungkan.
 
-## Kebijakan penerapan: production saja
+## Kebijakan penerapan
 
-- Penerapan preview dinonaktifkan sesuai konfigurasi proyek.
+- Penerapan preview dinonaktifkan.
 - Penerapan production hanya berasal dari cabang `main`.
 - Pemeriksaan CI berjalan pada pull request dan push ke `main`.
 - Integrasi Git Vercel menerapkan commit dari `main` ke lingkungan production.
-- Jangan aktifkan penerapan preview tanpa perubahan keputusan proyek yang terdokumentasi.
+- Jangan aktifkan penerapan preview tanpa keputusan proyek yang terdokumentasi.
+- Proyek Vercel menggunakan Vite, Node.js 22, perintah kompilasi `npm run build`, dan direktori hasil `dist`.
 
-Proyek Vercel menggunakan kerangka kerja Vite, Node.js 22, perintah kompilasi `npm run build`, dan direktori hasil `dist`.
-
-Variabel lingkungan production Vercel yang telah disiapkan:
+Variabel lingkungan Vercel production:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
@@ -170,18 +169,18 @@ Gunakan project yang berbeda untuk setiap lingkungan:
 - Staging: project Supabase staging khusus.
 - Production: project Supabase production khusus.
 
-Jangan pernah mengarahkan staging ke basis data production. URL dan kunci publishable boleh digunakan oleh browser. Kunci service-role hanya boleh berada pada lingkungan server tepercaya.
+Jangan pernah mengarahkan staging ke basis data production. URL dan kunci publishable boleh digunakan browser. Kunci service-role hanya boleh berada pada lingkungan server tepercaya.
 
 ## Keamanan
 
-- Jangan commit kredensial asli, token, atau file lingkungan lokal.
+- Jangan commit kredensial, token, atau file lingkungan lokal.
 - Jangan menaruh rahasia pada variabel berawalan `VITE_`.
 - Aktifkan dan uji RLS sebelum tabel bisnis diekspos.
 - Semua keputusan bisnis dengan hak istimewa harus dilakukan di sisi server.
 - Validasi tipe, ukuran, dan isi berkas yang diunggah.
 - Verifikasi tanda tangan webhook dan proses webhook secara idempoten.
 - Catat aktivitas administratif dan transaksi penting tanpa menyimpan rahasia.
-- Uji proses pencadangan dan pemulihan sebelum rilis produk.
+- Uji pencadangan dan pemulihan sebelum rilis, kecuali ada pengecualian tertulis dari pemilik proyek.
 
 ## Pengujian perangkat seluler
 
