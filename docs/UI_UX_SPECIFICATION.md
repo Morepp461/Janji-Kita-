@@ -146,3 +146,12 @@ Keyboard navigation, semantic headings, form labels, focus management, alt text,
 - Draft edits never silently replace published version.
 - Expired page does not expose private information.
 - All visible controls work and have loading/error states.
+
+
+## 9. Fitur Pengalaman Lanjutan (Fase 8)
+- Panel fitur lanjutan tersedia dari editor untuk impor desain, perencana tempat duduk, dan tautan livestream.
+- Matriks impor selalu memperlihatkan status format, hasil, serta fallback. Laporan impor menampilkan format sumber, objek editable, elemen diratakan/dilewati, dan peringatan.
+- Perencana tempat duduk hanya tersedia bagi pemilik undangan karena daftar tamu bersifat privat. Tampilkan kapasitas meja, jumlah terisi, daftar tamu yang belum ditempatkan, dan error kapasitas dari server.
+- Informasi meja/kursi pada undangan publik hanya tampil pada tautan tamu personal yang valid; tanpa token personal, tampilkan instruksi singkat tanpa data tamu.
+- Kontrol gerak berada pada tab Properti → Gerak. Tersedia preset, pemicu, durasi, dan jeda; hormati `prefers-reduced-motion`.
+- Livestream hanya berupa tautan HTTPS yang dibuka pada tab baru. Jangan menyematkan iframe/provider yang belum disetujui.
