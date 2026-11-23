@@ -85,7 +85,7 @@ begin
   where id = attempt_row.id;
 
   if order_row.status <> 'paid' or mapped_status in ('refunded', 'partially_refunded') then
-    if mapped_status = 'paid' and order_row.status not in ('refunded', 'partially_refunded', 'cancelled', 'expired') then
+    if mapped_status = 'paid' and order_row.status not in ('refunded', 'partially_refunded') then
       update public.orders set status = 'paid', paid_at = coalesce(paid_at, paid_time)
       where id = order_row.id;
       duration_days := greatest(1, least(365, coalesce((order_row.price_snapshot ->> 'duration_days')::integer, 30)));
