@@ -482,6 +482,7 @@ declare
   before_value jsonb;
   after_value jsonb;
   actor uuid := auth.uid();
+  target_uuid uuid;
 begin
   if tg_op <> 'INSERT' then
     before_value := to_jsonb(old);
@@ -492,12 +493,15 @@ begin
   if tg_table_name = 'system_settings' then
     before_value := case when before_value is null then null else before_value - 'value' end;
     after_value := case when after_value is null then null else after_value - 'value' end;
-  elsif tg_table_name = 'consent_records' then
-    before_value := case when before_value is null then null else before_value - 'metadata' end;
-    after_value := case when after_value is null then null else after_value - 'metadata' end;
+  elsif tg_table_name = 'media_assets' then
+    before_value := case when before_value is null then null else before_value - 'object_path' end;
+    after_value := case when after_value is null then null else after_value - 'object_path' end;
   end if;
-  insert into public.audit_logs(actor_user_id, action, target_type, before_data, after_data)
-  values (actor, lower(tg_table_name) || '.' || lower(tg_op), tg_table_name, before_value, after_value);
+  if tg_table_name in ('templates', 'media_assets', 'consent_records') then
+    target_uuid := coalesce((after_value ->> 'id')::uuid, (before_value ->> 'id')::uuid);
+  end if;
+  insert into public.audit_logs(actor_user_id, action, target_type, target_id, before_data, after_data)
+  values (actor, lower(tg_table_name) || '.' || lower(tg_op), tg_table_name, target_uuid, before_value, after_value);
   if tg_op = 'DELETE' then return old; end if;
   return new;
 end;
