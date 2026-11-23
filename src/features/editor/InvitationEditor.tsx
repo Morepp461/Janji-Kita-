@@ -110,6 +110,7 @@ function validateSignature(bytes: Uint8Array, mime: string): boolean {
 export default function InvitationEditor({ client, invitationId, userId }: Props) {
   const [title, setTitle] = useState("");
   const [ownerUserId, setOwnerUserId] = useState("");
+  const [readOnly, setReadOnly] = useState(false);
   const [document, setDocument] = useState<InvitationDocument | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
@@ -567,6 +568,20 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       </main>
     );
 
+  if (readOnly && document) {
+    return (
+      <main className="min-h-screen bg-[#fffaf6] px-4 py-6 text-[#30251f]">
+        <div className="mx-auto max-w-5xl">
+          <header className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eaded5] bg-white p-4">
+            <div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#a36d55]">Janji Kita · Pratinjau kolaborator</p><h1 className="mt-1 text-lg font-semibold">{title}</h1><p className="text-xs text-[#887970]">Akses pembaca · tidak dapat mengubah dokumen</p></div>
+            <a href={`/invitations/${invitationId}/collaborators`} className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold">Kolaborasi</a>
+          </header>
+          <InvitationDocumentView document={document} client={client} />
+        </div>
+      </main>
+    );
+  }
+
   const statusLabel: Record<SaveState, string> = {
     saved: "Tersimpan",
     dirty: "Perubahan belum tersimpan",
@@ -624,7 +639,13 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             {statusLabel[saveState]}
           </span>
           <a
-            href={`/invitations/${invitationId}/guests`}
+            href={`/invitations/${invitationId}/collaborators`}
+            className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+          >
+            Kolaborasi
+          </a>
+          <a
+            href={`/invitations/${invitationId}/guests`
             className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
           >
             Tamu & RSVP
