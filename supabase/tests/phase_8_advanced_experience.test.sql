@@ -1,0 +1,34 @@
+begin;
+select no_plan();
+
+select has_table('public', 'seating_tables', 'tabel meja tersedia');
+select has_table('public', 'seating_assignments', 'tabel penempatan tamu tersedia');
+select ok((select relrowsecurity from pg_class where oid = 'public.seating_tables'::regclass), 'RLS meja aktif');
+select ok((select relrowsecurity from pg_class where oid = 'public.seating_assignments'::regclass), 'RLS penempatan aktif');
+select ok(not has_table_privilege('anon', 'public.seating_tables', 'select'), 'anon tidak dapat membaca meja');
+select ok(not has_table_privilege('anon', 'public.seating_assignments', 'select'), 'anon tidak dapat membaca penempatan tamu');
+select ok(has_table_privilege('authenticated', 'public.seating_tables', 'select'), 'pengguna terautentikasi dapat membaca meja melalui RLS');
+select ok(has_table_privilege('authenticated', 'public.seating_assignments', 'insert'), 'pengguna terautentikasi dapat mengelola penempatan melalui RLS');
+select has_index('public', 'seating_tables', 'seating_tables_invitation_order_idx', 'indeks daftar meja tersedia');
+select has_index('public', 'seating_assignments', 'seating_assignments_table_idx', 'indeks penempatan per meja tersedia');
+select has_index('public', 'seating_assignments', 'seating_assignments_guest_idx', 'indeks penempatan per tamu tersedia');
+select has_index('public', 'seating_assignments', 'seating_assignments_seating_table_fk_idx', 'indeks foreign key meja tersedia');
+select has_trigger('public', 'seating_assignments', 'seating_assignments_validate_capacity', 'kapasitas meja divalidasi saat penempatan');
+select has_trigger('public', 'seating_tables', 'seating_tables_validate_capacity', 'kapasitas tidak dapat diturunkan di bawah jumlah tamu');
+select has_trigger('public', 'seating_tables', 'seating_tables_set_updated_at', 'waktu perubahan meja diperbarui');
+select has_trigger('public', 'seating_assignments', 'seating_assignments_set_updated_at', 'waktu perubahan penempatan diperbarui');
+select ok(not has_function_privilege('anon', 'app_private.validate_seating_assignment()', 'execute'), 'anon tidak dapat menjalankan helper validasi');
+select ok(not has_function_privilege('anon', 'app_private.validate_seating_table_capacity()', 'execute'), 'anon tidak dapat menjalankan helper kapasitas');
+select ok(exists (select 1 from pg_constraint where conname = 'seating_assignments_guest_invitation_fk' and contype = 'f'), 'penempatan tamu terikat pada undangan yang sama');
+select ok(exists (select 1 from pg_constraint where conname = 'seating_assignments_table_invitation_fk' and contype = 'f'), 'penempatan meja terikat pada undangan yang sama');
+select ok((select pg_get_constraintdef(oid) like '%seating%' from pg_constraint where conrelid = 'public.guest_public_rate_limits'::regclass and conname = 'guest_public_rate_limits_action_check'), 'aksi seating tercakup dalam pembatasan permintaan tamu');
+select ok(has_function_privilege('anon', 'public.get_public_guest_seating(text)', 'execute'), 'tamu dapat meminta informasi meja melalui token personal');
+select ok((select prosecdef from pg_proc where oid = 'public.get_public_guest_seating(text)'::regprocedure), 'RPC publik memakai security definer dengan validasi token');
+select ok(not has_schema_privilege('anon', 'app_private', 'usage'), 'anon tidak mendapat akses ke schema privat');
+select ok(not has_function_privilege('anon', 'app_private.get_public_guest_seating_internal(text)', 'execute'), 'anon tidak dapat memanggil helper privat secara langsung');
+select ok((select prosecdef from pg_proc where oid = 'app_private.get_public_guest_seating_internal(text)'::regprocedure), 'helper privat memeriksa token dengan security definer');
+select is(pg_get_function_result('public.get_public_guest_seating(text)'::regprocedure), 'TABLE(table_label text, seat_label text)', 'RPC hanya mengembalikan label meja dan kursi');
+select ok((select pg_get_constraintdef(oid) like '%seating%' from pg_constraint where conrelid = 'public.guest_public_rate_limits'::regclass and contype = 'c' and pg_get_constraintdef(oid) like '%action%'), 'rate limiter mendukung action seating');
+
+select * from finish();
+rollback;

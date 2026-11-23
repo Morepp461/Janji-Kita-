@@ -172,12 +172,15 @@
 
 **Checkpoint fase:** implementasi, QA, CI, migrasi staging/production, verifikasi keamanan, dan deployment production selesai sepenuhnya. Fase 7 menjadi checkpoint terbaru proyek.
 
-## 10. Phase 8 — Advanced Imports and Experience
-**Dependencies:** stable editor and asset pipeline.
-- Canva/Figma official integrations where approved.
-- PSD/AI/Affinity/PPTX/SVG/PDF import pipelines according to capability.
-- Seating planner, livestream, advanced animation.
-**Done when:** every format has a compatibility matrix, clear partial-import report, security validation, and tested fallback. Unsupported integrations remain disabled.
+## 10. Fase 8 — Impor dan Pengalaman Lanjutan
+**Dependensi:** editor visual dan pipeline aset stabil.
+- Matriks kompatibilitas untuk Canva, Figma, PSD, AI, Affinity, PPTX, SVG, PDF, PNG, dan JPG. Canva/Figma tetap nonaktif sampai API resmi mendapat persetujuan.
+- Impor PNG/JPG sebagai aset gambar; SVG disanitasi lalu dirasterisasi; PDF hanya pratinjau lokal. PSD, AI, Affinity, dan PPTX menampilkan status belum didukung beserta fallback ekspor yang jelas.
+- Laporan impor memuat format sumber, objek editable, elemen yang diratakan, elemen yang dilewati, peringatan, dan fallback.
+- Perencana tempat duduk mengelola meja, kapasitas, dan penempatan tamu. Kapasitas diperiksa secara transaksional di database; informasi meja/kursi publik hanya tersedia melalui token personal yang di-hash dan RPC terbatas.
+- Tautan livestream hanya menerima URL HTTPS eksternal. Penyematan provider dan integrasi API tidak diaktifkan tanpa persetujuan resmi.
+- Preset animasi aman: fade-in, rise-in, soft-zoom, dan float; mendukung durasi, pemicu, jeda, serta fallback `prefers-reduced-motion`.
+**Selesai ketika:** semua format memiliki matriks kompatibilitas, laporan hasil impor yang jelas, validasi keamanan, dan fallback teruji; fitur tempat duduk, tautan livestream, serta animasi tersedia di editor dan renderer publik; integrasi yang belum disetujui tetap nonaktif.
 
 ## 11. Release Gates
 ### Functional

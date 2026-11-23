@@ -206,12 +206,22 @@ Index `(invitation_id,sort_order)`.
 
 ### `seating_tables`
 - `id uuid PK`, `invitation_id uuid FK invitations ON DELETE CASCADE`
-- `label text`, `capacity int CHECK(capacity > 0)`, `sort_order int`.
+- `label text` (1–80 karakter), `capacity int CHECK(1..1000)`, `sort_order int`.
+- `created_at`, `updated_at`; indeks `(invitation_id,sort_order,created_at)`.
+- RLS hanya mengizinkan pemilik undangan membaca dan mengelola meja.
 
 ### `seating_assignments`
-- `id uuid PK`, `invitation_id uuid FK invitations`, `guest_id uuid FK guests`
-- `seating_table_id uuid FK seating_tables`, `seat_label text NULL`
-Unique `(invitation_id,guest_id)`.
+- `id uuid PK`, `invitation_id uuid FK invitations ON DELETE CASCADE`, `guest_id uuid FK guests ON DELETE CASCADE`
+- `seating_table_id uuid FK seating_tables ON DELETE CASCADE`, `seat_label text NULL` (maks. 40 karakter).
+- Unique `(invitation_id,guest_id)`; indeks untuk `invitation_id`, `guest_id`, dan foreign key `seating_table_id`.
+- Trigger memastikan tamu dan meja berasal dari undangan yang sama, mencegah kapasitas terlampaui secara transaksional, dan menolak pengurangan kapasitas di bawah jumlah penempatan aktif.
+- RLS hanya mengizinkan pemilik undangan membaca dan mengelola penempatan.
+
+### RPC informasi tempat duduk publik
+- `public.get_public_guest_seating(p_token_hash text)` adalah pengecualian token-tamu yang memakai `SECURITY DEFINER` dengan `search_path` tetap; fungsi hanya mengembalikan `table_label` serta `seat_label`.
+- Helper `app_private.get_public_guest_seating_internal` memvalidasi hash token 64 karakter, status/masa aktif undangan, versi publikasi, dan rate limit sebelum membaca penempatan. Skema `app_private` tetap tidak diberi `USAGE` kepada `anon`; pemanggilan helper hanya dilakukan oleh wrapper berprivilege.
+- Token mentah tidak disimpan atau dikembalikan. Akses publik tidak mengekspos nama, email, nomor telepon, atau data RSVP.
+- `guest_public_rate_limits.action` mencakup `rsvp`, `guestbook`, dan `seating`; tabel rate limit tetap tidak dapat diakses langsung oleh peran klien.
 
 ## 5. Reseller, Consent, Admin, Analytics
 

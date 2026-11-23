@@ -149,7 +149,7 @@ Jobs must be idempotent and observable. If free hosting lacks reliable scheduled
 - Consent is recorded separately from purchase terms through an authenticated RPC and stores the owner, invitation, order, consent text version, scope, and timestamps. Owners can withdraw their own consent; administrators can review but cannot grant consent on a user's behalf. Consent review metadata is available only through an admin-gated RPC.
 - Analytics events are written through a strict allowlist RPC. Only normalized route labels are accepted; invitation IDs/slugs, guest PII, contact details, and invitation document content are not collected. Admin analytics reads aggregated metrics through a permission-checked function.
 - Locale catalog and timezone choices are managed through permission-checked RPCs. Public clients receive only active locale and approved timezone options; values are validated against the active catalog and PostgreSQL timezone catalog. New profiles inherit the default locale, and new invitations inherit their owner's locale/timezone. Dashboard language is independent from invitation content locale/timezone.
-- Public RPC entry points run as `SECURITY INVOKER`; privileged implementations are kept in the non-exposed `app_private` schema and enforce `auth.uid()` or explicit permission checks. Public localization reads only active locales and the single public timezone-catalog setting.
+- Public RPC entry points default to `SECURITY INVOKER`; privileged implementations stay in non-exposed `app_private` and enforce `auth.uid()` or explicit permission checks. The token-authenticated guest-seating RPC is a documented exception: its `SECURITY DEFINER` wrapper validates the hashed guest token, checks invitation publication/expiry, applies rate limiting, returns only table/seat labels, and does not grant `anon` access to `app_private`. Public localization reads only active locales and the single public timezone-catalog setting.
 - Administrative changes to templates, consent, media status, locale catalog, and system settings are recorded in append-only audit logs. System setting values are excluded from audit payloads; secrets remain in provider secret stores.
 
 ## 11. Performance and Reliability
@@ -184,3 +184,12 @@ Start with free tiers for domain-adjacent services only where limits fit actual 
 - Path-based public URL `/i/{slug}`.
 - No arbitrary JavaScript in user designs.
 - Feature flags for integrations with uncertain API availability.
+
+
+## 15. Impor dan Pengalaman Lanjutan (Fase 8)
+- Import pipeline mengklasifikasikan format sebelum memproses berkas. PNG/JPG dan SVG yang sudah disanitasi dirasterisasi menjadi WebP; PDF hanya pratinjau lokal; format tanpa parser tidak diunggah dan menerima fallback eksplisit.
+- Sanitasi SVG menggunakan allowlist elemen/atribut, menolak deklarasi XML eksternal, menghapus handler, link eksternal, dan konten berisiko. Tidak ada JavaScript atau iframe dari file pengguna.
+- Seating planner menyimpan meja dan assignment pada tabel ber-RLS pemilik. Trigger database memeriksa konsistensi invitation/guest/table dan kapasitas dengan row lock.
+- RPC publik untuk seating memakai wrapper token-terautentikasi `SECURITY DEFINER` dengan `search_path` tetap; helper `app_private` memvalidasi token SHA-256, status dan masa aktif undangan, versi publikasi, serta rate limit. Skema `app_private` tetap tertutup untuk `anon`, dan data yang dikembalikan hanya label meja dan kursi.
+- Livestream tidak memakai provider API atau embed; hanya URL HTTPS eksternal. Motion memakai preset allowlist dan nilai durasi/jeda yang dibatasi, serta menonaktifkan gerak ketika reduced-motion aktif.
+- Tidak ada dependency baru pada Fase 8.
