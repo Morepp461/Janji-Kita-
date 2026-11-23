@@ -110,6 +110,14 @@ function validateSignature(bytes: Uint8Array, mime: string): boolean {
 export default function InvitationEditor({ client, invitationId, userId }: Props) {
   const [title, setTitle] = useState("");
   const [ownerUserId, setOwnerUserId] = useState("");
+  const [invitationLocale, setInvitationLocale] = useState("id-ID");
+  const [invitationTimezone, setInvitationTimezone] = useState("Asia/Jakarta");
+  const [localeOptions, setLocaleOptions] = useState<Array<{ code: string; native_name: string }>>([
+    { code: "id-ID", native_name: "Bahasa Indonesia" },
+    { code: "en", native_name: "English" },
+  ]);
+  const [timezoneOptions, setTimezoneOptions] = useState(["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura", "UTC"]);
+  const [savingLocalization, setSavingLocalization] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [canManage, setCanManage] = useState(false);
   const [document, setDocument] = useState<InvitationDocument | null>(null);
@@ -161,7 +169,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       const { data: invitation, error: invitationError } = await client
         .from("invitations")
         .select(
-          "id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id,reseller_user_id",
+          "id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id,reseller_user_id,locale,timezone",
         )
         .eq("id", invitationId)
         .maybeSingle();
@@ -172,6 +180,15 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         return;
       }
       setOwnerUserId(invitation.owner_user_id);
+      setInvitationLocale(String(invitation.locale || "id-ID"));
+      setInvitationTimezone(String(invitation.timezone || "Asia/Jakarta"));
+      const { data: localizationConfig } = await client.rpc("get_public_localization_config");
+      if (active && localizationConfig && typeof localizationConfig === "object") {
+        const config = localizationConfig as { locales?: Array<{ code: string; native_name: string }>; timezones?: string[] };
+        if (Array.isArray(config.locales) && config.locales.length) setLocaleOptions(config.locales);
+        if (Array.isArray(config.timezones) && config.timezones.length) setTimezoneOptions(config.timezones);
+      }
+      if (!active) return;
       let canEditCurrent = invitation.owner_user_id === userId;
       let readOnlyCurrent = false;
       let canManageCurrent = invitation.owner_user_id === userId;
@@ -255,7 +272,12 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       }
       const draftTitle = (version.document as unknown as { metadata?: { title?: string } }).metadata
         ?.title;
-      const snapshot = { document: version.document, title: draftTitle || invitation.title };
+      const loadedDocument = {
+        ...version.document,
+        locale: String(invitation.locale || version.document.locale || "id-ID"),
+        timezone: String(invitation.timezone || version.document.timezone || "Asia/Jakarta"),
+      };
+      const snapshot = { document: loadedDocument, title: draftTitle || invitation.title };
       setTitle(snapshot.title);
       titleRef.current = snapshot.title;
       setDocument(snapshot.document);
@@ -413,6 +435,32 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     }, 850);
     return () => window.clearTimeout(timer);
   }, [client, document, title, baseUpdatedAt, invitationId, userId, saveState, online]);
+
+  async function updateInvitationLocalization(nextLocale: string, nextTimezone: string) {
+    if (!canManage || !document || saveState !== "saved") {
+      setMessage("Simpan perubahan editor sebelum mengubah bahasa atau zona waktu undangan.");
+      return;
+    }
+    setSavingLocalization(true);
+    setMessage("");
+    const { data, error: updateError } = await client.rpc("update_invitation_localization", {
+      p_invitation_id: invitationId,
+      p_locale: nextLocale,
+      p_timezone: nextTimezone,
+    });
+    if (updateError || !data) {
+      setMessage(updateError?.message || "Pengaturan bahasa dan zona waktu belum dapat disimpan.");
+      setSavingLocalization(false);
+      return;
+    }
+    const updatedAt = String(data);
+    updatedAtRef.current = updatedAt;
+    setBaseUpdatedAt(updatedAt);
+    setInvitationLocale(nextLocale);
+    setInvitationTimezone(nextTimezone);
+    commit({ ...docRef.current!, locale: nextLocale, timezone: nextTimezone }, titleRef.current);
+    setSavingLocalization(false);
+  }
 
   async function publishInvitation() {
     if (!draftVersionId || !docRef.current) return;
@@ -758,6 +806,36 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           </button>
         </div>
       </header>
+
+      {canManage && (
+        <section className="grid gap-3 border-b border-[#eaded5] bg-white px-4 py-3 sm:grid-cols-2 sm:px-5">
+          <label className="text-xs font-semibold text-[#76675f]">
+            Bahasa undangan
+            <select
+              value={invitationLocale}
+              disabled={savingLocalization || saveState !== "saved"}
+              onChange={(event) => void updateInvitationLocalization(event.target.value, invitationTimezone)}
+              className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2 text-sm text-[#30251f] disabled:opacity-60"
+            >
+              {localeOptions.map((item) => <option key={item.code} value={item.code}>{item.native_name}</option>)}
+              {!localeOptions.some((item) => item.code === invitationLocale) && <option value={invitationLocale}>{invitationLocale}</option>}
+            </select>
+          </label>
+          <label className="text-xs font-semibold text-[#76675f]">
+            Zona waktu acara
+            <select
+              value={invitationTimezone}
+              disabled={savingLocalization || saveState !== "saved"}
+              onChange={(event) => void updateInvitationLocalization(invitationLocale, event.target.value)}
+              className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2 text-sm text-[#30251f] disabled:opacity-60"
+            >
+              {timezoneOptions.map((value) => <option key={value} value={value}>{value}</option>)}
+              {!timezoneOptions.includes(invitationTimezone) && <option value={invitationTimezone}>{invitationTimezone}</option>}
+            </select>
+          </label>
+          {savingLocalization && <p role="status" className="text-xs text-[#887970] sm:col-span-2">Menyimpan lokalisasi...</p>}
+        </section>
+      )}
 
       <div className="grid min-h-[calc(100vh-65px)] grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_280px]">
         <aside className="order-2 border-t border-[#eaded5] bg-white p-3 lg:order-1 lg:border-r lg:border-t-0">
