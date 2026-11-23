@@ -248,7 +248,7 @@ export default function App() {
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
   const isFinance = roles.includes("finance");
   const isSuperAdmin = roles.includes("super_admin");
-  const checkoutMatch = pathname.match(/^\\/checkout\\/([0-9a-f-]+)\\/?$/i);
+  const checkoutMatch = pathname.match(/^\/checkout\/([0-9a-f-]+)\/?$/i);
   if (checkoutMatch) {
     return <CheckoutPage client={client} userId={session.user.id} invitationId={checkoutMatch[1]} />;
   }
