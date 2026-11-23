@@ -279,11 +279,7 @@ export default function PhaseSevenDashboard({
       return;
     }
     await runAction(
-      () =>
-        client
-          .from("locales")
-          .update({ is_active: !item.is_active, updated_at: new Date().toISOString() })
-          .eq("code", item.code),
+      () => client.rpc("admin_set_locale_active", { p_code: item.code, p_is_active: !item.is_active }),
       `Bahasa ${item.code} berhasil diperbarui.`,
     );
   }
@@ -302,17 +298,7 @@ export default function PhaseSevenDashboard({
       return;
     }
     await runAction(
-      () =>
-        client.from("system_settings").upsert(
-          {
-            key: "localization.timezones",
-            value: values,
-            updated_by: userId,
-            description: "Daftar zona waktu yang dapat dipilih pengguna dan undangan.",
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "key" },
-        ),
+      () => client.rpc("admin_update_timezone_options", { p_timezones: values }),
       "Daftar zona waktu berhasil disimpan.",
     );
   }
