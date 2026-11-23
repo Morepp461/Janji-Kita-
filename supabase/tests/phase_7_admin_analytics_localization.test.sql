@@ -20,7 +20,9 @@ select ok(not has_table_privilege('anon', 'public.consent_records', 'select'), '
 select ok(not has_table_privilege('anon', 'public.analytics_events', 'select'), 'anon tidak dapat membaca peristiwa analitik');
 select ok(not has_table_privilege('authenticated', 'public.system_settings', 'update'), 'pengaturan sistem hanya dapat diubah melalui RPC tervalidasi');
 select ok(not has_table_privilege('authenticated', 'public.locales', 'update'), 'katalog bahasa hanya dapat diubah melalui RPC tervalidasi');
+select ok(not has_table_privilege('authenticated', 'public.templates', 'insert'), 'template tidak dapat dibuat langsung melalui REST');
 select ok(not has_table_privilege('authenticated', 'public.templates', 'update'), 'moderasi template hanya dapat dilakukan melalui RPC');
+select ok(not has_table_privilege('authenticated', 'public.template_versions', 'insert'), 'versi template hanya dapat dibuat melalui RPC');
 
 select ok(has_function_privilege('anon', 'public.get_public_localization_config()', 'execute'), 'konfigurasi lokalisasi publik tersedia');
 select ok(not has_function_privilege('anon', 'public.record_marketplace_consent(uuid,uuid,text)', 'execute'), 'anon tidak dapat memberi persetujuan');
