@@ -315,7 +315,7 @@ export default function Marketplace({
         p_thumbnail_asset_id: thumbnailAssetId,
       });
       if (saveError) throw saveError;
-      setNotice("Template dan versi awal berhasil diterbitkan ke marketplace.");
+      setNotice("Template dan versi awal disimpan sebagai draft dan menunggu moderasi admin.");
       setTemplateTitle("");
       setTemplateSlug("");
       setTemplateDescription("");
@@ -345,7 +345,7 @@ export default function Marketplace({
       });
       if (versionError) throw versionError;
       setNotice(
-        "Versi template baru berhasil diterbitkan. Undangan lama tetap memakai snapshot sebelumnya.",
+        "Versi template baru disimpan sebagai draft untuk ditinjau. Template tidak tampil di marketplace sampai disetujui.",
       );
       setVersionTemplateId("");
       setVersionDocument("");
@@ -590,7 +590,7 @@ export default function Marketplace({
             <div>
               <h3 className="text-lg font-semibold">Pengelolaan template</h3>
               <p className="text-sm text-[#76675f]">
-                Hanya admin dengan izin templates.manage yang dapat menerbitkan template.
+                Hanya admin dengan izin templates.manage yang dapat membuat draft template. Publikasi dilakukan setelah moderasi.
               </p>
             </div>
             <button
@@ -714,7 +714,7 @@ export default function Marketplace({
                 disabled={saving}
                 className="rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50 md:col-span-2"
               >
-                {saving ? "Menyimpan..." : "Terbitkan template"}
+                {saving ? "Menyimpan..." : "Simpan sebagai draft"}
               </button>
             </form>
           )}
@@ -722,7 +722,7 @@ export default function Marketplace({
             className="mt-6 grid gap-3 border-t border-[#f0e7e1] pt-5"
             onSubmit={(event) => void createTemplateVersion(event)}
           >
-            <h4 className="font-semibold">Terbitkan versi template berikutnya</h4>
+            <h4 className="font-semibold">Buat versi template untuk ditinjau</h4>
             <select
               required
               className="rounded-lg border border-[#ddcec3] px-3 py-2"
@@ -766,7 +766,7 @@ export default function Marketplace({
               disabled={saving || !versionTemplateId}
               className="rounded-xl border border-[#754b3b] px-5 py-3 text-sm font-semibold text-[#754b3b] disabled:opacity-50"
             >
-              {saving ? "Menyimpan..." : "Terbitkan versi baru"}
+              {saving ? "Menyimpan..." : "Simpan versi draft baru"}
             </button>
           </form>
         </section>
