@@ -182,7 +182,7 @@
 - Preset animasi aman: fade-in, rise-in, soft-zoom, dan float; mendukung durasi, pemicu, jeda, serta fallback `prefers-reduced-motion`.
 **Selesai ketika:** semua format memiliki matriks kompatibilitas, laporan hasil impor yang jelas, validasi keamanan, dan fallback teruji; fitur tempat duduk, tautan livestream, serta animasi tersedia di editor dan renderer publik; integrasi yang belum disetujui tetap nonaktif.
 
-**Status akhir — 23 November 2026:** Fase 8 selesai sepenuhnya. QA/CI lulus (format, lint, TypeScript, unit test, build, migrasi lokal, database lint, dan pgTAP). Lima migrasi Fase 8 diterapkan serta diverifikasi pada Supabase staging dan production. Deployment Vercel production berstatus READY pada commit `bf2dcae437e6da98da894b790b2dcc4090c17f82`. Implementasi digabung melalui [PR #24](https://github.com/Morepp461/Janji-Kita-/pull/24).
+**Status akhir — 23 November 2026:** Fase 8 selesai sepenuhnya. QA/CI lulus (format, lint, TypeScript, unit test, build, migrasi lokal, database lint, dan 346 pengujian pgTAP). Enam migrasi Fase 8 diterapkan serta diverifikasi pada Supabase staging dan production. Indeks komposit menutup kedua foreign key penempatan; Performance Advisor tidak lagi melaporkan foreign key seating tanpa indeks pendukung. Deployment Vercel production berstatus READY pada commit `9d34283e92f62564dd987459e03c9675bfe050c3`. Implementasi digabung melalui [PR #24](https://github.com/Morepp461/Janji-Kita-/pull/24) dan tindak lanjut indeks [PR #26](https://github.com/Morepp461/Janji-Kita-/pull/26).
 
 ## 11. Release Gates
 ### Functional
