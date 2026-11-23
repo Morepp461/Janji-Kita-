@@ -44,14 +44,23 @@ Deno.serve(async (request: Request) => {
     });
     const { data: userData, error: authError } = await userClient.auth.getUser(token);
     if (authError || !userData.user) return json({ error: "Sesi masuk tidak valid." }, 401);
-    const { data: allowed, error: permissionError } = await userClient.rpc("has_permission", {
-      permission_key: "orders.read",
-    });
-    if (permissionError || allowed !== true) return json({ error: "Akses finance diperlukan." }, 403);
-
     const admin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
+    const { data: userRoles, error: roleError } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id);
+    if (roleError) return json({ error: "Izin finance belum dapat diverifikasi." }, 500);
+    const roleNames = (userRoles ?? []).map((item) => item.role as string);
+    const { data: permissions, error: permissionError } = await admin
+      .from("role_permissions")
+      .select("permission_key")
+      .in("role", roleNames);
+    if (permissionError) return json({ error: "Izin finance belum dapat diverifikasi." }, 500);
+    const allowed = roleNames.includes("super_admin")
+      || (permissions ?? []).some((item) => item.permission_key === "orders.read");
+    if (!allowed) return json({ error: "Akses finance diperlukan." }, 403);
     const cutoff = new Date(Date.now() - 5 * 60_000).toISOString();
     const { data: attempts, error: queryError } = await admin
       .from("payment_attempts")
