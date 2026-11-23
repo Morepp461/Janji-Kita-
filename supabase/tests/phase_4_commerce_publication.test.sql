@@ -31,6 +31,15 @@ insert into auth.users (
   '00000000-0000-0000-0000-000000000401', 'authenticated', 'authenticated',
   'phase4-commerce@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()
 );
+insert into auth.users (
+  id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-0000-0000-000000000405', 'authenticated', 'authenticated',
+  'phase4-finance@example.test', '', now(), '{}'::jsonb, '{}'::jsonb, now(), now()
+);
+update public.user_roles set role = 'finance'
+where user_id = '00000000-0000-0000-0000-000000000405';
 
 insert into public.templates (
   id, slug, title, category_id, style_id, description, base_price, currency, status, created_by
@@ -346,6 +355,26 @@ select is(
   'refund penuh menangguhkan undangan yang sudah terbit'
 );
 
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000401","role":"authenticated"}', true);
+select is((select count(*) from public.payment_events), 0::bigint,
+  'akun biasa tidak dapat membaca event pembayaran');
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000405', true);
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000405","role":"authenticated"}', true);
+select is(public.has_permission('orders.read'), true,
+  'finance memiliki izin baca laporan pesanan');
+select is(public.has_permission('commerce.manage'), false,
+  'finance tidak memiliki izin mengubah harga');
+select ok((select count(*) from public.orders) >= 2,
+  'finance dapat membaca seluruh pesanan untuk audit');
+select ok((select count(*) from public.payment_events) >= 3,
+  'finance dapat membaca riwayat webhook teredaksi');
 reset role;
 set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
