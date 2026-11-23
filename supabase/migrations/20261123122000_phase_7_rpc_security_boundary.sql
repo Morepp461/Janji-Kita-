@@ -175,12 +175,12 @@ returns uuid
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $
+as $$
   select app_private.admin_create_template(
     p_slug, p_title, p_description, p_category_id, p_style_id,
     p_base_price, p_document, p_thumbnail_asset_id, 'first_party'
   );
-$;
+$$;
 revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) from public, anon;
 grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) to authenticated;
 
