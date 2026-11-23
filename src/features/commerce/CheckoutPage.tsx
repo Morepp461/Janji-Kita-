@@ -51,6 +51,7 @@ export default function CheckoutPage({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [coupon, setCoupon] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -60,7 +61,7 @@ export default function CheckoutPage({
   const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [invitationResult, addOnResult] = await Promise.all([
+    const [invitationResult, addOnResult, orderResult] = await Promise.all([
       client
         .from("invitations")
         .select("id,title,status,template_id,owner_user_id")
@@ -73,6 +74,16 @@ export default function CheckoutPage({
         .eq("is_active", true)
         .in("billing_type", ["one_time", "quantity"])
         .order("price"),
+      client
+        .from("orders")
+        .select("id,order_number,status,subtotal,discount_total,tax_total,grand_total,currency")
+        .eq("invitation_id", invitationId)
+        .eq("owner_user_id", userId)
+        .eq("status", "pending")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     if (invitationResult.error || !invitationResult.data) {
       setError(invitationResult.error?.message || "Undangan tidak ditemukan atau bukan milik akun ini.");
@@ -81,6 +92,20 @@ export default function CheckoutPage({
     }
     if (addOnResult.error) setError(addOnResult.error.message);
     else setAddOns((addOnResult.data || []) as AddOn[]);
+    if (orderResult.data) {
+      const pendingOrder = orderResult.data;
+      setOrder({
+        order_id: pendingOrder.id,
+        order_number: pendingOrder.order_number,
+        status: pendingOrder.status,
+        subtotal: pendingOrder.subtotal,
+        discount_total: pendingOrder.discount_total,
+        tax_total: pendingOrder.tax_total,
+        grand_total: pendingOrder.grand_total,
+        currency: pendingOrder.currency,
+      });
+      setNotice("Pesanan pending sebelumnya ditemukan. Lanjutkan pembayaran atau lihat statusnya.");
+    }
     setLoading(false);
   }, [client, invitationId, userId]);
 
@@ -89,7 +114,7 @@ export default function CheckoutPage({
   }, [refresh]);
 
   async function createOrder() {
-    if (!invitation) return;
+    if (!invitation || order) return;
     setCreating(true);
     setError("");
     setNotice("");
@@ -100,7 +125,7 @@ export default function CheckoutPage({
       p_invitation_id: invitation.id,
       p_add_ons: selected,
       p_coupon_code: coupon.trim() || null,
-      p_idempotency_key: crypto.randomUUID(),
+      p_idempotency_key: idempotencyKey,
     });
     if (createError || !data) {
       setError(createError?.message || "Pesanan belum dapat dibuat.");
@@ -175,6 +200,7 @@ export default function CheckoutPage({
                     <select
                       id={`qty-${item.id}`}
                       value={quantities[item.id] || 0}
+                      disabled={Boolean(order)}
                       onChange={(event) => setQuantities((current) => ({ ...current, [item.id]: Number(event.target.value) }))}
                       className="rounded-lg border border-[#ddcec3] bg-white px-3 py-2 text-sm"
                     >
@@ -190,6 +216,7 @@ export default function CheckoutPage({
             Kode kupon (opsional)
             <input
               value={coupon}
+              disabled={Boolean(order)}
               onChange={(event) => setCoupon(event.target.value.toUpperCase())}
               maxLength={40}
               autoComplete="off"
@@ -202,11 +229,11 @@ export default function CheckoutPage({
           </p>
           <button
             type="button"
-            disabled={creating}
+            disabled={creating || Boolean(order)}
             onClick={() => void createOrder()}
             className="mt-5 w-full rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {creating ? "Membuat pesanan..." : "Hitung total dan buat pesanan"}
+            {creating ? "Membuat pesanan..." : order ? "Pesanan sudah dibuat" : "Hitung total dan buat pesanan"}
           </button>
         </section>
 
