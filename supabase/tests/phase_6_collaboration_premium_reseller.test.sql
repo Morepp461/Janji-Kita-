@@ -163,13 +163,15 @@ select is((select created_by from public.invitations where title='Undangan Klien
 select is((select reseller_user_id from public.invitations where title='Undangan Klien Reseller'),
   '00000000-0000-0000-0000-000000000602'::uuid,'atribusi reseller terpisah dari pemilik dan pembuat');
 
+select set_config('test.phase6_referral_code',
+  (select referral_code from public.reseller_profiles where user_id='00000000-0000-0000-0000-000000000602'),true);
 set local role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000601',true);
 select set_config('request.jwt.claims','{"sub":"00000000-0000-0000-0000-000000000601","role":"authenticated","email":"phase6-owner@example.test"}',true);
 select lives_ok(
   $q$select public.attribute_invitation_to_reseller(
     (select id from public.invitations where title='Undangan Fase Enam'),
-    (select referral_code from public.reseller_profiles where user_id='00000000-0000-0000-0000-000000000602')
+    current_setting('test.phase6_referral_code')
   )$q$,
   'pemilik dapat menerapkan kode referral reseller'
 );
