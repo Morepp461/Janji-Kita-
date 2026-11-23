@@ -107,13 +107,33 @@
 - Attendance dashboard.
 **Done when:** guest data private; invalid/duplicate ticket rejected; RSVP rate limited; CSV import reports row errors.
 
-## 8. Phase 6 — Collaboration, Premium, and Reseller
-**Dependencies:** Phase 1 roles, Phase 4 commerce.
-- Collaborator invitations and limits.
-- Premium subscription and entitlement adapter.
-- Reseller application/approval, price rules, client records.
-- Attribution and reports.
-**Done when:** regular limit enforced transactionally; Premium limit configurable; owner/payer/creator/reseller distinct; no false payout representation.
+## 8. Fase 6 — Kolaborasi, Premium, dan Reseller
+
+<badge>SELESAI SEPENUHNYA — 23 NOVEMBER 2026</badge>
+
+**Ketergantungan:** role Fase 1 dan commerce Fase 4.
+
+- Undangan kolaborator melalui email dengan peran editor dan pembaca.
+- Kotak masuk undangan, penerimaan, pencabutan akses, dan tampilan baca-saja.
+- Batas editor akun reguler ditegakkan secara transaksional.
+- Paket Premium menyediakan batas kolaborator yang dapat dikonfigurasi admin, hak akses berbasis langganan, sinkronisasi status, dan masa tenggang.
+- Aplikasi dan persetujuan reseller, tingkat harga, kode rujukan, aturan harga khusus reseller, data klien, serta pengarsipan klien.
+- Reseller dapat membuat dan mengelola undangan atas nama klien terverifikasi.
+- Pemilik, pembuat, pembayar, dan reseller disimpan sebagai identitas terpisah.
+- Harga khusus reseller diterapkan ketika reseller menjadi pembayar. Pembayaran langsung klien tetap memakai harga retail dengan atribusi reseller.
+- Laporan penjualan dan margin tidak diklaim sebagai pencairan komisi.
+- Kebijakan RLS, hak akses Storage, audit, dan adapter penyedia langganan diterapkan.
+
+**Kriteria selesai — seluruhnya terpenuhi:**
+- Batas akun reguler dan Premium diuji secara transaksional.
+- Hak akses editor/pembaca dan akses reseller diverifikasi.
+- Atribusi pemilik/pembuat/pembayar/reseller teruji.
+- Tiga migrasi diterapkan dan diverifikasi pada Supabase staging serta production.
+- CI lulus: [run #45112026551](https://github.com/Morepp461/Janji-Kita-/actions/runs/45112026551).
+- [PR #19](https://github.com/Morepp461/Janji-Kita-/pull/19) digabung pada commit `32c8b69e82bd6e9b55c1542071a8ff899bbdd123`.
+- Vercel production berstatus SIAP pada commit yang sama: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+
+**Catatan operasional:** paket Premium tetap nonaktif tanpa harga dan penyedia pembayaran yang disetujui admin. Implementasi adapter langganan selesai, tetapi penjualan langganan otomatis belum dibuka.
 
 ## 9. Phase 7 — Admin, Analytics, and Localization
 **Dependencies:** core modules.
