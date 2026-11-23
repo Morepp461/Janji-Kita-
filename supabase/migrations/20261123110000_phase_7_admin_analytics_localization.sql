@@ -614,3 +614,12 @@ end;
 $$;
 revoke all on function public.admin_create_template_version(uuid,jsonb,text) from public, anon;
 grant execute on function public.admin_create_template_version(uuid,jsonb,text) to authenticated;
+
+create trigger media_assets_audit_phase7
+  after update on public.media_assets
+  for each row
+  when (
+    old.processing_status is distinct from new.processing_status
+    or old.visibility is distinct from new.visibility
+  )
+  execute function public.audit_phase7_admin_change();
