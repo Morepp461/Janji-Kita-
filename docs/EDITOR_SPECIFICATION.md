@@ -27,6 +27,7 @@ Core components:
 Every component declares schema, default props, allowed style properties, responsive behavior, accessibility rules, and renderer implementation. Registry version is stored with document schema.
 
 ## 4. Canvas and Editing
+Invitation owners/managers can set the invitation content locale and event timezone independently from their dashboard language. Options come from the active locale/timezone catalog, are validated on the server, and control date/time formatting in the public renderer.
 - Add component from library.
 - Select by canvas or layer panel.
 - Drag/drop to reorder or position where component supports free positioning.
@@ -127,4 +128,4 @@ Validation errors identify section/component and offer direct navigation.
 - Public renderer must not load editor bundle.
 
 ## 14. Editor Acceptance Criteria
-All basic component operations work; undo/redo reliable; autosave survives refresh/network interruption; conflicts are visible; import limitations are explicit; no arbitrary script executes; mobile editing is usable; preview matches published renderer; failed publish preserves current live version.
+All basic component operations work; undo/redo reliable; autosave survives refresh/network interruption; conflicts are visible; import limitations are explicit; no arbitrary script executes; mobile editing is usable; preview matches published renderer; failed publish preserves current live version; invitation locale/timezone settings persist and match public date/time formatting.

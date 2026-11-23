@@ -198,6 +198,12 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
           >
             Audit pembayaran
           </a>
+          <a
+            href="/admin/operations"
+            className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]"
+          >
+            Operasional & analitik
+          </a>
           <button
             className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]"
             onClick={() => void refresh()}

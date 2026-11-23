@@ -68,6 +68,8 @@ Overview cards: total invitations, active, drafts, expiring soon, recent orders.
 Tabs: Overview, Editor, Guests, RSVP, Analytics, Collaborators, Orders/Access, Settings. Show invitation state and expiry prominently. Tabs hidden/disabled when not entitled, with explanation.
 
 ### Editor `/invitations/:id/editor`
+Pengaturan bahasa konten undangan dan zona waktu acara tersedia bagi pemilik/pengelola undangan. Preferensi ini terpisah dari bahasa dashboard. Renderer publik memformat tanggal dan waktu sesuai locale/timezone undangan.
+
 Desktop layout:
 - Top bar: back, invitation name, save state, undo/redo, preview, update/publish.
 - Left panel: pages/sections/layers/assets/components.
@@ -84,7 +86,7 @@ Mobile layout:
 Editor controls: add, delete, duplicate, reorder, hide/show, lock, group, align, layer order, content/style edit, copy/paste style, reusable components, undo/redo, autosave, preview, draft save, publish update.
 
 ### Checkout `/checkout/:order`
-Order summary, itemized base price/add-ons, discount, tax/fees if applicable, total, payer/owner/reseller context, optional marketplace design consent (unchecked), terms acceptance, payment method handoff. No preselected optional consent. Display expiry duration and exact start rule.
+Order summary, itemized base price/add-ons, discount, tax/fees if applicable, total, payer/owner/reseller context, optional marketplace design consent (unchecked), terms acceptance, payment method handoff. No preselected optional consent. Display expiry duration and exact start rule. Consent is stored with user, invitation, order, text version, scope, and timestamp; it can be withdrawn from `/settings/consents`.
 
 ### Payment result
 Pending, success, failed, cancelled, expired states. Do not infer success from redirect alone. Success page links to published invitation and dashboard. Pending page polls/rechecks safely.
@@ -108,7 +110,12 @@ List owner and collaborators, invite by email, role, pending/accepted/revoked st
 Orders and invitations, client/owner/payer context, wholesale price, reseller margin/report, status filters. Clearly distinguish recorded resale price from platform-collected payment.
 
 ### Admin console
+Rute `/admin/operations` menyediakan analitik ringkas, moderasi template, tinjauan persetujuan marketplace, inventaris/karantina media, pengelolaan locale dan zona waktu, pengaturan sistem non-rahasia, serta audit log. Template baru dan versi baru tetap draft sampai admin menerbitkannya. Template bersumber dari desain pelanggan wajib ditautkan ke persetujuan aktif yang sudah disetujui.
+
 Data tables with search/filter/pagination, create/edit forms, confirmation for destructive actions, audit preview, role-based controls, safe defaults. Critical configuration requires confirmation and audit event.
+
+### Pengaturan persetujuan `/settings/consents`
+Menampilkan riwayat persetujuan desain marketplace milik pengguna dan aksi pencabutan. Pencabutan harus menghentikan penggunaan baru dan mengarsipkan template pelanggan yang terhubung.
 
 ## 4. Design System
 - Typography: readable sans-serif for UI; template typography may vary.

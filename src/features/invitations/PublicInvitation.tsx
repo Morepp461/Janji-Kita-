@@ -80,6 +80,8 @@ export default function PublicInvitation({
         <InvitationDocumentView
           document={invitation.document as InvitationDocument}
           client={client}
+          locale={invitation.locale}
+          timezone={invitation.timezone}
         />
         {client && <GuestPublicForms client={client} guestToken={guestToken} slug={slug} />}
       </div>

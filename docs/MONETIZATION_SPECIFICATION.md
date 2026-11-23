@@ -71,7 +71,7 @@ Admin can define percent/fixed coupon, start/end, global/per-user redemption lim
 - No automatic payout/affiliate commission in initial release. Payment settlement and margin reporting must not be misrepresented as money transferred to reseller.
 
 ## 11. Consent and Marketplace
-Optional consent at checkout is independent of transaction acceptance. Record consent version and timestamp. No consent means no reuse. Consent withdrawal blocks future use where operationally possible; already published marketplace assets require review/removal workflow. Third-party assets require separate rights clearance.
+Optional consent at checkout is independent of transaction acceptance and is never preselected. Record the user, invitation, order, consent scope, text version, and grant/withdrawal timestamps. No consent means no reuse. Customer-source templates require an active, approved consent linked to the same invitation before publication. Owners can withdraw consent; linked published templates are archived automatically, and rejected/withdrawn consent blocks future publication. Third-party assets require separate rights clearance.
 
 ## 12. Refunds, Disputes, and Support
 Admin policy must define refund eligibility, processing, gateway fees, chargeback, invitation deactivation, and customer communication before launch. Every adjustment creates audit record. Do not promise automatic refund if gateway/policy does not support it.
