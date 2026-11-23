@@ -351,7 +351,11 @@ begin
           coalesce(p_refund_amount, case when mapped_status = 'refunded' then grand_total else refund_total end)))
       where id = order_row.id;
     elsif mapped_status in ('refunded', 'partially_refunded') then
-      update public.orders set status = mapped_status where id = order_row.id;
+      update public.orders set
+        status = case when order_row.status = 'refunded' then 'refunded' else mapped_status end,
+        refund_total = greatest(refund_total, least(grand_total,
+          coalesce(p_refund_amount, case when mapped_status = 'refunded' then grand_total else refund_total end)))
+      where id = order_row.id;
       if mapped_status = 'refunded' or order_row.status = 'refunded' then
         update public.entitlements set status = 'revoked'
         where user_id = order_row.owner_user_id and entitlement_key = 'invitation.publish'
