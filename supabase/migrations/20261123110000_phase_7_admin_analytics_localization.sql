@@ -351,6 +351,9 @@ begin
   if p_status = 'published' and template_row.current_version_id is null then
     raise exception 'Template belum memiliki versi yang dapat diterbitkan';
   end if;
+  if template_row.source_invitation_id is not null and template_row.source_consent_id is null then
+    raise exception 'Template dari undangan pelanggan wajib memiliki persetujuan';
+  end if;
   if template_row.source_consent_id is not null then
     select * into consent_row from public.consent_records
     where id = template_row.source_consent_id
@@ -502,3 +505,112 @@ create trigger templates_audit_phase7
     or old.moderation_note is distinct from new.moderation_note
   )
   execute function public.audit_phase7_admin_change();
+
+
+-- Template baru dan versi baru wajib melewati antrean moderasi sebelum terlihat di marketplace.
+create or replace function public.admin_create_template(
+  p_slug text,
+  p_title text,
+  p_description text,
+  p_category_id uuid,
+  p_style_id uuid,
+  p_base_price bigint,
+  p_document jsonb,
+  p_thumbnail_asset_id uuid default null
+)
+returns uuid
+language plpgsql
+set search_path = public, app_private, pg_temp
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  new_template_id uuid;
+  new_version_id uuid;
+begin
+  if current_user_id is null or not app_private.has_permission('templates.manage') then
+    raise exception 'Tidak memiliki izin mengelola template' using errcode = '42501';
+  end if;
+  if p_slug !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$' or length(trim(p_title)) not between 1 and 120 then
+    raise exception 'Slug atau judul template tidak valid' using errcode = '22023';
+  end if;
+  if jsonb_typeof(p_document) <> 'object' or coalesce((p_document ->> 'schemaVersion')::integer, 0) <> 1 then
+    raise exception 'Dokumen template harus memakai schemaVersion 1' using errcode = '22023';
+  end if;
+  if not exists (select 1 from public.categories where id = p_category_id and is_active)
+    or not exists (select 1 from public.design_styles where id = p_style_id and is_active) then
+    raise exception 'Kategori atau gaya desain tidak tersedia' using errcode = '22023';
+  end if;
+
+  insert into public.templates (
+    slug, title, description, category_id, style_id, base_price, status,
+    thumbnail_asset_id, created_by
+  ) values (
+    p_slug, trim(p_title), coalesce(p_description, ''), p_category_id, p_style_id,
+    greatest(coalesce(p_base_price, 0), 0), 'draft', p_thumbnail_asset_id, current_user_id
+  ) returning id into new_template_id;
+
+  insert into public.template_versions (
+    template_id, version_no, schema_version, document, asset_manifest, change_note, created_by
+  ) values (
+    new_template_id, 1, 1, p_document, '{}'::jsonb, 'Versi awal · menunggu moderasi', current_user_id
+  ) returning id into new_version_id;
+
+  update public.templates
+  set current_version_id = new_version_id,
+      moderation_note = 'Menunggu peninjauan admin'
+  where id = new_template_id;
+
+  return new_template_id;
+end;
+$$;
+revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) from public, anon;
+grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) to authenticated;
+
+create or replace function public.admin_create_template_version(
+  p_template_id uuid,
+  p_document jsonb,
+  p_change_note text default null
+)
+returns uuid
+language plpgsql
+set search_path = public, app_private, pg_temp
+as $$
+declare
+  current_user_id uuid := auth.uid();
+  next_version integer;
+  new_version_id uuid;
+begin
+  if current_user_id is null or not app_private.has_permission('templates.manage') then
+    raise exception 'Tidak memiliki izin mengelola template' using errcode = '42501';
+  end if;
+  if jsonb_typeof(p_document) <> 'object' or coalesce((p_document ->> 'schemaVersion')::integer, 0) <> 1 then
+    raise exception 'Dokumen template harus memakai schemaVersion 1' using errcode = '22023';
+  end if;
+
+  perform 1 from public.templates where id = p_template_id for update;
+  if not found then raise exception 'Template tidak ditemukan' using errcode = 'P0002'; end if;
+
+  select coalesce(max(version_no), 0) + 1 into next_version
+  from public.template_versions where template_id = p_template_id;
+
+  insert into public.template_versions (
+    template_id, version_no, schema_version, document, asset_manifest, change_note, created_by
+  ) values (
+    p_template_id, next_version, 1, p_document, '{}'::jsonb,
+    left(coalesce(p_change_note, 'Versi baru · menunggu moderasi'), 500), current_user_id
+  ) returning id into new_version_id;
+
+  update public.templates
+  set current_version_id = new_version_id,
+      status = 'draft',
+      moderation_note = 'Versi baru menunggu peninjauan admin',
+      moderated_by = null,
+      moderated_at = null,
+      updated_at = now()
+  where id = p_template_id;
+
+  return new_version_id;
+end;
+$$;
+revoke all on function public.admin_create_template_version(uuid,jsonb,text) from public, anon;
+grant execute on function public.admin_create_template_version(uuid,jsonb,text) to authenticated;
