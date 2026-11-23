@@ -613,8 +613,8 @@ create or replace function public.save_invitation_draft(
 )
 returns jsonb
 language plpgsql
-security definer
-set search_path = pg_catalog
+security invoker
+set search_path = public, app_private, pg_temp
 as $$
 declare
   current_user_id uuid := auth.uid();
@@ -793,6 +793,20 @@ using (app_private.can_view_invitation(id));
 create policy invitation_versions_collaborator_read on public.invitation_versions
 for select to authenticated
 using (app_private.can_view_invitation(invitation_id));
+
+create policy invitations_collaborator_update on public.invitations
+for update to authenticated
+using (app_private.can_edit_invitation(id))
+with check (app_private.can_edit_invitation(id));
+
+create policy invitation_versions_collaborator_insert on public.invitation_versions
+for insert to authenticated
+with check (app_private.can_edit_invitation(invitation_id));
+
+create policy invitation_versions_collaborator_update on public.invitation_versions
+for update to authenticated
+using (app_private.can_edit_invitation(invitation_id))
+with check (app_private.can_edit_invitation(invitation_id));
 
 create policy media_assets_collaborator_read on public.media_assets
 for select to authenticated
