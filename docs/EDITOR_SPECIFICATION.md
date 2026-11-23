@@ -77,6 +77,14 @@ Supported targets depend on actual parser/API availability:
 - PNG/JPG: import as image asset, not editable layer structure.
 Import result must report: imported editable objects, flattened elements, skipped elements, warnings, and source format. Never promise lossless conversion without compatibility validation.
 
+Implementasi Fase 8:
+- PNG/JPG dioptimalkan menjadi WebP dan ditambahkan sebagai aset gambar.
+- SVG dibatasi pada elemen/atribut allowlist; script, event handler, external reference, XML entity, dan elemen berisiko dibuang. Hasilnya dirasterisasi, bukan dipresentasikan sebagai layer vektor editable.
+- PDF hanya dibuka sebagai pratinjau lokal. PSD, AI, Affinity, dan PPTX belum memiliki parser aktif dan tidak diunggah; laporan menyertakan langkah ekspor alternatif.
+- Canva/Figma API resmi tetap nonaktif sampai persetujuan tersedia.
+- Perencana tempat duduk mengatur meja, kapasitas, dan penempatan tamu. Livestream berupa tautan HTTPS eksternal, bukan embed/provider integration.
+- Preset gerak yang diizinkan: fade-in, rise-in, soft-zoom, float; kontrol mencakup durasi, pemicu, jeda, dan reduced-motion fallback.
+
 ## 9. Custom HTML/CSS
 - No arbitrary JavaScript, event handlers, remote script, iframe injection, or server-side execution.
 - Custom HTML limited to sanitized allowlisted tags and attributes.
