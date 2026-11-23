@@ -455,6 +455,11 @@ begin
     'consents_active', (select count(*) from public.consent_records where granted and withdrawn_at is null),
     'consents_withdrawn', (select count(*) from public.consent_records where withdrawn_at is not null),
     'events_total', (select count(*) from public.analytics_events where occurred_at >= now() - make_interval(days => day_count)),
+    'events_last_hour', (select count(*) from public.analytics_events where occurred_at >= now() - interval '1 hour'),
+    'last_event_at', (select max(occurred_at) from public.analytics_events),
+    'media_pending', (select count(*) from public.media_assets where processing_status in ('uploaded', 'processing', 'failed')),
+    'media_quarantined', (select count(*) from public.media_assets where processing_status = 'quarantined'),
+    'consents_pending_review', (select count(*) from public.consent_records where granted and withdrawn_at is null and metadata ->> 'moderation_status' = 'pending'),
     'events_by_name', coalesce((
       select jsonb_object_agg(event_name, event_count)
       from (
