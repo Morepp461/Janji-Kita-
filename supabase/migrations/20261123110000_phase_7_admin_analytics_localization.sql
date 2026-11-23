@@ -93,7 +93,9 @@ grant select, insert, update, delete on public.system_settings to authenticated;
 grant select on public.consent_records, public.analytics_events to authenticated;
 
 create policy locales_read_active on public.locales
-  for select to anon, authenticated using (is_active or app_private.has_permission('locales.manage'));
+  for select to anon, authenticated using (is_active);
+create policy locales_admin_select on public.locales
+  for select to authenticated using (app_private.has_permission('locales.manage'));
 create policy locales_admin_insert on public.locales
   for insert to authenticated with check (app_private.has_permission('locales.manage'));
 create policy locales_admin_update on public.locales
