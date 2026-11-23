@@ -403,7 +403,7 @@ declare
   safe_properties jsonb;
 begin
   if auth.uid() is null then raise exception 'Autentikasi diperlukan'; end if;
-  if p_event_name not in ('dashboard_view', 'marketplace_view', 'editor_view', 'checkout_view', 'admin_view', 'consent_settings_view') then
+  if p_event_name not in ('dashboard_view', 'marketplace_view', 'editor_view', 'checkout_view', 'admin_view', 'consent_settings_view', 'invitation_view') then
     raise exception 'Jenis peristiwa analitik tidak diizinkan';
   end if;
   if p_invitation_id is not null and not app_private.can_view_invitation(p_invitation_id) then
