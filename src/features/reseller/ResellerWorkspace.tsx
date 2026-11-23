@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-type ResellerProfile = { id: string; user_id: string; status: string; business_name: string; contact_email: string; pricing_tier: string };
+type ResellerProfile = { id: string; user_id: string; status: string; business_name: string; contact_email: string; pricing_tier: string; referral_code: string };
+type PriceRule = { id: string; reseller_tier: string; template_id: string | null; add_on_id: string | null; wholesale_price: number; currency: string; valid_from: string; valid_until: string | null };
+type CatalogOption = { id: string; title?: string; code?: string; name_i18n?: Record<string, string> };
 type ClientRow = { id: string; name: string; email: string; phone: string | null; status: string };
 type OrderRow = { id: string; order_number: string; status: string; grand_total: number; currency: string };
 type SaleRow = { id: string; order_id: string; wholesale_amount: number; resale_amount: number | null; currency: string; created_at: string };
@@ -15,6 +17,13 @@ export default function ResellerWorkspace({ client, userId, isAdmin }: { client:
   const [clients, setClients] = useState<ClientRow[]>([]);
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [sales, setSales] = useState<SaleRow[]>([]);
+  const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
+  const [templates, setTemplates] = useState<CatalogOption[]>([]);
+  const [addOns, setAddOns] = useState<CatalogOption[]>([]);
+  const [ruleType, setRuleType] = useState<"template" | "add_on">("template");
+  const [ruleReference, setRuleReference] = useState("");
+  const [ruleTier, setRuleTier] = useState("standard");
+  const [rulePrice, setRulePrice] = useState("0");
   const [businessName, setBusinessName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [clientName, setClientName] = useState("");
@@ -39,6 +48,18 @@ export default function ResellerWorkspace({ client, userId, isAdmin }: { client:
     const nextProfile = profileResult.data as ResellerProfile | null;
     setProfile(nextProfile);
     setApplications((applicationsResult.data || []) as Application[]);
+    if (isAdmin || nextProfile?.status === "approved") {
+      const [ruleResult, templateResult, addOnResult] = await Promise.all([
+        client.from("reseller_price_rules").select("*").order("valid_from", { ascending: false }),
+        client.from("templates").select("id,title").eq("status", "published").order("title"),
+        client.from("add_ons").select("id,code,name_i18n").eq("is_active", true).order("code"),
+      ]);
+      const catalogError = ruleResult.error || templateResult.error || addOnResult.error;
+      if (catalogError) setError(catalogError.message);
+      setPriceRules((ruleResult.data || []) as PriceRule[]);
+      setTemplates((templateResult.data || []) as CatalogOption[]);
+      setAddOns((addOnResult.data || []) as CatalogOption[]);
+    }
     if (nextProfile?.status === "approved") {
       const [clientResult, orderResult, saleResult] = await Promise.all([
         client.from("reseller_clients").select("*").eq("reseller_user_id", userId).order("created_at", { ascending: false }),
@@ -90,6 +111,21 @@ export default function ResellerWorkspace({ client, userId, isAdmin }: { client:
     setSaving(false);
   }
 
+  async function savePriceRule(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ruleReference) { setError("Pilih template atau add-on."); return; }
+    setSaving(true); setError(""); setNotice("");
+    const { error: insertError } = await client.from("reseller_price_rules").insert({
+      reseller_tier: ruleTier,
+      template_id: ruleType === "template" ? ruleReference : null,
+      add_on_id: ruleType === "add_on" ? ruleReference : null,
+      wholesale_price: Number(rulePrice), currency: "IDR", valid_from: new Date().toISOString(),
+    });
+    if (insertError) setError(insertError.message);
+    else { setNotice("Aturan harga wholesale berhasil ditambahkan."); setRuleReference(""); setRulePrice("0"); await refresh(); }
+    setSaving(false);
+  }
+
   async function review(user: string, nextStatus: "approved" | "rejected") {
     setSaving(true); setError(""); setNotice("");
     const { error: rpcError } = await client.rpc("review_reseller_application", {
@@ -110,9 +146,22 @@ export default function ResellerWorkspace({ client, userId, isAdmin }: { client:
         {(error || notice) && <p role={error ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm ${error ? "bg-red-50 text-red-700" : "bg-green-50 text-green-800"}`}>{error || notice}</p>}
         {loading ? <p className="py-10 text-center text-sm text-[#76675f]">Memuat data reseller...</p> : (
           <>
+            {isAdmin && <section className="rounded-2xl border border-[#eaded5] bg-white p-5">
+              <h2 className="text-lg font-semibold">Aturan harga wholesale</h2>
+              <p className="mt-1 text-sm text-[#76675f]">Harga berlaku untuk checkout yang dibayar reseller. Checkout klien langsung tetap memakai harga retail.</p>
+              <form onSubmit={savePriceRule} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                <label className="text-sm font-medium">Tingkat reseller<input value={ruleTier} onChange={(e) => setRuleTier(e.target.value)} required maxLength={40} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label>
+                <label className="text-sm font-medium">Jenis item<select value={ruleType} onChange={(e) => { setRuleType(e.target.value as "template" | "add_on"); setRuleReference(""); }} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5"><option value="template">Template</option><option value="add_on">Add-on</option></select></label>
+                <label className="text-sm font-medium sm:col-span-2 lg:col-span-1">Item<select required value={ruleReference} onChange={(e) => setRuleReference(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5"><option value="">Pilih item</option>{(ruleType === "template" ? templates : addOns).map((item) => <option key={item.id} value={item.id}>{item.title || item.name_i18n?.["id-ID"] || item.code || item.id}</option>)}</select></label>
+                <label className="text-sm font-medium">Harga wholesale<input type="number" min="0" required value={rulePrice} onChange={(e) => setRulePrice(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label>
+                <button disabled={saving} className="self-end rounded-xl bg-[#754b3b] px-4 py-2.5 text-sm font-semibold text-white">Tambah aturan</button>
+              </form>
+              <div className="mt-4 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-[#f0e7e0] text-[#887970]"><th className="py-2 pr-3">Tingkat</th><th className="py-2 pr-3">Item</th><th className="py-2 pr-3">Harga</th><th className="py-2">Berlaku</th></tr></thead><tbody>{priceRules.map((rule) => <tr key={rule.id} className="border-b border-[#f7f0eb]"><td className="py-2 pr-3">{rule.reseller_tier}</td><td className="py-2 pr-3">{rule.template_id ? "Template" : "Add-on"} · {(rule.template_id || rule.add_on_id || "").slice(0, 8)}</td><td className="py-2 pr-3">{money(rule.wholesale_price, rule.currency)}</td><td className="py-2">{new Date(rule.valid_from).toLocaleDateString("id-ID")}{rule.valid_until ? " – " + new Date(rule.valid_until).toLocaleDateString("id-ID") : " – seterusnya"}</td></tr>)}</tbody></table></div>
+            </section>}
             {isAdmin && applications.length > 0 && <section className="rounded-2xl border border-[#eaded5] bg-white p-5"><h2 className="text-lg font-semibold">Pendaftaran menunggu persetujuan</h2><div className="mt-3 divide-y divide-[#f0e7e0]">{applications.map((item) => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><p className="font-semibold">{item.business_name}</p><p className="text-xs text-[#887970]">{item.contact_email} · {item.user_id}</p></div><div className="flex gap-2"><button disabled={saving} onClick={() => void review(item.user_id, "approved")} className="rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white">Setujui</button><button disabled={saving} onClick={() => void review(item.user_id, "rejected")} className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold">Tolak</button></div></div>)}</div></section>}
             {!profile || profile.status === "rejected" ? <form onSubmit={apply} className="rounded-2xl border border-[#eaded5] bg-white p-5 sm:p-6"><h2 className="text-lg font-semibold">Daftar sebagai reseller</h2><p className="mt-1 text-sm text-[#76675f]">Akses komersial diberikan setelah peninjauan admin.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-sm font-medium">Nama usaha<input required maxLength={120} value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="mt-2 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label><label className="text-sm font-medium">Email kontak<input type="email" required value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label></div><label className="mt-4 flex items-start gap-2 text-sm"><input type="checkbox" required className="mt-1" /><span>Saya menyetujui ketentuan reseller versi 2026-11-23-v1.</span></label><button disabled={saving} className="mt-4 rounded-xl bg-[#754b3b] px-5 py-3 text-sm font-semibold text-white">Kirim pendaftaran</button></form> : profile.status !== "approved" ? <section className="rounded-2xl border border-[#eaded5] bg-white p-6"><h2 className="font-semibold">Pendaftaran {profile.status === "applied" ? "sedang ditinjau" : profile.status}</h2><p className="mt-1 text-sm text-[#76675f]">Fitur klien dan laporan akan tersedia setelah status reseller disetujui.</p></section> : (
               <>
+                <section className="rounded-2xl border border-[#eaded5] bg-white p-5"><p className="text-sm text-[#76675f]">Kode referral reseller</p><p className="mt-2 font-mono text-2xl font-semibold tracking-wider">{profile.referral_code}</p><p className="mt-1 text-xs text-[#887970]">Klien dapat memasukkan kode ini saat checkout untuk mencatat atribusi reseller.</p></section>
                 <section className="grid gap-3 sm:grid-cols-3"><article className="rounded-2xl border border-[#eaded5] bg-white p-5"><p className="text-sm text-[#76675f]">Klien aktif</p><p className="mt-2 text-2xl font-semibold">{clients.filter((item) => item.status === "active").length}</p></article><article className="rounded-2xl border border-[#eaded5] bg-white p-5"><p className="text-sm text-[#76675f]">Biaya wholesale tercatat</p><p className="mt-2 text-xl font-semibold">{money(totalWholesale)}</p></article><article className="rounded-2xl border border-[#eaded5] bg-white p-5"><p className="text-sm text-[#76675f]">Margin yang dicatat</p><p className="mt-2 text-xl font-semibold">{money(recordedMargin)}</p><p className="mt-1 text-xs text-[#887970]">Bukan dana payout atau saldo yang ditransfer</p></article></section>
                 <section className="grid gap-4 lg:grid-cols-2">
                   <form onSubmit={addClient} className="rounded-2xl border border-[#eaded5] bg-white p-5"><h2 className="font-semibold">Tambah klien</h2><div className="mt-3 space-y-3"><label className="block text-sm font-medium">Nama<input required value={clientName} onChange={(e) => setClientName(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label><label className="block text-sm font-medium">Email<input type="email" required value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label><label className="block text-sm font-medium">Telepon (opsional)<input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} className="mt-1.5 w-full rounded-xl border border-[#ddcec3] px-3 py-2.5" /></label></div><button disabled={saving} className="mt-4 rounded-xl bg-[#754b3b] px-4 py-2.5 text-sm font-semibold text-white">Simpan klien</button></form>
