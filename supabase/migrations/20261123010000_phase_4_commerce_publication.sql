@@ -179,7 +179,6 @@ insert into public.role_permissions (role, permission_key) values
   ('admin', 'commerce.manage'),
   ('admin', 'orders.read'),
   ('finance', 'orders.read'),
-  ('finance', 'commerce.manage'),
   ('super_admin', 'commerce.manage'),
   ('super_admin', 'orders.read')
 on conflict (role, permission_key) do nothing;
@@ -188,6 +187,7 @@ revoke all on public.commerce_settings, public.add_ons, public.invitation_add_on
   public.order_items, public.payment_attempts, public.payment_events, public.entitlements,
   public.coupon_redemptions from public, anon, authenticated;
 grant select on public.add_ons to anon, authenticated;
+grant select on public.coupons, public.commerce_settings to authenticated;
 grant select on public.invitation_add_ons, public.orders, public.order_items,
   public.payment_attempts, public.entitlements to authenticated;
 
@@ -195,6 +195,10 @@ create policy add_ons_read_active on public.add_ons
   for select to anon using (is_active);
 create policy add_ons_read_authenticated on public.add_ons
   for select to authenticated using (is_active or app_private.has_permission('commerce.manage'));
+create policy commerce_settings_admin_read on public.commerce_settings
+  for select to authenticated using (app_private.has_permission('commerce.manage'));
+create policy coupons_admin_read on public.coupons
+  for select to authenticated using (app_private.has_permission('commerce.manage'));
 create policy invitation_add_ons_owner_read on public.invitation_add_ons
   for select to authenticated using (
     exists (select 1 from public.invitations i
