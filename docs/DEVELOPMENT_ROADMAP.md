@@ -74,14 +74,29 @@
 **Production release:** migrasi production telah diterapkan dan diverifikasi. PR #15 memuat implementasi editor visual. Deployment preview tetap nonaktif.
 
 ## 6. Phase 4 — Commerce and Publication
+**Status: SELESAI SEPENUHNYA PADA STAGING DAN PRODUCTION — 23 November 2026.**
+**Checkpoint:** [PR #16](https://github.com/Morepp461/Janji-Kita-/pull/16); [CI run #45090335232 lulus seluruh job](https://github.com/Morepp461/Janji-Kita-/actions/runs/45090335232).
 **Dependencies:** Phase 2, Phase 3 basic editor, Phase 1 security.
-- Pricing and add-on configuration.
-- Order snapshots and coupon rules.
-- Midtrans sandbox adapter and webhook.
-- Idempotent payment processing.
-- 30-day entitlement, expiry and renewal.
-- Publish/update atomic version pointer.
-**Done when:** no unpaid invitation can publish; duplicate webhook grants one entitlement; expiry enforced by renderer; failed publish leaves old version live. Real payment remains disabled until production merchant approval and release gate.
+
+### Implementasi dan verifikasi
+- Pricing, konfigurasi add-on, snapshot order, kupon dengan batas penggunaan, dan perhitungan harga server-side.
+- Midtrans sandbox adapter, pembuatan sesi pembayaran, verifikasi signature dan status webhook, rekonsiliasi pending, serta pemrosesan idempoten.
+- Entitlement publikasi 30 hari, perpanjangan, expiry terjadwal, refund sebagian/penuh, dan renderer yang menolak undangan kedaluwarsa.
+- Publikasi/pembaruan versi immutable dengan perpindahan pointer atomik; kegagalan publikasi tidak mengganti versi publik sebelumnya.
+- Dashboard admin commerce dan dashboard finance read-only.
+- Seluruh **15 migrasi Fase 4** diterapkan pada Supabase staging dan production.
+- Tiga Edge Functions aktif pada kedua project: `create-midtrans-payment`, `midtrans-webhook`, dan `reconcile-midtrans-pending`. Guard server-side hanya mengizinkan integrasi sandbox pada project staging; seluruh transaksi ditolak pada project production.
+- **74 pengujian pgTAP Fase 4 lulus pada staging** dan **18 pengujian regresi editor Fase 3 lulus** setelah kontrak autosave tetap menggunakan SECURITY INVOKER.
+- CI menjalankan format, lint, typecheck, unit test, build, seluruh migrasi lokal, database lint, dan **169 pengujian pgTAP lintas fase**; seluruh job lulus pada run #45090335232.
+- Smoke test production memastikan tabel commerce tersedia, RLS aktif pada semua tabel commerce, anon tidak dapat membaca order/payment attempts, dan job expiry aktif setiap 15 menit.
+- Konfigurasi Vercel production tetap menggunakan Supabase production; deployment preview tetap nonaktif dan deployment aplikasi hanya berasal dari `main`.
+
+### Gerbang sebelum menerima pembayaran nyata
+- Pembayaran production tetap dinonaktifkan. Transaksi sandbox end-to-end melalui akun merchant belum diverifikasi karena kredensial `MIDTRANS_SERVER_KEY` belum dapat diverifikasi melalui akses yang tersedia.
+- Sebelum menerima uang sungguhan, wajib melakukan transaksi sandbox, memverifikasi callback/webhook dan rekonsiliasi, memperoleh persetujuan merchant production, serta memenuhi seluruh launch gate pada MONETIZATION_SPECIFICATION.md.
+- Kunci Midtrans hanya boleh disimpan pada Supabase Function Secrets, tidak pada variabel `VITE_` atau repository.
+
+**Done when:** seluruh kriteria implementasi fase ini telah lulus pada staging dan migrasi/guard produksi telah diterapkan. Penerimaan uang sungguhan tetap dikunci sampai launch gate monetisasi terpenuhi.
 
 ## 7. Phase 5 — Guest Operations
 **Dependencies:** Phase 2 public renderer and Phase 4 publish.

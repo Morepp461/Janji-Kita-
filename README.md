@@ -53,23 +53,24 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Rilis production:** [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) telah digabung ke `main` pada commit `5a2a003436cce8a5fb31064985255f23148ab068`. Deployment Vercel production berstatus **READY**: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app). Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek, bukan hanya satu rilis. Pemilik menerima risiko kehilangan data karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Restore tidak diklaim telah diuji; pemulihan mengandalkan corrective/forward migration. Satu peringatan Security Advisor production yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 3.
 
-**Fase 4 — Commerce dan Publication: implementasi kode serta basis data staging selesai; verifikasi sandbox end-to-end masih menunggu kredensial sandbox Midtrans.**
+**Fase 4 — Commerce dan Publication: SELESAI SEPENUHNYA PADA STAGING DAN PRODUCTION — 23 November 2026.**
 
-**Checkpoint: 23 November 2026**
+**Checkpoint:** implementasi, pengujian, migrasi, dan Edge Functions telah diterapkan pada kedua project Supabase.
 
 - Admin dapat mengatur harga template, harga kanvas kosong, add-on, serta kupon persentase/nominal dengan masa berlaku dan batas penggunaan.
-- Checkout membuat snapshot harga di server. Perubahan harga setelah pesanan dibuat tidak mengubah nilai pesanan lama. Kupon dihitung dan direservasi secara transaksional, termasuk batas penggunaan per akun dan kompatibilitas reseller.
-- Integrasi Midtrans hanya memakai endpoint sandbox. Edge Function pembuatan sesi pembayaran memerlukan autentikasi; webhook memverifikasi signature dan status transaksi langsung ke Midtrans sebelum mengubah status pesanan.
-- Pemrosesan pembayaran idempoten, menolak nominal yang tidak cocok, menyimpan event webhook teredaksi, mengabaikan notifikasi terlambat yang mencoba menurunkan status pembayaran, dan mencatat nominal refund.
-- Pembayaran sukses membuat entitlement publikasi selama 30 hari. Perpanjangan menambah masa aktif; renderer publik menolak undangan kedaluwarsa. Refund penuh mencabut entitlement dan menangguhkan undangan; refund sebagian dicatat tanpa otomatis mematikan entitlement.
-- Publikasi dan pembaruan membuat versi immutable lalu memindahkan pointer publik dalam satu transaksi. Perubahan draft aktif tidak mengubah judul/konten yang sedang tayang sebelum publikasi berhasil.
-- Dashboard finance bersifat baca-saja untuk peran finance/admin, menampilkan nilai order, diskon, refund, event pembayaran teredaksi, serta menyediakan rekonsiliasi transaksi pending. Job `pg_cron` memperbarui status pesanan dan entitlement kedaluwarsa setiap 15 menit.
-- **CI web GitHub Actions lulus** untuk format, lint, typecheck, unit test, dan build. Job database CI masih berjalan; pengujian staging tetap lulus.
-- Seluruh **74 pengujian pgTAP Fase 4 lulus pada Supabase staging**, termasuk snapshot harga, batas kupon, pesanan tanpa pembayaran, webhook duplikat/terlambat, refund sebagian/penuh, entitlement, publikasi atomik, akses finance, dan expiry renderer.
-- Migrasi Fase 4 serta tiga Edge Function telah diterapkan pada Supabase staging. Pembayaran production tetap dinonaktifkan.
-- **Fase 4 belum dinyatakan selesai sepenuhnya:** kredensial `MIDTRANS_SERVER_KEY` sandbox belum diverifikasi melalui transaksi sandbox nyata, sehingga checkout, webhook gateway, dan rekonsiliasi end-to-end belum dapat dibuktikan. Jangan menaruh kunci ini pada variabel `VITE_` atau mengirimkannya melalui chat; simpan hanya pada Supabase Function Secrets.
-- URL webhook staging: `https://kcdydzdwfgdccbqbqcof.supabase.co/functions/v1/midtrans-webhook`. Setelah secret sandbox diverifikasi, lakukan transaksi sandbox dan pastikan callback kembali ke aplikasi serta dashboard finance merekonsiliasi statusnya.
-- Migrasi production, penggabungan ke `main`, dan deployment Vercel production belum dilakukan. Roadmap mensyaratkan sandbox E2E, rekonsiliasi, refund, dan persetujuan pemilik sebelum rilis production.
+- Checkout membuat snapshot harga di server. Perubahan harga setelah pesanan dibuat tidak mengubah nilai pesanan lama. Kupon dihitung dan dibatasi secara transaksional, termasuk batas penggunaan per akun.
+- Midtrans sandbox adapter membuat sesi pembayaran di server. Webhook memverifikasi signature dan status transaksi langsung ke gateway sebelum mengubah status pesanan.
+- Pemrosesan pembayaran idempoten, memeriksa nominal, menyimpan event webhook teredaksi, menangani settlement terlambat, dan mencatat refund.
+- Pembayaran sukses membuat entitlement publikasi 30 hari. Perpanjangan menambah masa aktif; renderer menolak undangan kedaluwarsa. Refund penuh mencabut entitlement; refund sebagian dicatat tanpa otomatis mematikan entitlement.
+- Publikasi dan pembaruan membuat versi immutable lalu memindahkan pointer publik dalam satu transaksi. Perubahan draft tidak mengganti versi publik sebelum publikasi berhasil.
+- Dashboard finance bersifat baca-saja untuk peran finance/admin. Job `pg_cron` memperbarui status undangan dan entitlement kedaluwarsa setiap 15 menit.
+- **15 migrasi Fase 4 diterapkan pada Supabase staging dan production.** Pemeriksaan production memastikan tabel commerce tersedia, RLS aktif pada seluruh tabel commerce, akses baca anon ditolak untuk order/payment attempts, dan job expiry aktif.
+- Tiga Edge Functions aktif pada kedua project: `create-midtrans-payment`, `midtrans-webhook`, dan `reconcile-midtrans-pending`. Pembayaran sandbox dibatasi ke project staging; project production ditolak oleh guard di sisi server.
+- **74 pengujian pgTAP Fase 4 lulus pada staging.** CI [run #45090335232](https://github.com/Morepp461/Janji-Kita-/actions/runs/45090335232) lulus seluruh pemeriksaan web dan database: format, lint, typecheck, unit test, build, reset migrasi, lint skema, dan 169 pengujian pgTAP lintas fase.
+- Regresi editor Fase 3: 18 pengujian lulus pada staging setelah kontrak autosave dipertahankan menggunakan SECURITY INVOKER.
+- Konfigurasi Vercel production tetap menunjuk ke Supabase production; deployment preview tetap nonaktif dan deployment aplikasi mengikuti cabang `main`.
+
+**Gerbang sebelum menerima pembayaran nyata:** transaksi sandbox end-to-end melalui akun merchant belum diverifikasi karena kredensial `MIDTRANS_SERVER_KEY` belum dapat diverifikasi melalui akses yang tersedia. Pembayaran production tetap dinonaktifkan dan fungsi production menolak seluruh transaksi. Sebelum menerima uang sungguhan, lakukan transaksi sandbox, verifikasi callback/webhook dan rekonsiliasi, serta penuhi persetujuan merchant production sesuai spesifikasi monetisasi. Simpan kunci hanya pada Supabase Function Secrets, bukan pada variabel `VITE_` atau chat.
 
 **Checkpoint: 22 November 2026**
 
