@@ -471,7 +471,14 @@ export default function InvitationDocumentView({
                   : ""
           }
         >
-          {renderNode(node, assetUrls, displayLocale, displayTimezone, guestSeating, Boolean(guestToken))}
+          {renderNode(
+            node,
+            assetUrls,
+            displayLocale,
+            displayTimezone,
+            guestSeating,
+            Boolean(guestToken),
+          )}
         </div>
       ))}
     </div>
