@@ -10,6 +10,9 @@ import CheckoutPage from "./features/commerce/CheckoutPage";
 import OrdersPage from "./features/commerce/OrdersPage";
 import InvitationEditor from "./features/editor/InvitationEditor";
 import GuestOperations from "./features/guests/GuestOperations";
+import CollaborationPage from "./features/collaboration/CollaborationPage";
+import PremiumPage from "./features/premium/PremiumPage";
+import ResellerWorkspace from "./features/reseller/ResellerWorkspace";
 import { getSupabaseClient } from "./lib/supabase";
 
 type Profile = {
@@ -246,6 +249,26 @@ export default function App() {
     );
   }
 
+  const collaborationMatch = pathname.match(/^\/invitations\/([0-9a-f-]+)\/collaborators\/?$/i);
+  if (collaborationMatch)
+    return (
+      <CollaborationPage
+        client={client}
+        invitationId={collaborationMatch[1]}
+        userId={session.user.id}
+        email={session.user.email || ""}
+      />
+    );
+  if (pathname === "/collaborations")
+    return (
+      <CollaborationPage
+        client={client}
+        invitationId=""
+        userId={session.user.id}
+        email={session.user.email || ""}
+      />
+    );
+
   const guestMatch = pathname.match(/^\/invitations\/([0-9a-f-]+)\/guests\/?$/i);
   if (guestMatch) return <GuestOperations client={client} invitationId={guestMatch[1]} />;
 
@@ -259,6 +282,14 @@ export default function App() {
     );
   }
   if (pathname === "/orders") return <OrdersPage client={client} />;
+  if (pathname === "/premium")
+    return <PremiumPage client={client} userId={session.user.id} isAdmin={isAdmin} />;
+  if (pathname === "/admin/subscriptions" && isAdmin)
+    return <PremiumPage client={client} userId={session.user.id} isAdmin />;
+  if (pathname === "/reseller")
+    return <ResellerWorkspace client={client} userId={session.user.id} isAdmin={false} />;
+  if (pathname === "/admin/resellers" && isAdmin)
+    return <ResellerWorkspace client={client} userId={session.user.id} isAdmin />;
   if (pathname === "/admin/commerce" && isAdmin) return <CommerceAdmin client={client} />;
   if (pathname === "/finance/orders" && (isAdmin || isFinance))
     return <FinanceDashboard client={client} />;
@@ -382,6 +413,43 @@ export default function App() {
             </p>
           </aside>
         </section>
+
+        <nav className="flex flex-wrap gap-2" aria-label="Fitur akun">
+          <a
+            href="/premium"
+            className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+          >
+            Premium
+          </a>
+          <a
+            href="/collaborations"
+            className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+          >
+            Undangan kolaborasi
+          </a>
+          <a
+            href="/reseller"
+            className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+          >
+            Program reseller
+          </a>
+          {isAdmin && (
+            <>
+              <a
+                href="/admin/subscriptions"
+                className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+              >
+                Kelola Premium
+              </a>
+              <a
+                href="/admin/resellers"
+                className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+              >
+                Kelola reseller
+              </a>
+            </>
+          )}
+        </nav>
 
         <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />
 

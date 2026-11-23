@@ -109,6 +109,9 @@ function validateSignature(bytes: Uint8Array, mime: string): boolean {
 
 export default function InvitationEditor({ client, invitationId, userId }: Props) {
   const [title, setTitle] = useState("");
+  const [ownerUserId, setOwnerUserId] = useState("");
+  const [readOnly, setReadOnly] = useState(false);
+  const [canManage, setCanManage] = useState(false);
   const [document, setDocument] = useState<InvitationDocument | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
@@ -157,9 +160,10 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setLoading(true);
       const { data: invitation, error: invitationError } = await client
         .from("invitations")
-        .select("id,title,status,draft_version_id,updated_at")
+        .select(
+          "id,title,status,draft_version_id,published_version_id,updated_at,owner_user_id,reseller_user_id",
+        )
         .eq("id", invitationId)
-        .eq("owner_user_id", userId)
         .maybeSingle();
       if (!active) return;
       if (invitationError || !invitation) {
@@ -167,6 +171,43 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         setLoading(false);
         return;
       }
+      setOwnerUserId(invitation.owner_user_id);
+      let canEditCurrent = invitation.owner_user_id === userId;
+      let readOnlyCurrent = false;
+      let canManageCurrent = invitation.owner_user_id === userId;
+      if (invitation.owner_user_id === userId) {
+        setReadOnly(false);
+      } else if (invitation.reseller_user_id === userId) {
+        const { data: resellerProfile } = await client
+          .from("reseller_profiles")
+          .select("status")
+          .eq("user_id", userId)
+          .eq("status", "approved")
+          .maybeSingle();
+        if (resellerProfile) {
+          canEditCurrent = true;
+          canManageCurrent = true;
+          setReadOnly(false);
+        }
+      }
+      if (!canEditCurrent) {
+        const { data: membership, error: membershipError } = await client
+          .from("invitation_collaborators")
+          .select("role,status")
+          .eq("invitation_id", invitationId)
+          .eq("user_id", userId)
+          .eq("status", "accepted")
+          .maybeSingle();
+        if (membershipError || !membership) {
+          setMessage(membershipError?.message || "Akses kolaborator tidak ditemukan.");
+          setLoading(false);
+          return;
+        }
+        readOnlyCurrent = membership.role === "viewer";
+        canEditCurrent = membership.role === "editor";
+        setReadOnly(readOnlyCurrent);
+      }
+      setCanManage(canManageCurrent);
       if (!["draft", "active", "expired"].includes(invitation.status)) {
         setMessage("Status undangan ini tidak dapat disunting.");
         setLoading(false);
@@ -174,7 +215,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       }
       let nextDraftVersionId = invitation.draft_version_id as string | null;
       let invitationUpdatedAt = invitation.updated_at as string;
-      if (!nextDraftVersionId && invitation.status !== "draft") {
+      if (!nextDraftVersionId && invitation.status !== "draft" && canEditCurrent) {
         const { data: revisionId, error: revisionError } = await client.rpc(
           "create_invitation_revision",
           { p_invitation_id: invitationId },
@@ -192,6 +233,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           .eq("id", invitationId)
           .maybeSingle();
         if (refreshedInvitation?.updated_at) invitationUpdatedAt = refreshedInvitation.updated_at;
+      }
+      if (!nextDraftVersionId && readOnlyCurrent) {
+        nextDraftVersionId = invitation.published_version_id as string | null;
       }
       if (!nextDraftVersionId) {
         setMessage("Versi draft tidak ditemukan.");
@@ -480,7 +524,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       }
       const bucket = "user-uploads-private";
       const objectPath =
-        userId +
+        ownerUserId +
         "/" +
         invitationId +
         "/" +
@@ -498,7 +542,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       const { data: asset, error: assetError } = await client
         .from("media_assets")
         .insert({
-          owner_user_id: userId,
+          owner_user_id: ownerUserId,
           storage_bucket: bucket,
           object_path: objectPath,
           media_type: mediaType,
@@ -567,6 +611,31 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       </main>
     );
 
+  if (readOnly && document) {
+    return (
+      <main className="min-h-screen bg-[#fffaf6] px-4 py-6 text-[#30251f]">
+        <div className="mx-auto max-w-5xl">
+          <header className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#eaded5] bg-white p-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.2em] text-[#a36d55]">
+                Janji Kita · Pratinjau kolaborator
+              </p>
+              <h1 className="mt-1 text-lg font-semibold">{title}</h1>
+              <p className="text-xs text-[#887970]">Akses pembaca · tidak dapat mengubah dokumen</p>
+            </div>
+            <a
+              href={`/invitations/${invitationId}/collaborators`}
+              className="rounded-lg border border-[#ddcec3] px-3 py-2 text-sm font-semibold"
+            >
+              Kolaborasi
+            </a>
+          </header>
+          <InvitationDocumentView document={document} client={client} />
+        </div>
+      </main>
+    );
+  }
+
   const statusLabel: Record<SaveState, string> = {
     saved: "Tersimpan",
     dirty: "Perubahan belum tersimpan",
@@ -624,25 +693,37 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             {statusLabel[saveState]}
           </span>
           <a
-            href={`/invitations/${invitationId}/guests`}
+            href={`/invitations/${invitationId}/collaborators`}
             className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
           >
-            Tamu & RSVP
+            Kolaborasi
           </a>
-          <a
-            href={`/checkout/${invitationId}`}
-            className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
-          >
-            Bayar / perpanjang
-          </a>
-          <button
-            type="button"
-            disabled={publishing || saveState !== "saved" || !draftVersionId}
-            onClick={() => void publishInvitation()}
-            className="rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
-          >
-            {publishing ? "Menerbitkan..." : "Terbitkan / perbarui"}
-          </button>
+          {canManage && (
+            <>
+              {ownerUserId === userId && (
+                <a
+                  href={`/invitations/${invitationId}/guests`}
+                  className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+                >
+                  Tamu & RSVP
+                </a>
+              )}
+              <a
+                href={`/checkout/${invitationId}`}
+                className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+              >
+                Bayar / perpanjang
+              </a>
+              <button
+                type="button"
+                disabled={publishing || saveState !== "saved" || !draftVersionId}
+                onClick={() => void publishInvitation()}
+                className="rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+              >
+                {publishing ? "Menerbitkan..." : "Terbitkan / perbarui"}
+              </button>
+            </>
+          )}
           {publishedUrl && (
             <a
               href={publishedUrl}
