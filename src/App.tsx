@@ -137,7 +137,9 @@ export default function App() {
 
   useEffect(() => {
     if (!client || !currentUserId) return;
-    const eventName = pathname.startsWith("/admin")
+    const eventName = pathname.startsWith("/i/")
+      ? "invitation_view"
+      : pathname.startsWith("/admin")
       ? "admin_view"
       : pathname.startsWith("/editor/")
         ? "editor_view"
@@ -148,10 +150,25 @@ export default function App() {
             : pathname === "/settings/consents"
               ? "consent_settings_view"
               : "dashboard_view";
+    const analyticsRoute = pathname.startsWith("/editor/")
+      ? "/editor/:id"
+      : pathname.startsWith("/checkout/")
+        ? "/checkout/:id"
+        : pathname.startsWith("/i/")
+          ? "/i/:slug"
+          : pathname.startsWith("/admin")
+            ? "/admin"
+            : pathname.startsWith("/settings/consents")
+              ? "/settings/consents"
+              : pathname.startsWith("/templates")
+                ? "/templates"
+                : pathname === "/"
+                  ? "/"
+                  : "/other";
     void client.rpc("track_analytics_event", {
       p_event_name: eventName,
       p_invitation_id: null,
-      p_properties: { route: pathname.split("?")[0].slice(0, 120) },
+      p_properties: { route: analyticsRoute },
     });
   }, [client, currentUserId, pathname]);
 
