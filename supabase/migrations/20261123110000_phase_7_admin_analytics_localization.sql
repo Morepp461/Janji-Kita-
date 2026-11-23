@@ -544,7 +544,7 @@ returns uuid
 language plpgsql
 security definer
 set search_path = public, app_private, pg_temp
-as $
+as $$
 declare
   current_user_id uuid := auth.uid();
   new_template_id uuid;
@@ -608,7 +608,7 @@ returns uuid
 language sql
 security definer
 set search_path = public, app_private, pg_temp
-as $
+as $$
   select public.admin_create_template(
     p_slug, p_title, p_description, p_category_id, p_style_id,
     p_base_price, p_document, p_thumbnail_asset_id, 'first_party'
@@ -627,7 +627,7 @@ returns uuid
 language plpgsql
 security definer
 set search_path = public, app_private, pg_temp
-as $
+as $$
 declare
   current_user_id uuid := auth.uid();
   next_version integer;
