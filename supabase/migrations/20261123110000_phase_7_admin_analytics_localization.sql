@@ -285,8 +285,15 @@ begin
   where id = p_consent_id and user_id = auth.uid()
     and consent_type = 'marketplace_template' and granted;
   if not found then raise exception 'Persetujuan aktif tidak ditemukan'; end if;
+  update public.templates
+  set status = 'archived',
+      moderation_note = 'Persetujuan pemilik dicabut',
+      moderated_by = null,
+      moderated_at = now(),
+      updated_at = now()
+  where source_consent_id = p_consent_id and status = 'published';
 end;
-$$;
+$;
 revoke all on function public.withdraw_marketplace_consent(uuid) from public, anon;
 grant execute on function public.withdraw_marketplace_consent(uuid) to authenticated;
 
@@ -319,8 +326,17 @@ begin
   )
   where id = p_consent_id and granted and withdrawn_at is null;
   if not found then raise exception 'Persetujuan aktif tidak ditemukan'; end if;
+  if p_decision = 'rejected' then
+    update public.templates
+    set status = 'archived',
+        moderation_note = 'Persetujuan marketplace ditolak oleh moderator',
+        moderated_by = auth.uid(),
+        moderated_at = now(),
+        updated_at = now()
+    where source_consent_id = p_consent_id and status = 'published';
+  end if;
 end;
-$$;
+$;
 revoke all on function public.admin_review_marketplace_consent(uuid,text,text) from public, anon;
 grant execute on function public.admin_review_marketplace_consent(uuid,text,text) to authenticated;
 
