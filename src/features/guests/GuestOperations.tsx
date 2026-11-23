@@ -11,14 +11,16 @@ type Guest = {
   guest_group: string | null;
   plus_one_allowed: boolean;
   status: string;
-  rsvps?: { response: string; attendee_count: number }[] | null;
-  tickets?:
-    | {
-        ticket_code: string;
-        status: string;
-        checkins?: { checked_in_at: string; method: string }[] | null;
-      }[]
-    | null;
+  rsvps?: { response: string; attendee_count: number } | { response: string; attendee_count: number }[] | null;
+  tickets?: {
+    ticket_code: string;
+    status: string;
+    checkins?: { checked_in_at: string; method: string } | { checked_in_at: string; method: string }[] | null;
+  } | {
+    ticket_code: string;
+    status: string;
+    checkins?: { checked_in_at: string; method: string } | { checked_in_at: string; method: string }[] | null;
+  }[] | null;
 };
 
 type GuestbookEntry = {
@@ -41,6 +43,10 @@ type BarcodeDetectorLike = {
   detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue?: string }>>;
 };
 type BarcodeDetectorConstructor = new (options: { formats: string[] }) => BarcodeDetectorLike;
+
+function firstRelation<T>(relation: T | T[] | null | undefined): T | undefined {
+  return Array.isArray(relation) ? relation[0] : relation ?? undefined;
+}
 
 const token = () => {
   const bytes = crypto.getRandomValues(new Uint8Array(12));
@@ -156,12 +162,12 @@ export default function GuestOperations({
   const stats: GuestStats = useMemo(
     () => ({
       total: guests.length,
-      confirmed: guests.filter((guest) => guest.rsvps?.[0]?.response === "yes").length,
+      confirmed: guests.filter((guest) => firstRelation(guest.rsvps)?.response === "yes").length,
       declined: guests.filter((guest) => guest.rsvps?.[0]?.response === "no").length,
       pending: guests.filter((guest) => !guest.rsvps?.length).length,
       checkedIn: guests.filter(
         (guest) =>
-          guest.status === "checked_in" || guest.tickets?.some((ticket) => ticket.checkins?.length),
+          guest.status === "checked_in" || Boolean(firstRelation(firstRelation(guest.tickets)?.checkins)),
       ).length,
     }),
     [guests],
@@ -381,8 +387,8 @@ export default function GuestOperations({
     const rows = guests.map((guest) => ({
       ...guest,
       rsvp_response: guest.rsvps?.[0]?.response || "",
-      attendee_count: guest.rsvps?.[0]?.attendee_count ?? "",
-      checked_in_at: guest.tickets?.[0]?.checkins?.[0]?.checked_in_at || "",
+      attendee_count: firstRelation(guest.rsvps)?.attendee_count ?? "",
+      checked_in_at: firstRelation(firstRelation(guest.tickets)?.checkins)?.checked_in_at || "",
     }));
     const blob = new Blob(["\\uFEFF", exportGuestsCsv(rows)], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -658,7 +664,7 @@ export default function GuestOperations({
                       <p className="mt-1 text-xs text-[#76675f]">
                         {moneylessStatus[guest.status] || guest.status} · RSVP:{" "}
                         {responseLabel[guest.rsvps?.[0]?.response || ""] || "Belum ada"} · Tiket:{" "}
-                        {guest.tickets?.[0]?.status || "Belum dibuat"}
+                        {firstRelation(guest.tickets)?.status || "Belum dibuat"}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
