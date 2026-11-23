@@ -1226,7 +1226,12 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                       value={Number(selected.style?.animationDelayMs || 0)}
                       onChange={(event) =>
                         updateSelected(
-                          { animationDelayMs: Math.min(5000, Math.max(0, Number(event.target.value))) },
+                          {
+                            animationDelayMs: Math.min(
+                              5000,
+                              Math.max(0, Number(event.target.value)),
+                            ),
+                          },
                           "style",
                         )
                       }
