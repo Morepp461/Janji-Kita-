@@ -137,6 +137,7 @@ create policy tickets_owner_select on public.tickets for select to authenticated
 create policy checkins_owner_select on public.checkins for select to authenticated
   using (exists (select 1 from public.invitations i where i.id = invitation_id and i.owner_user_id = (select auth.uid())));
 
+revoke all on public.guests, public.rsvps, public.guestbook_entries, public.tickets, public.checkins, public.guest_public_rate_limits from anon, public, authenticated;
 grant select, insert, update, delete on public.guests to authenticated;
 grant select on public.rsvps to authenticated;
 grant select, update, delete on public.guestbook_entries to authenticated;
