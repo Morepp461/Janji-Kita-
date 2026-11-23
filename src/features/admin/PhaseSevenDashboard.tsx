@@ -519,7 +519,7 @@ export default function PhaseSevenDashboard({
                         {item.moderated_at && <p className="mt-1 text-xs text-[#887970]">Ditinjau: {dateTime(item.moderated_at)}</p>}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {item.status !== "published" && <button className={primaryClass} disabled={saving || !item.current_version_id || (item.source_type === "customer" && !approvedConsents.some((consent) => consent.id === item.source_consent_id))} onClick={() => void moderateTemplate(item, "published")} type="button">Terbitkan</button>}
+                        {item.status !== "published" && <button className={primaryClass} disabled={saving || !item.current_version_id || (item.source_type === "customer" && !item.source_consent_id)} onClick={() => void moderateTemplate(item, "published")} type="button">Terbitkan</button>}
                         {item.status !== "draft" && <button className={buttonClass} disabled={saving} onClick={() => void moderateTemplate(item, "draft")} type="button">Kembalikan ke draft</button>}
                         {item.status !== "archived" && <button className={buttonClass} disabled={saving} onClick={() => void moderateTemplate(item, "archived")} type="button">Arsipkan</button>}
                       </div>
