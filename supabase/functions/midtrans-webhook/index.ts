@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
+import { isStagingSupabaseUrl } from "../_shared/payment-environment.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +44,9 @@ Deno.serve(async (request: Request) => {
     if (!supabaseUrl || !serviceRoleKey || !serverKey) {
       console.error("Konfigurasi webhook pembayaran belum lengkap.");
       return json({ error: "Webhook belum dikonfigurasi." }, 503);
+    }
+    if (!isStagingSupabaseUrl(supabaseUrl)) {
+      return json({ error: "Integrasi pembayaran hanya diaktifkan pada project staging." }, 503);
     }
     if (Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true") {
       return json({ error: "Webhook production dinonaktifkan pada fase ini." }, 503);
