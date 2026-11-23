@@ -23,8 +23,12 @@ Deno.serve(async (request: Request) => {
     if (!token) return json({ error: "Sesi masuk diperlukan." }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const publishableKeys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}") as Record<string, string>;
+    const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}") as Record<string, string>;
+    const publishableKey = Deno.env.get("SUPABASE_ANON_KEY")
+      ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")
+      ?? publishableKeys.default;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? secretKeys.default;
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
     if (!supabaseUrl || !publishableKey || !serviceRoleKey || !serverKey) {
       console.error("Konfigurasi Supabase atau MIDTRANS_SERVER_KEY belum lengkap.");
@@ -50,7 +54,7 @@ Deno.serve(async (request: Request) => {
     });
     const { data: order, error: orderError } = await admin
       .from("orders")
-      .select("id,order_number,payer_user_id,owner_user_id,status,grand_total,currency,expires_at")
+      .select("id,order_number,payer_user_id,owner_user_id,status,subtotal,discount_total,grand_total,currency,expires_at")
       .eq("id", body.order_id)
       .maybeSingle();
     if (orderError || !order) return json({ error: "Pesanan tidak ditemukan." }, 404);
@@ -98,12 +102,35 @@ Deno.serve(async (request: Request) => {
           order_id: order.order_number,
           gross_amount: Number(order.grand_total),
         },
-        item_details: (items ?? []).map((item) => ({
+        item_details: [
+          ...(items ?? []).map((item) => ({
           id: item.description_snapshot.slice(0, 50),
           name: item.description_snapshot.slice(0, 50),
           quantity: item.quantity,
           price: item.unit_price,
         })),
+        callbacks: {
+          finish: (() => {
+            const requested = String(body.return_url ?? "");
+            try {
+              const parsed = new URL(requested);
+              const allowedHosts = new Set([
+                "janji-kita-nine.vercel.app",
+                "janji-kita-morepp.vercel.app",
+                "janji-kita-git-main-morepp.vercel.app",
+                "localhost",
+              ]);
+              if (!allowedHosts.has(parsed.hostname) || !["https:", "http:"].includes(parsed.protocol)) {
+                return "https://janji-kita-nine.vercel.app/orders";
+              }
+              parsed.pathname = "/orders";
+              parsed.search = new URLSearchParams({ order_id: order.id }).toString();
+              return parsed.toString();
+            } catch {
+              return "https://janji-kita-nine.vercel.app/orders";
+            }
+          })(),
+        },
         customer_details: {
           first_name: (userData.user.user_metadata?.display_name as string | undefined)?.slice(0, 50)
             ?? "Pelanggan Janji Kita",
