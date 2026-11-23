@@ -262,8 +262,10 @@ export default function App() {
     );
   }
   if (pathname === "/orders") return <OrdersPage client={client} />;
-  if (pathname === "/premium" || pathname === "/admin/subscriptions") return <PremiumPage client={client} userId={session.user.id} isAdmin={isAdmin} />;
-  if (pathname === "/reseller" || pathname === "/admin/resellers") return <ResellerWorkspace client={client} userId={session.user.id} isAdmin={isAdmin} />;
+  if (pathname === "/premium") return <PremiumPage client={client} userId={session.user.id} isAdmin={isAdmin} />;
+  if (pathname === "/admin/subscriptions" && isAdmin) return <PremiumPage client={client} userId={session.user.id} isAdmin />;
+  if (pathname === "/reseller") return <ResellerWorkspace client={client} userId={session.user.id} isAdmin={false} />;
+  if (pathname === "/admin/resellers" && isAdmin) return <ResellerWorkspace client={client} userId={session.user.id} isAdmin />;
   if (pathname === "/admin/commerce" && isAdmin) return <CommerceAdmin client={client} />;
   if (pathname === "/finance/orders" && (isAdmin || isFinance))
     return <FinanceDashboard client={client} />;
