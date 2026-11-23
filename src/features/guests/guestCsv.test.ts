@@ -31,4 +31,8 @@ describe("guest CSV", () => {
   it("mengutip nilai ekspor untuk CSV yang valid", () => {
     expect(exportGuestsCsv([{ display_name: 'A "B"', email: null }])).toContain('"A ""B"""');
   });
+
+  it("menetralisir formula spreadsheet pada nilai ekspor", () => {
+    expect(exportGuestsCsv([{ display_name: "=HYPERLINK(1)" }])).toContain("'=HYPERLINK");
+  });
 });
