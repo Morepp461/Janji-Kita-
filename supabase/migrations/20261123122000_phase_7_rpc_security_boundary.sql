@@ -59,7 +59,7 @@ language sql
 stable
 security invoker
 set search_path = public, pg_temp
-as $$
+as $phase7$
   select jsonb_build_object(
     'locales',
     coalesce((
@@ -82,7 +82,7 @@ as $$
       where key = 'localization.timezones'
     ), '["Asia/Jakarta","Asia/Makassar","Asia/Jayapura","Asia/Singapore","UTC"]'::jsonb)
   );
-$$;
+$phase7$;
 revoke all on function public.get_public_localization_config() from public;
 grant execute on function public.get_public_localization_config() to anon, authenticated;
 
@@ -151,12 +151,12 @@ returns uuid
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_create_template(
     p_slug, p_title, p_description, p_category_id, p_style_id,
     p_base_price, p_document, p_thumbnail_asset_id, p_source_type
   );
-$$;
+$phase7$;
 revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid,text) from public, anon;
 grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid,text) to authenticated;
 
@@ -175,12 +175,12 @@ returns uuid
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_create_template(
     p_slug, p_title, p_description, p_category_id, p_style_id,
     p_base_price, p_document, p_thumbnail_asset_id, 'first_party'
   );
-$$;
+$phase7$;
 revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) from public, anon;
 grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) to authenticated;
 
@@ -193,9 +193,9 @@ returns uuid
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_create_template_version(p_template_id, p_document, p_change_note);
-$$;
+$phase7$;
 revoke all on function public.admin_create_template_version(uuid,jsonb,text) from public, anon;
 grant execute on function public.admin_create_template_version(uuid,jsonb,text) to authenticated;
 
@@ -205,9 +205,9 @@ language sql
 stable
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_get_analytics_summary(p_days);
-$$;
+$phase7$;
 revoke all on function public.admin_get_analytics_summary(integer) from public, anon;
 grant execute on function public.admin_get_analytics_summary(integer) to authenticated;
 
@@ -220,9 +220,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_link_template_consent(p_template_id, p_invitation_id, p_consent_id);
-$$;
+$phase7$;
 revoke all on function public.admin_link_template_consent(uuid,uuid,uuid) from public, anon;
 grant execute on function public.admin_link_template_consent(uuid,uuid,uuid) to authenticated;
 
@@ -242,9 +242,9 @@ language sql
 stable
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select * from app_private.admin_list_marketplace_consents();
-$$;
+$phase7$;
 revoke all on function public.admin_list_marketplace_consents() from public, anon;
 grant execute on function public.admin_list_marketplace_consents() to authenticated;
 
@@ -257,9 +257,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_review_marketplace_consent(p_consent_id, p_decision, p_note);
-$$;
+$phase7$;
 revoke all on function public.admin_review_marketplace_consent(uuid,text,text) from public, anon;
 grant execute on function public.admin_review_marketplace_consent(uuid,text,text) to authenticated;
 
@@ -268,9 +268,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_set_default_locale(p_code);
-$$;
+$phase7$;
 revoke all on function public.admin_set_default_locale(text) from public, anon;
 grant execute on function public.admin_set_default_locale(text) to authenticated;
 
@@ -279,9 +279,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_set_locale_active(p_code, p_is_active);
-$$;
+$phase7$;
 revoke all on function public.admin_set_locale_active(text,boolean) from public, anon;
 grant execute on function public.admin_set_locale_active(text,boolean) to authenticated;
 
@@ -294,9 +294,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_set_template_moderation(p_template_id, p_status, p_note);
-$$;
+$phase7$;
 revoke all on function public.admin_set_template_moderation(uuid,text,text) from public, anon;
 grant execute on function public.admin_set_template_moderation(uuid,text,text) to authenticated;
 
@@ -305,9 +305,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.admin_update_timezone_options(p_timezones);
-$$;
+$phase7$;
 revoke all on function public.admin_update_timezone_options(jsonb) from public, anon;
 grant execute on function public.admin_update_timezone_options(jsonb) to authenticated;
 
@@ -320,9 +320,9 @@ returns uuid
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.record_marketplace_consent(p_invitation_id, p_order_id, p_consent_text_version);
-$$;
+$phase7$;
 revoke all on function public.record_marketplace_consent(uuid,uuid,text) from public, anon;
 grant execute on function public.record_marketplace_consent(uuid,uuid,text) to authenticated;
 
@@ -335,9 +335,9 @@ returns uuid
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.track_analytics_event(p_event_name, p_invitation_id, p_properties);
-$$;
+$phase7$;
 revoke all on function public.track_analytics_event(text,uuid,jsonb) from public, anon;
 grant execute on function public.track_analytics_event(text,uuid,jsonb) to authenticated;
 
@@ -350,9 +350,9 @@ returns timestamptz
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.update_invitation_localization(p_invitation_id, p_locale, p_timezone);
-$$;
+$phase7$;
 revoke all on function public.update_invitation_localization(uuid,text,text) from public, anon;
 grant execute on function public.update_invitation_localization(uuid,text,text) to authenticated;
 
@@ -361,9 +361,9 @@ returns void
 language sql
 security invoker
 set search_path = public, app_private, pg_temp
-as $$
+as $phase7$
   select app_private.withdraw_marketplace_consent(p_consent_id);
-$$;
+$phase7$;
 revoke all on function public.withdraw_marketplace_consent(uuid) from public, anon;
 grant execute on function public.withdraw_marketplace_consent(uuid) to authenticated;
 
