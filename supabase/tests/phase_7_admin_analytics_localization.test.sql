@@ -59,6 +59,7 @@ select ok(not (select prosecdef from pg_proc where oid = 'public.get_public_loca
 select ok(has_column_privilege('anon', 'public.system_settings', 'value', 'select'), 'anon hanya dapat membaca nilai konfigurasi zona waktu publik');
 select ok(not has_column_privilege('anon', 'public.system_settings', 'updated_by', 'select'), 'anon tidak dapat membaca metadata admin pengaturan sistem');
 select has_index('public', 'analytics_events', 'analytics_events_invitation_occurred_idx', 'indeks relasi analitik ke undangan tersedia');
+select has_index('public', 'analytics_events', 'analytics_events_user_time_idx', 'indeks foreign key pengguna dan lini masa analitik tersedia');
 select has_index('public', 'templates', 'templates_source_consent_id_idx', 'indeks sumber persetujuan template tersedia');
 
 select * from finish();
