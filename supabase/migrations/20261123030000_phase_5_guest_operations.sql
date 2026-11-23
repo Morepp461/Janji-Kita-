@@ -14,7 +14,7 @@ create table public.guests (
   updated_at timestamptz not null default now()
 );
 create unique index guests_invitation_email_unique on public.guests(invitation_id, lower(email)) where email is not null and trim(email) <> '';
-create unique index guests_invitation_phone_unique on public.guests(invitation_id, regexp_replace(phone, '\\D', '', 'g')) where phone is not null and regexp_replace(phone, '\\D', '', 'g') <> '';
+create unique index guests_invitation_phone_unique on public.guests(invitation_id, regexp_replace(phone, '[^0-9]', '', 'g')) where phone is not null and regexp_replace(phone, '[^0-9]', '', 'g') <> '';
 create index guests_invitation_name_idx on public.guests(invitation_id, display_name);
 create index guests_invitation_status_idx on public.guests(invitation_id, status);
 
