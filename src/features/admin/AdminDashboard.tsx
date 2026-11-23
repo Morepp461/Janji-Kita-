@@ -185,13 +185,18 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
             Akses mengikuti izin server dan setiap perubahan penting tercatat.
           </p>
         </div>
-        <button
-          className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]"
-          onClick={() => void refresh()}
-          type="button"
-        >
-          Muat ulang
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <a href="/admin/commerce" className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]">
+            Kelola commerce
+          </a>
+          <button
+            className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]"
+            onClick={() => void refresh()}
+            type="button"
+          >
+            Muat ulang
+          </button>
+        </div>
       </div>
 
       <nav aria-label="Menu administrasi" className="flex gap-2 overflow-x-auto pb-1">
