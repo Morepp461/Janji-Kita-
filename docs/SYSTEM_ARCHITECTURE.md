@@ -184,3 +184,12 @@ Start with free tiers for domain-adjacent services only where limits fit actual 
 - Path-based public URL `/i/{slug}`.
 - No arbitrary JavaScript in user designs.
 - Feature flags for integrations with uncertain API availability.
+
+
+## 15. Impor dan Pengalaman Lanjutan (Fase 8)
+- Import pipeline mengklasifikasikan format sebelum memproses berkas. PNG/JPG dan SVG yang sudah disanitasi dirasterisasi menjadi WebP; PDF hanya pratinjau lokal; format tanpa parser tidak diunggah dan menerima fallback eksplisit.
+- Sanitasi SVG menggunakan allowlist elemen/atribut, menolak deklarasi XML eksternal, menghapus handler, link eksternal, dan konten berisiko. Tidak ada JavaScript atau iframe dari file pengguna.
+- Seating planner menyimpan meja dan assignment pada tabel ber-RLS pemilik. Trigger database memeriksa konsistensi invitation/guest/table dan kapasitas dengan row lock.
+- RPC publik untuk seating memakai wrapper `SECURITY INVOKER`; helper `app_private` memvalidasi token SHA-256, status dan masa aktif undangan, versi publikasi, serta rate limit. Data yang dikembalikan hanya label meja dan kursi.
+- Livestream tidak memakai provider API atau embed; hanya URL HTTPS eksternal. Motion memakai preset allowlist dan nilai durasi/jeda yang dibatasi, serta menonaktifkan gerak ketika reduced-motion aktif.
+- Tidak ada dependency baru pada Fase 8.
