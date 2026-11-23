@@ -349,7 +349,6 @@ set search_path = public, app_private, pg_temp
 as $$
 declare
   template_row public.templates%rowtype;
-  consent_row public.consent_records%rowtype;
 begin
   if not app_private.has_permission('templates.manage') then
     raise exception 'Tidak memiliki izin moderasi template';
@@ -368,13 +367,14 @@ begin
   if template_row.source_type = 'customer' and (template_row.source_invitation_id is null or template_row.source_consent_id is null) then
     raise exception 'Template dari pelanggan wajib ditautkan ke persetujuan aktif';
   end if;
-  if template_row.source_consent_id is not null then
-    select * into consent_row from public.consent_records
+  if template_row.source_consent_id is not null and not exists (
+    select 1 from public.consent_records
     where id = template_row.source_consent_id
       and invitation_id = template_row.source_invitation_id
       and granted and withdrawn_at is null
-      and metadata ->> 'moderation_status' = 'approved';
-    if not found then raise exception 'Persetujuan pemilik belum disetujui atau sudah dicabut'; end if;
+      and metadata ->> 'moderation_status' = 'approved'
+  ) then
+    raise exception 'Persetujuan pemilik belum disetujui atau sudah dicabut';
   end if;
   update public.templates
   set status = p_status,
