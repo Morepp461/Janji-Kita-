@@ -782,14 +782,12 @@ export default function GuestOperations({
                 </button>
               )}
             </div>
-            {scanning && (
-              <video
-                ref={videoRef}
-                muted
-                playsInline
-                className="mt-3 aspect-video w-full max-w-lg rounded-xl bg-black object-cover"
-              />
-            )}
+            <video
+              ref={videoRef}
+              muted
+              playsInline
+              className={scanning ? "mt-3 aspect-video w-full max-w-lg rounded-xl bg-black object-cover" : "hidden"}
+            />
             {scannerMessage && <p className="mt-2 text-sm text-[#76675f]">{scannerMessage}</p>}
             {checkinResult && (
               <p className="mt-3 text-sm">
