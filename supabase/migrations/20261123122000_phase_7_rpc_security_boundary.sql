@@ -143,8 +143,8 @@ create function public.admin_create_template(
   p_style_id uuid,
   p_base_price bigint,
   p_document jsonb,
-  p_thumbnail_asset_id uuid default null,
-  p_source_type text default 'first_party'
+  p_thumbnail_asset_id uuid,
+  p_source_type text
 )
 returns uuid
 language sql
