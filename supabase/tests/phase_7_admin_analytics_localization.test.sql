@@ -31,12 +31,17 @@ select ok(has_function_privilege('authenticated', 'public.admin_create_template(
 select ok(has_function_privilege('authenticated', 'public.admin_get_analytics_summary(integer)', 'execute'), 'RPC ringkasan analitik tersedia');
 select ok(has_function_privilege('authenticated', 'public.track_analytics_event(text,uuid,jsonb)', 'execute'), 'RPC pencatatan analitik tersedia');
 select ok(has_function_privilege('authenticated', 'public.update_invitation_localization(uuid,text,text)', 'execute'), 'RPC lokalisasi undangan tersedia');
+select ok(has_function_privilege('authenticated', 'public.admin_set_locale_active(text,boolean)', 'execute'), 'RPC pengaktifan bahasa tersedia');
+select ok(has_function_privilege('authenticated', 'public.admin_update_timezone_options(jsonb)', 'execute'), 'RPC pembaruan zona waktu tersedia');
 
 select is((select count(*)::integer from public.locales where is_active), 2, 'dua bahasa awal aktif');
 select is((select count(*)::integer from public.locales where is_default), 1, 'tepat satu bahasa bawaan');
 select ok(exists(select 1 from public.role_permissions where role = 'admin' and permission_key = 'analytics.read'), 'admin memiliki izin analitik');
 select ok(exists(select 1 from public.role_permissions where role = 'admin' and permission_key = 'consent.manage'), 'admin memiliki izin moderasi persetujuan');
 select ok(exists(select 1 from public.role_permissions where role = 'super_admin' and permission_key = 'locales.manage'), 'super admin memiliki izin lokalisasi');
+select has_trigger('public', 'profiles', 'profiles_validate_localization', 'preferensi akun divalidasi');
+select has_trigger('public', 'invitations', 'invitations_validate_localization', 'preferensi undangan divalidasi');
+select has_trigger('public', 'media_assets', 'media_assets_audit_phase7', 'perubahan status media diaudit');
 
 select * from finish();
 rollback;
