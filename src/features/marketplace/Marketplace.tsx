@@ -75,7 +75,9 @@ export default function Marketplace({
   const [templateCategory, setTemplateCategory] = useState("");
   const [templateStyle, setTemplateStyle] = useState("");
   const [templatePrice, setTemplatePrice] = useState("0");
-  const [templateSourceType, setTemplateSourceType] = useState<"first_party" | "customer">("first_party");
+  const [templateSourceType, setTemplateSourceType] = useState<"first_party" | "customer">(
+    "first_party",
+  );
   const [templateDocument, setTemplateDocument] = useState(() =>
     JSON.stringify(createBlankInvitationDocument("Nama Acara"), null, 2),
   );
@@ -592,7 +594,8 @@ export default function Marketplace({
             <div>
               <h3 className="text-lg font-semibold">Pengelolaan template</h3>
               <p className="text-sm text-[#76675f]">
-                Hanya admin dengan izin templates.manage yang dapat membuat draft template. Publikasi dilakukan setelah moderasi.
+                Hanya admin dengan izin templates.manage yang dapat membuat draft template.
+                Publikasi dilakukan setelah moderasi.
               </p>
             </div>
             <button
@@ -674,7 +677,9 @@ export default function Marketplace({
                 Sumber desain
                 <select
                   value={templateSourceType}
-                  onChange={(event) => setTemplateSourceType(event.target.value as "first_party" | "customer")}
+                  onChange={(event) =>
+                    setTemplateSourceType(event.target.value as "first_party" | "customer")
+                  }
                   className="mt-1 w-full rounded-lg border border-[#ddcec3] px-3 py-2"
                 >
                   <option value="first_party">Desain milik Janji Kita</option>
@@ -701,7 +706,10 @@ export default function Marketplace({
                 />
               </label>
               {templateSourceType === "customer" && (
-                <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">Template pelanggan akan tetap menjadi draft. Admin harus meninjau dan menautkan persetujuan marketplace yang aktif sebelum dapat menerbitkannya.</p>
+                <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">
+                  Template pelanggan akan tetap menjadi draft. Admin harus meninjau dan menautkan
+                  persetujuan marketplace yang aktif sebelum dapat menerbitkannya.
+                </p>
               )}
               {templateFile && (
                 <label className="text-sm font-medium md:col-span-2">

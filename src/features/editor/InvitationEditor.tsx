@@ -116,7 +116,12 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     { code: "id-ID", native_name: "Bahasa Indonesia" },
     { code: "en", native_name: "English" },
   ]);
-  const [timezoneOptions, setTimezoneOptions] = useState(["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura", "UTC"]);
+  const [timezoneOptions, setTimezoneOptions] = useState([
+    "Asia/Jakarta",
+    "Asia/Makassar",
+    "Asia/Jayapura",
+    "UTC",
+  ]);
   const [savingLocalization, setSavingLocalization] = useState(false);
   const [readOnly, setReadOnly] = useState(false);
   const [canManage, setCanManage] = useState(false);
@@ -184,9 +189,14 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setInvitationTimezone(String(invitation.timezone || "Asia/Jakarta"));
       const { data: localizationConfig } = await client.rpc("get_public_localization_config");
       if (active && localizationConfig && typeof localizationConfig === "object") {
-        const config = localizationConfig as { locales?: Array<{ code: string; native_name: string }>; timezones?: string[] };
-        if (Array.isArray(config.locales) && config.locales.length) setLocaleOptions(config.locales);
-        if (Array.isArray(config.timezones) && config.timezones.length) setTimezoneOptions(config.timezones);
+        const config = localizationConfig as {
+          locales?: Array<{ code: string; native_name: string }>;
+          timezones?: string[];
+        };
+        if (Array.isArray(config.locales) && config.locales.length)
+          setLocaleOptions(config.locales);
+        if (Array.isArray(config.timezones) && config.timezones.length)
+          setTimezoneOptions(config.timezones);
       }
       if (!active) return;
       let canEditCurrent = invitation.owner_user_id === userId;
@@ -814,11 +824,19 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             <select
               value={invitationLocale}
               disabled={savingLocalization || saveState !== "saved"}
-              onChange={(event) => void updateInvitationLocalization(event.target.value, invitationTimezone)}
+              onChange={(event) =>
+                void updateInvitationLocalization(event.target.value, invitationTimezone)
+              }
               className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2 text-sm text-[#30251f] disabled:opacity-60"
             >
-              {localeOptions.map((item) => <option key={item.code} value={item.code}>{item.native_name}</option>)}
-              {!localeOptions.some((item) => item.code === invitationLocale) && <option value={invitationLocale}>{invitationLocale}</option>}
+              {localeOptions.map((item) => (
+                <option key={item.code} value={item.code}>
+                  {item.native_name}
+                </option>
+              ))}
+              {!localeOptions.some((item) => item.code === invitationLocale) && (
+                <option value={invitationLocale}>{invitationLocale}</option>
+              )}
             </select>
           </label>
           <label className="text-xs font-semibold text-[#76675f]">
@@ -826,14 +844,26 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             <select
               value={invitationTimezone}
               disabled={savingLocalization || saveState !== "saved"}
-              onChange={(event) => void updateInvitationLocalization(invitationLocale, event.target.value)}
+              onChange={(event) =>
+                void updateInvitationLocalization(invitationLocale, event.target.value)
+              }
               className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white px-3 py-2 text-sm text-[#30251f] disabled:opacity-60"
             >
-              {timezoneOptions.map((value) => <option key={value} value={value}>{value}</option>)}
-              {!timezoneOptions.includes(invitationTimezone) && <option value={invitationTimezone}>{invitationTimezone}</option>}
+              {timezoneOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+              {!timezoneOptions.includes(invitationTimezone) && (
+                <option value={invitationTimezone}>{invitationTimezone}</option>
+              )}
             </select>
           </label>
-          {savingLocalization && <p role="status" className="text-xs text-[#887970] sm:col-span-2">Menyimpan lokalisasi...</p>}
+          {savingLocalization && (
+            <p role="status" className="text-xs text-[#887970] sm:col-span-2">
+              Menyimpan lokalisasi...
+            </p>
+          )}
         </section>
       )}
 

@@ -115,7 +115,9 @@ const primaryClass =
   "rounded-lg bg-[#754b3b] px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50";
 
 const dateTime = (value: string | null) =>
-  value ? new Date(value).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  value
+    ? new Date(value).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })
+    : "—";
 
 export default function PhaseSevenDashboard({
   client,
@@ -132,7 +134,9 @@ export default function PhaseSevenDashboard({
   const [locales, setLocales] = useState<LocaleRow[]>([]);
   const [settings, setSettings] = useState<SettingRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
-  const [timezoneText, setTimezoneText] = useState("Asia/Jakarta, Asia/Makassar, Asia/Jayapura, Asia/Singapore, UTC");
+  const [timezoneText, setTimezoneText] = useState(
+    "Asia/Jakarta, Asia/Makassar, Asia/Jayapura, Asia/Singapore, UTC",
+  );
   const [auditFilter, setAuditFilter] = useState("");
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -142,36 +146,45 @@ export default function PhaseSevenDashboard({
   const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [summaryResult, templateResult, consentResult, mediaResult, localeResult, settingResult, auditResult] =
-      await Promise.all([
-        client.rpc("admin_get_analytics_summary", { p_days: 30 }),
-        client
-          .from("templates")
-          .select(
-            "id,slug,title,status,current_version_id,source_type,source_invitation_id,source_consent_id,moderation_note,moderated_at",
-          )
-          .order("updated_at", { ascending: false }),
-        client
-          .from("consent_records")
-          .select(
-            "id,user_id,invitation_id,order_id,granted,granted_at,withdrawn_at,consent_text_version,metadata",
-          )
-          .eq("consent_type", "marketplace_template")
-          .order("created_at", { ascending: false })
-          .limit(100),
-        client
-          .from("media_assets")
-          .select("id,owner_user_id,storage_bucket,media_type,mime_type,byte_size,visibility,processing_status,created_at")
-          .order("created_at", { ascending: false })
-          .limit(100),
-        client.from("locales").select("*").order("sort_order"),
-        client.from("system_settings").select("*").order("key"),
-        client
-          .from("audit_logs")
-          .select("id,action,target_type,target_id,actor_user_id,before_data,after_data,created_at")
-          .order("created_at", { ascending: false })
-          .limit(100),
-      ]);
+    const [
+      summaryResult,
+      templateResult,
+      consentResult,
+      mediaResult,
+      localeResult,
+      settingResult,
+      auditResult,
+    ] = await Promise.all([
+      client.rpc("admin_get_analytics_summary", { p_days: 30 }),
+      client
+        .from("templates")
+        .select(
+          "id,slug,title,status,current_version_id,source_type,source_invitation_id,source_consent_id,moderation_note,moderated_at",
+        )
+        .order("updated_at", { ascending: false }),
+      client
+        .from("consent_records")
+        .select(
+          "id,user_id,invitation_id,order_id,granted,granted_at,withdrawn_at,consent_text_version,metadata",
+        )
+        .eq("consent_type", "marketplace_template")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      client
+        .from("media_assets")
+        .select(
+          "id,owner_user_id,storage_bucket,media_type,mime_type,byte_size,visibility,processing_status,created_at",
+        )
+        .order("created_at", { ascending: false })
+        .limit(100),
+      client.from("locales").select("*").order("sort_order"),
+      client.from("system_settings").select("*").order("key"),
+      client
+        .from("audit_logs")
+        .select("id,action,target_type,target_id,actor_user_id,before_data,after_data,created_at")
+        .order("created_at", { ascending: false })
+        .limit(100),
+    ]);
     const firstError =
       summaryResult.error ||
       templateResult.error ||
@@ -190,7 +203,9 @@ export default function PhaseSevenDashboard({
     setSettings(nextSettings);
     const timezoneSetting = nextSettings.find((item) => item.key === "localization.timezones");
     if (Array.isArray(timezoneSetting?.value)) {
-      setTimezoneText((timezoneSetting.value as unknown[]).filter((item) => typeof item === "string").join(", "));
+      setTimezoneText(
+        (timezoneSetting.value as unknown[]).filter((item) => typeof item === "string").join(", "),
+      );
     }
     setAudit((auditResult.data || []) as AuditRow[]);
     setLoading(false);
@@ -200,7 +215,10 @@ export default function PhaseSevenDashboard({
     void refresh();
   }, [refresh]);
 
-  async function runAction(action: () => PromiseLike<{ error: { message: string } | null }>, success: string) {
+  async function runAction(
+    action: () => PromiseLike<{ error: { message: string } | null }>,
+    success: string,
+  ) {
     setSaving(true);
     setError("");
     setNotice("");
@@ -214,7 +232,12 @@ export default function PhaseSevenDashboard({
   }
 
   async function moderateTemplate(item: TemplateRow, status: "draft" | "published" | "archived") {
-    const label = status === "published" ? "menerbitkan" : status === "archived" ? "mengarsipkan" : "mengembalikan ke draft";
+    const label =
+      status === "published"
+        ? "menerbitkan"
+        : status === "archived"
+          ? "mengarsipkan"
+          : "mengembalikan ke draft";
     if (!window.confirm(`Yakin ${label} template “${item.title}”?`)) return;
     await runAction(
       () =>
@@ -231,7 +254,11 @@ export default function PhaseSevenDashboard({
     const action = status === "quarantined" ? "memasukkan aset ke karantina" : "memulihkan aset";
     if (!window.confirm(`Yakin ${action} ini?`)) return;
     await runAction(
-      () => client.from("media_assets").update({ processing_status: status, updated_at: new Date().toISOString() }).eq("id", item.id),
+      () =>
+        client
+          .from("media_assets")
+          .update({ processing_status: status, updated_at: new Date().toISOString() })
+          .eq("id", item.id),
       status === "quarantined" ? "Aset berhasil dikarantina." : "Status aset berhasil dipulihkan.",
     );
   }
@@ -240,11 +267,12 @@ export default function PhaseSevenDashboard({
     const consent = consents.find((entry) => entry.id === consentId);
     if (!consent) return;
     await runAction(
-      () => client.rpc("admin_link_template_consent", {
-        p_template_id: item.id,
-        p_invitation_id: consent.invitation_id,
-        p_consent_id: consent.id,
-      }),
+      () =>
+        client.rpc("admin_link_template_consent", {
+          p_template_id: item.id,
+          p_invitation_id: consent.invitation_id,
+          p_consent_id: consent.id,
+        }),
       "Persetujuan berhasil ditautkan ke template.",
     );
   }
@@ -279,14 +307,22 @@ export default function PhaseSevenDashboard({
       return;
     }
     await runAction(
-      () => client.rpc("admin_set_locale_active", { p_code: item.code, p_is_active: !item.is_active }),
+      () =>
+        client.rpc("admin_set_locale_active", { p_code: item.code, p_is_active: !item.is_active }),
       `Bahasa ${item.code} berhasil diperbarui.`,
     );
   }
 
   async function saveTimezones(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const values = [...new Set(timezoneText.split(",").map((item) => item.trim()).filter(Boolean))];
+    const values = [
+      ...new Set(
+        timezoneText
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean),
+      ),
+    ];
     if (!values.length || values.length > 40) {
       setError("Masukkan 1 sampai 40 zona waktu.");
       return;
@@ -315,7 +351,9 @@ export default function PhaseSevenDashboard({
   }, [audit, auditFilter]);
 
   const activeConsents = consents.filter((item) => item.granted && !item.withdrawn_at);
-  const approvedConsents = activeConsents.filter((item) => item.metadata.moderation_status === "approved");
+  const approvedConsents = activeConsents.filter(
+    (item) => item.metadata.moderation_status === "approved",
+  );
   const eventEntries = Object.entries(summary.events_by_name || {}).sort((a, b) => b[1] - a[1]);
   const tabs: Array<[Tab, string]> = [
     ["analytics", "Analitik"],
@@ -341,15 +379,30 @@ export default function PhaseSevenDashboard({
             </p>
           </div>
           <div className="flex gap-2">
-            <button type="button" className={buttonClass} onClick={() => void refresh()} disabled={loading}>
+            <button
+              type="button"
+              className={buttonClass}
+              onClick={() => void refresh()}
+              disabled={loading}
+            >
               Muat ulang
             </button>
-            <a href="/" className={buttonClass}>Ruang kerja</a>
+            <a href="/" className={buttonClass}>
+              Ruang kerja
+            </a>
           </div>
         </header>
 
-        {notice && <p role="status" className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">{notice}</p>}
-        {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {notice && (
+          <p role="status" className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-800">
+            {notice}
+          </p>
+        )}
+        {error && (
+          <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </p>
+        )}
 
         <nav aria-label="Menu operasional admin" className="flex gap-2 overflow-x-auto pb-1">
           {tabs.map(([key, label]) => (
@@ -366,7 +419,9 @@ export default function PhaseSevenDashboard({
         </nav>
 
         {loading ? (
-          <section className={cardClass}><p className="py-8 text-center text-sm text-[#76675f]">Memuat data operasional...</p></section>
+          <section className={cardClass}>
+            <p className="py-8 text-center text-sm text-[#76675f]">Memuat data operasional...</p>
+          </section>
         ) : (
           <>
             {tab === "analytics" && (
@@ -392,36 +447,64 @@ export default function PhaseSevenDashboard({
                   ].map(([label, value]) => (
                     <article key={label} className={cardClass}>
                       <p className="text-sm text-[#76675f]">{label}</p>
-                      <p className="mt-2 text-2xl font-semibold tabular-nums">{Number(value).toLocaleString("id-ID")}</p>
+                      <p className="mt-2 text-2xl font-semibold tabular-nums">
+                        {Number(value).toLocaleString("id-ID")}
+                      </p>
                     </article>
                   ))}
                 </div>
                 <section className={cardClass}>
                   <h2 className="font-semibold">Kesehatan operasional</h2>
                   <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                    <div><p className="text-xs text-[#887970]">Aktivitas terakhir</p><p className="mt-1 text-sm font-semibold">{dateTime(summary.last_event_at)}</p></div>
-                    <div><p className="text-xs text-[#887970]">Moderasi template</p><p className="mt-1 text-sm font-semibold">{summary.templates_pending} menunggu</p></div>
-                    <div><p className="text-xs text-[#887970]">Media bermasalah</p><p className="mt-1 text-sm font-semibold">{summary.media_pending + summary.media_quarantined} aset</p></div>
+                    <div>
+                      <p className="text-xs text-[#887970]">Aktivitas terakhir</p>
+                      <p className="mt-1 text-sm font-semibold">
+                        {dateTime(summary.last_event_at)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#887970]">Moderasi template</p>
+                      <p className="mt-1 text-sm font-semibold">
+                        {summary.templates_pending} menunggu
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#887970]">Media bermasalah</p>
+                      <p className="mt-1 text-sm font-semibold">
+                        {summary.media_pending + summary.media_quarantined} aset
+                      </p>
+                    </div>
                   </div>
                 </section>
                 <section className={cardClass}>
                   <h2 className="font-semibold">Aktivitas 30 hari terakhir</h2>
-                  <p className="mt-1 text-xs text-[#887970]">Data berasal dari peristiwa aplikasi tanpa nama, email, nomor telepon, atau isi undangan.</p>
+                  <p className="mt-1 text-xs text-[#887970]">
+                    Data berasal dari peristiwa aplikasi tanpa nama, email, nomor telepon, atau isi
+                    undangan.
+                  </p>
                   <div className="mt-4 space-y-3">
                     {eventEntries.map(([name, count]) => {
                       const max = Math.max(1, ...eventEntries.map((item) => item[1]));
                       return (
                         <div key={name}>
                           <div className="mb-1 flex justify-between gap-3 text-sm">
-                            <span>{name}</span><strong className="tabular-nums">{count}</strong>
+                            <span>{name}</span>
+                            <strong className="tabular-nums">{count}</strong>
                           </div>
                           <div className="h-2 overflow-hidden rounded-full bg-[#f0e7e0]">
-                            <div className="h-full rounded-full bg-[#a36d55]" style={{ width: `${(count / max) * 100}%` }} />
+                            <div
+                              className="h-full rounded-full bg-[#a36d55]"
+                              style={{ width: `${(count / max) * 100}%` }}
+                            />
                           </div>
                         </div>
                       );
                     })}
-                    {!eventEntries.length && <p className="text-sm text-[#887970]">Belum ada peristiwa analitik pada periode ini.</p>}
+                    {!eventEntries.length && (
+                      <p className="text-sm text-[#887970]">
+                        Belum ada peristiwa analitik pada periode ini.
+                      </p>
+                    )}
                   </div>
                 </section>
               </section>
@@ -431,37 +514,115 @@ export default function PhaseSevenDashboard({
               <section className={cardClass}>
                 <div className="mb-4">
                   <h2 className="font-semibold">Moderasi template marketplace</h2>
-                  <p className="mt-1 text-sm text-[#76675f]">Template draft tidak tampil di marketplace sampai lolos peninjauan dan diterbitkan.</p>
+                  <p className="mt-1 text-sm text-[#76675f]">
+                    Template draft tidak tampil di marketplace sampai lolos peninjauan dan
+                    diterbitkan.
+                  </p>
                 </div>
                 <div className="divide-y divide-[#f0e7e0]">
                   {templates.map((item) => (
-                    <article key={item.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
+                    <article
+                      key={item.id}
+                      className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between"
+                    >
                       <div className="min-w-0">
                         <p className="font-semibold">{item.title}</p>
-                        <p className="mt-1 break-all text-xs text-[#887970]">{item.slug} · {item.status} · {item.source_type === "customer" ? "desain pelanggan" : "desain Janji Kita"} · versi {item.current_version_id ? "tersedia" : "belum tersedia"}</p>
-                        {item.source_invitation_id && <p className="mt-1 break-all text-xs text-[#887970]">Sumber undangan: {item.source_invitation_id}</p>}
-                        {item.source_consent_id && <p className="mt-1 break-all text-xs text-[#887970]">Persetujuan: {item.source_consent_id}</p>}
+                        <p className="mt-1 break-all text-xs text-[#887970]">
+                          {item.slug} · {item.status} ·{" "}
+                          {item.source_type === "customer"
+                            ? "desain pelanggan"
+                            : "desain Janji Kita"}{" "}
+                          · versi {item.current_version_id ? "tersedia" : "belum tersedia"}
+                        </p>
+                        {item.source_invitation_id && (
+                          <p className="mt-1 break-all text-xs text-[#887970]">
+                            Sumber undangan: {item.source_invitation_id}
+                          </p>
+                        )}
+                        {item.source_consent_id && (
+                          <p className="mt-1 break-all text-xs text-[#887970]">
+                            Persetujuan: {item.source_consent_id}
+                          </p>
+                        )}
                         {item.source_type === "customer" && !item.source_consent_id && (
                           <label className="mt-2 block max-w-xl text-xs font-semibold text-[#76675f]">
                             Tautkan persetujuan yang sudah disetujui
-                            <select className={inputClass} value="" disabled={saving || !approvedConsents.length} onChange={(event) => void linkTemplateConsent(item, event.target.value)}>
+                            <select
+                              className={inputClass}
+                              value=""
+                              disabled={saving || !approvedConsents.length}
+                              onChange={(event) =>
+                                void linkTemplateConsent(item, event.target.value)
+                              }
+                            >
                               <option value="">Pilih persetujuan marketplace</option>
-                              {approvedConsents.map((consent) => <option key={consent.id} value={consent.id}>{consent.invitation_id} · {consent.id}</option>)}
+                              {approvedConsents.map((consent) => (
+                                <option key={consent.id} value={consent.id}>
+                                  {consent.invitation_id} · {consent.id}
+                                </option>
+                              ))}
                             </select>
-                            {!approvedConsents.length && <span className="mt-1 block font-normal">Belum ada persetujuan aktif yang disetujui.</span>}
+                            {!approvedConsents.length && (
+                              <span className="mt-1 block font-normal">
+                                Belum ada persetujuan aktif yang disetujui.
+                              </span>
+                            )}
                           </label>
                         )}
-                        {item.moderation_note && <p className="mt-1 text-xs text-[#76675f]">Catatan: {item.moderation_note}</p>}
-                        {item.moderated_at && <p className="mt-1 text-xs text-[#887970]">Ditinjau: {dateTime(item.moderated_at)}</p>}
+                        {item.moderation_note && (
+                          <p className="mt-1 text-xs text-[#76675f]">
+                            Catatan: {item.moderation_note}
+                          </p>
+                        )}
+                        {item.moderated_at && (
+                          <p className="mt-1 text-xs text-[#887970]">
+                            Ditinjau: {dateTime(item.moderated_at)}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {item.status !== "published" && <button className={primaryClass} disabled={saving || !item.current_version_id || (item.source_type === "customer" && !item.source_consent_id)} onClick={() => void moderateTemplate(item, "published")} type="button">Terbitkan</button>}
-                        {item.status !== "draft" && <button className={buttonClass} disabled={saving} onClick={() => void moderateTemplate(item, "draft")} type="button">Kembalikan ke draft</button>}
-                        {item.status !== "archived" && <button className={buttonClass} disabled={saving} onClick={() => void moderateTemplate(item, "archived")} type="button">Arsipkan</button>}
+                        {item.status !== "published" && (
+                          <button
+                            className={primaryClass}
+                            disabled={
+                              saving ||
+                              !item.current_version_id ||
+                              (item.source_type === "customer" && !item.source_consent_id)
+                            }
+                            onClick={() => void moderateTemplate(item, "published")}
+                            type="button"
+                          >
+                            Terbitkan
+                          </button>
+                        )}
+                        {item.status !== "draft" && (
+                          <button
+                            className={buttonClass}
+                            disabled={saving}
+                            onClick={() => void moderateTemplate(item, "draft")}
+                            type="button"
+                          >
+                            Kembalikan ke draft
+                          </button>
+                        )}
+                        {item.status !== "archived" && (
+                          <button
+                            className={buttonClass}
+                            disabled={saving}
+                            onClick={() => void moderateTemplate(item, "archived")}
+                            type="button"
+                          >
+                            Arsipkan
+                          </button>
+                        )}
                       </div>
                     </article>
                   ))}
-                  {!templates.length && <p className="py-8 text-center text-sm text-[#887970]">Belum ada template untuk ditinjau.</p>}
+                  {!templates.length && (
+                    <p className="py-8 text-center text-sm text-[#887970]">
+                      Belum ada template untuk ditinjau.
+                    </p>
+                  )}
                 </div>
               </section>
             )}
@@ -470,33 +631,87 @@ export default function PhaseSevenDashboard({
               <section className={cardClass}>
                 <div className="mb-4">
                   <h2 className="font-semibold">Persetujuan penggunaan desain pelanggan</h2>
-                  <p className="mt-1 text-sm text-[#76675f]">Persetujuan bersifat opsional, terpisah dari pembelian, dan dapat dicabut pemilik kapan saja.</p>
-                  <p className="mt-1 text-xs text-[#887970]">{activeConsents.length} persetujuan aktif · {consents.length - activeConsents.length} dicabut/tidak aktif · menampilkan maksimal 100 catatan terbaru.</p>
+                  <p className="mt-1 text-sm text-[#76675f]">
+                    Persetujuan bersifat opsional, terpisah dari pembelian, dan dapat dicabut
+                    pemilik kapan saja.
+                  </p>
+                  <p className="mt-1 text-xs text-[#887970]">
+                    {activeConsents.length} persetujuan aktif ·{" "}
+                    {consents.length - activeConsents.length} dicabut/tidak aktif · menampilkan
+                    maksimal 100 catatan terbaru.
+                  </p>
                 </div>
                 <div className="divide-y divide-[#f0e7e0]">
                   {consents.map((item) => {
-                    const state = item.withdrawn_at ? "Dicabut pemilik" : item.metadata.moderation_status === "approved" ? "Disetujui" : item.metadata.moderation_status === "rejected" ? "Ditolak" : item.granted ? "Menunggu tinjauan" : "Tidak diberikan";
-                    const canReview = item.granted && !item.withdrawn_at && item.metadata.moderation_status !== "approved" && item.metadata.moderation_status !== "rejected";
+                    const state = item.withdrawn_at
+                      ? "Dicabut pemilik"
+                      : item.metadata.moderation_status === "approved"
+                        ? "Disetujui"
+                        : item.metadata.moderation_status === "rejected"
+                          ? "Ditolak"
+                          : item.granted
+                            ? "Menunggu tinjauan"
+                            : "Tidak diberikan";
+                    const canReview =
+                      item.granted &&
+                      !item.withdrawn_at &&
+                      item.metadata.moderation_status !== "approved" &&
+                      item.metadata.moderation_status !== "rejected";
                     return (
-                      <article key={item.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
+                      <article
+                        key={item.id}
+                        className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between"
+                      >
                         <div className="min-w-0">
                           <p className="font-semibold">{state}</p>
-                          <p className="mt-1 break-all text-xs text-[#887970]">Pengguna: {item.user_id}</p>
-                          <p className="break-all text-xs text-[#887970]">Undangan: {item.invitation_id}</p>
-                          <p className="break-all text-xs text-[#887970]">Pesanan: {item.order_id || "—"} · versi teks: {item.consent_text_version}</p>
-                          <p className="mt-1 text-xs text-[#887970]">Diberikan: {dateTime(item.granted_at)} · Dicabut: {dateTime(item.withdrawn_at)}</p>
-                          {typeof item.metadata.review_note === "string" && <p className="mt-1 text-xs text-[#76675f]">Catatan tinjauan: {item.metadata.review_note}</p>}
+                          <p className="mt-1 break-all text-xs text-[#887970]">
+                            Pengguna: {item.user_id}
+                          </p>
+                          <p className="break-all text-xs text-[#887970]">
+                            Undangan: {item.invitation_id}
+                          </p>
+                          <p className="break-all text-xs text-[#887970]">
+                            Pesanan: {item.order_id || "—"} · versi teks:{" "}
+                            {item.consent_text_version}
+                          </p>
+                          <p className="mt-1 text-xs text-[#887970]">
+                            Diberikan: {dateTime(item.granted_at)} · Dicabut:{" "}
+                            {dateTime(item.withdrawn_at)}
+                          </p>
+                          {typeof item.metadata.review_note === "string" && (
+                            <p className="mt-1 text-xs text-[#76675f]">
+                              Catatan tinjauan: {item.metadata.review_note}
+                            </p>
+                          )}
                         </div>
                         {canReview && (
                           <div className="flex gap-2">
-                            <button className={primaryClass} disabled={saving} onClick={() => void reviewConsent(item, "approved")} type="button">Setujui</button>
-                            <button className={buttonClass} disabled={saving} onClick={() => void reviewConsent(item, "rejected")} type="button">Tolak</button>
+                            <button
+                              className={primaryClass}
+                              disabled={saving}
+                              onClick={() => void reviewConsent(item, "approved")}
+                              type="button"
+                            >
+                              Setujui
+                            </button>
+                            <button
+                              className={buttonClass}
+                              disabled={saving}
+                              onClick={() => void reviewConsent(item, "rejected")}
+                              type="button"
+                            >
+                              Tolak
+                            </button>
                           </div>
                         )}
                       </article>
                     );
                   })}
-                  {!consents.length && <p className="py-8 text-center text-sm text-[#887970]">Belum ada persetujuan marketplace.</p>}
+                  {!consents.length && (
+                    <p className="py-8 text-center text-sm text-[#887970]">
+                      Belum ada persetujuan marketplace.
+                    </p>
+                  )}
                 </div>
               </section>
             )}
@@ -505,26 +720,59 @@ export default function PhaseSevenDashboard({
               <section className={cardClass}>
                 <div className="mb-4">
                   <h2 className="font-semibold">Inventaris media</h2>
-                  <p className="mt-1 text-sm text-[#76675f]">Tinjau metadata aset dan karantina berkas yang bermasalah. Berkas privat tidak dibuka atau ditampilkan melalui panel ini.</p>
-                  <p className="mt-1 text-xs text-[#887970]">Menampilkan maksimal 100 aset terbaru.</p>
+                  <p className="mt-1 text-sm text-[#76675f]">
+                    Tinjau metadata aset dan karantina berkas yang bermasalah. Berkas privat tidak
+                    dibuka atau ditampilkan melalui panel ini.
+                  </p>
+                  <p className="mt-1 text-xs text-[#887970]">
+                    Menampilkan maksimal 100 aset terbaru.
+                  </p>
                 </div>
                 <div className="divide-y divide-[#f0e7e0]">
                   {mediaAssets.map((item) => (
-                    <article key={item.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
+                    <article
+                      key={item.id}
+                      className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between"
+                    >
                       <div className="min-w-0">
-                        <p className="font-semibold">{item.media_type} · {item.mime_type}</p>
-                        <p className="mt-1 break-all text-xs text-[#887970]">{item.storage_bucket} · {item.visibility} · {item.processing_status}</p>
-                        <p className="break-all text-xs text-[#887970]">Aset: {item.id} · Pemilik: {item.owner_user_id || "Sistem"}</p>
-                        <p className="text-xs text-[#887970]">{(item.byte_size / 1024 / 1024).toFixed(2)} MB · {dateTime(item.created_at)}</p>
+                        <p className="font-semibold">
+                          {item.media_type} · {item.mime_type}
+                        </p>
+                        <p className="mt-1 break-all text-xs text-[#887970]">
+                          {item.storage_bucket} · {item.visibility} · {item.processing_status}
+                        </p>
+                        <p className="break-all text-xs text-[#887970]">
+                          Aset: {item.id} · Pemilik: {item.owner_user_id || "Sistem"}
+                        </p>
+                        <p className="text-xs text-[#887970]">
+                          {(item.byte_size / 1024 / 1024).toFixed(2)} MB ·{" "}
+                          {dateTime(item.created_at)}
+                        </p>
                       </div>
                       {item.processing_status === "quarantined" ? (
-                        <button type="button" className={buttonClass} disabled={saving} onClick={() => void setMediaStatus(item, "ready")}>Pulihkan status</button>
+                        <button
+                          type="button"
+                          className={buttonClass}
+                          disabled={saving}
+                          onClick={() => void setMediaStatus(item, "ready")}
+                        >
+                          Pulihkan status
+                        </button>
                       ) : (
-                        <button type="button" className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50" disabled={saving} onClick={() => void setMediaStatus(item, "quarantined")}>Karantina</button>
+                        <button
+                          type="button"
+                          className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50"
+                          disabled={saving}
+                          onClick={() => void setMediaStatus(item, "quarantined")}
+                        >
+                          Karantina
+                        </button>
                       )}
                     </article>
                   ))}
-                  {!mediaAssets.length && <p className="py-8 text-center text-sm text-[#887970]">Belum ada aset media.</p>}
+                  {!mediaAssets.length && (
+                    <p className="py-8 text-center text-sm text-[#887970]">Belum ada aset media.</p>
+                  )}
                 </div>
               </section>
             )}
@@ -533,33 +781,78 @@ export default function PhaseSevenDashboard({
               <div className="grid gap-4 lg:grid-cols-2">
                 <section className={cardClass}>
                   <h2 className="font-semibold">Bahasa yang didukung</h2>
-                  <p className="mt-1 text-sm text-[#76675f]">Bahasa bawaan digunakan saat preferensi pengguna belum ditentukan.</p>
+                  <p className="mt-1 text-sm text-[#76675f]">
+                    Bahasa bawaan digunakan saat preferensi pengguna belum ditentukan.
+                  </p>
                   <div className="mt-4 divide-y divide-[#f0e7e0]">
                     {locales.map((item) => (
-                      <div key={item.code} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <div
+                        key={item.code}
+                        className="flex flex-wrap items-center justify-between gap-3 py-3"
+                      >
                         <div>
-                          <p className="font-semibold">{item.native_name} <span className="text-xs font-normal text-[#887970]">({item.code})</span></p>
-                          <p className="text-xs text-[#887970]">{item.name} · {item.is_active ? "Aktif" : "Nonaktif"}{item.is_default ? " · Bawaan" : ""}</p>
+                          <p className="font-semibold">
+                            {item.native_name}{" "}
+                            <span className="text-xs font-normal text-[#887970]">
+                              ({item.code})
+                            </span>
+                          </p>
+                          <p className="text-xs text-[#887970]">
+                            {item.name} · {item.is_active ? "Aktif" : "Nonaktif"}
+                            {item.is_default ? " · Bawaan" : ""}
+                          </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {!item.is_default && item.is_active && <button type="button" className={buttonClass} disabled={saving} onClick={() => void setDefaultLocale(item.code)}>Jadikan bawaan</button>}
-                          <button type="button" className={buttonClass} disabled={saving} onClick={() => void toggleLocale(item)}>{item.is_active ? "Nonaktifkan" : "Aktifkan"}</button>
+                          {!item.is_default && item.is_active && (
+                            <button
+                              type="button"
+                              className={buttonClass}
+                              disabled={saving}
+                              onClick={() => void setDefaultLocale(item.code)}
+                            >
+                              Jadikan bawaan
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className={buttonClass}
+                            disabled={saving}
+                            onClick={() => void toggleLocale(item)}
+                          >
+                            {item.is_active ? "Nonaktifkan" : "Aktifkan"}
+                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-5 border-t border-[#f0e7e0] pt-4 text-xs text-[#887970]">Bahasa yang dapat diaktifkan dibatasi pada paket terjemahan yang sudah didukung aplikasi. Bahasa baru memerlukan paket terjemahan sebelum dapat ditambahkan.</p>
-
+                  <p className="mt-5 border-t border-[#f0e7e0] pt-4 text-xs text-[#887970]">
+                    Bahasa yang dapat diaktifkan dibatasi pada paket terjemahan yang sudah didukung
+                    aplikasi. Bahasa baru memerlukan paket terjemahan sebelum dapat ditambahkan.
+                  </p>
                 </section>
 
                 <section className={cardClass}>
                   <h2 className="font-semibold">Zona waktu</h2>
-                  <p className="mt-1 text-sm text-[#76675f]">Daftar ini digunakan pada preferensi akun dan pengaturan undangan.</p>
+                  <p className="mt-1 text-sm text-[#76675f]">
+                    Daftar ini digunakan pada preferensi akun dan pengaturan undangan.
+                  </p>
                   <form onSubmit={(event) => void saveTimezones(event)} className="mt-4 space-y-3">
-                    <label className="block text-sm">Zona waktu, pisahkan dengan koma<textarea rows={6} value={timezoneText} onChange={(event) => setTimezoneText(event.target.value)} className={inputClass} /></label>
-                    <button className={primaryClass} disabled={saving}>Simpan zona waktu</button>
+                    <label className="block text-sm">
+                      Zona waktu, pisahkan dengan koma
+                      <textarea
+                        rows={6}
+                        value={timezoneText}
+                        onChange={(event) => setTimezoneText(event.target.value)}
+                        className={inputClass}
+                      />
+                    </label>
+                    <button className={primaryClass} disabled={saving}>
+                      Simpan zona waktu
+                    </button>
                   </form>
-                  <p className="mt-3 text-xs text-[#887970]">Gunakan nama zona waktu IANA, misalnya Asia/Jakarta atau UTC.</p>
+                  <p className="mt-3 text-xs text-[#887970]">
+                    Gunakan nama zona waktu IANA, misalnya Asia/Jakarta atau UTC.
+                  </p>
                 </section>
               </div>
             )}
@@ -568,8 +861,9 @@ export default function PhaseSevenDashboard({
               <section className={cardClass}>
                 <h2 className="font-semibold">Pengaturan sistem non-rahasia</h2>
                 <p className="mt-1 text-sm text-[#76675f]">
-                  Nilai konfigurasi yang dipakai aplikasi. Pengaturan zona waktu dikelola pada tab Bahasa & zona waktu.
-                  Kredensial dan rahasia hanya boleh disimpan pada secret manager.
+                  Nilai konfigurasi yang dipakai aplikasi. Pengaturan zona waktu dikelola pada tab
+                  Bahasa & zona waktu. Kredensial dan rahasia hanya boleh disimpan pada secret
+                  manager.
                 </p>
                 <div className="mt-4 divide-y divide-[#f0e7e0]">
                   {settings.map((item) => (
@@ -579,7 +873,9 @@ export default function PhaseSevenDashboard({
                       <pre className="mt-2 max-h-32 overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">
                         {JSON.stringify(item.value, null, 2)}
                       </pre>
-                      <p className="mt-1 text-xs text-[#887970]">Diperbarui: {dateTime(item.updated_at)}</p>
+                      <p className="mt-1 text-xs text-[#887970]">
+                        Diperbarui: {dateTime(item.updated_at)}
+                      </p>
                     </article>
                   ))}
                   {!settings.length && (
@@ -592,21 +888,49 @@ export default function PhaseSevenDashboard({
             {tab === "audit" && (
               <section className={cardClass}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div><h2 className="font-semibold">Jejak aktivitas administratif</h2><p className="mt-1 text-xs text-[#887970]">Catatan bersifat append-only; data rahasia tidak ditampilkan.</p></div>
-                  <label className="text-sm">Cari aktivitas<input value={auditFilter} onChange={(event) => setAuditFilter(event.target.value)} className={inputClass} placeholder="Aksi, target, atau ID" /></label>
+                  <div>
+                    <h2 className="font-semibold">Jejak aktivitas administratif</h2>
+                    <p className="mt-1 text-xs text-[#887970]">
+                      Catatan bersifat append-only; data rahasia tidak ditampilkan.
+                    </p>
+                  </div>
+                  <label className="text-sm">
+                    Cari aktivitas
+                    <input
+                      value={auditFilter}
+                      onChange={(event) => setAuditFilter(event.target.value)}
+                      className={inputClass}
+                      placeholder="Aksi, target, atau ID"
+                    />
+                  </label>
                 </div>
                 <div className="mt-4 divide-y divide-[#f0e7e0]">
                   {filteredAudit.map((item) => (
                     <details key={item.id} className="py-3">
-                      <summary className="cursor-pointer list-inside text-sm font-semibold">{item.action} · {item.target_type} <span className="font-normal text-[#887970]">· {dateTime(item.created_at)}</span></summary>
-                      <p className="mt-2 break-all text-xs text-[#887970]">Target: {item.target_id || "—"} · Pelaku: {item.actor_user_id || "Sistem"}</p>
+                      <summary className="cursor-pointer list-inside text-sm font-semibold">
+                        {item.action} · {item.target_type}{" "}
+                        <span className="font-normal text-[#887970]">
+                          · {dateTime(item.created_at)}
+                        </span>
+                      </summary>
+                      <p className="mt-2 break-all text-xs text-[#887970]">
+                        Target: {item.target_id || "—"} · Pelaku: {item.actor_user_id || "Sistem"}
+                      </p>
                       <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                        <pre className="overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">{JSON.stringify(item.before_data, null, 2) || "—"}</pre>
-                        <pre className="overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">{JSON.stringify(item.after_data, null, 2) || "—"}</pre>
+                        <pre className="overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">
+                          {JSON.stringify(item.before_data, null, 2) || "—"}
+                        </pre>
+                        <pre className="overflow-auto rounded-lg bg-[#faf5f0] p-2 text-xs">
+                          {JSON.stringify(item.after_data, null, 2) || "—"}
+                        </pre>
                       </div>
                     </details>
                   ))}
-                  {!filteredAudit.length && <p className="py-8 text-center text-sm text-[#887970]">Tidak ada aktivitas yang cocok.</p>}
+                  {!filteredAudit.length && (
+                    <p className="py-8 text-center text-sm text-[#887970]">
+                      Tidak ada aktivitas yang cocok.
+                    </p>
+                  )}
                 </div>
               </section>
             )}

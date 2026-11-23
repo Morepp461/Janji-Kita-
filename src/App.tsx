@@ -43,7 +43,12 @@ export default function App() {
     { code: "id-ID", native_name: "Bahasa Indonesia" },
     { code: "en", native_name: "English" },
   ]);
-  const [timezoneOptions, setTimezoneOptions] = useState(["Asia/Jakarta", "Asia/Makassar", "Asia/Jayapura", "UTC"]);
+  const [timezoneOptions, setTimezoneOptions] = useState([
+    "Asia/Jakarta",
+    "Asia/Makassar",
+    "Asia/Jayapura",
+    "UTC",
+  ]);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -81,11 +86,17 @@ export default function App() {
     let active = true;
     client.rpc("get_public_localization_config").then(({ data }) => {
       if (!active || !data || typeof data !== "object") return;
-      const config = data as { locales?: Array<{ code: string; native_name: string }>; timezones?: string[] };
+      const config = data as {
+        locales?: Array<{ code: string; native_name: string }>;
+        timezones?: string[];
+      };
       if (Array.isArray(config.locales) && config.locales.length) setLocaleOptions(config.locales);
-      if (Array.isArray(config.timezones) && config.timezones.length) setTimezoneOptions(config.timezones);
+      if (Array.isArray(config.timezones) && config.timezones.length)
+        setTimezoneOptions(config.timezones);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [client]);
 
   useEffect(() => {
@@ -355,7 +366,9 @@ export default function App() {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a36d55]">
               Janji Kita
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">{dashboardText(locale, "workspace")}</h1>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              {dashboardText(locale, "workspace")}
+            </h1>
             <p className="mt-1 text-sm text-[#76675f]">{session.user.email}</p>
           </div>
           <button
@@ -407,8 +420,14 @@ export default function App() {
                   onChange={(event) => setLocale(event.target.value)}
                   value={locale}
                 >
-                  {localeOptions.map((item) => <option key={item.code} value={item.code}>{item.native_name}</option>)}
-                  {!localeOptions.some((item) => item.code === locale) && <option value={locale}>{locale}</option>}
+                  {localeOptions.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.native_name}
+                    </option>
+                  ))}
+                  {!localeOptions.some((item) => item.code === locale) && (
+                    <option value={locale}>{locale}</option>
+                  )}
                 </select>
               </label>
               <label className="text-sm font-medium sm:col-span-2">
@@ -418,8 +437,14 @@ export default function App() {
                   onChange={(event) => setTimezone(event.target.value)}
                   value={timezone}
                 >
-                  {timezoneOptions.map((value) => <option key={value} value={value}>{value}</option>)}
-                  {!timezoneOptions.includes(timezone) && <option value={timezone}>{timezone}</option>}
+                  {timezoneOptions.map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                  {!timezoneOptions.includes(timezone) && (
+                    <option value={timezone}>{timezone}</option>
+                  )}
                 </select>
               </label>
               <div className="sm:col-span-2">
@@ -489,13 +514,23 @@ export default function App() {
               >
                 {dashboardText(locale, "manage_reseller")}
               </a>
-              <a href="/admin/operations" className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold">Operasional & analitik</a>
+              <a
+                href="/admin/operations"
+                className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+              >
+                Operasional & analitik
+              </a>
             </>
           )}
         </nav>
 
         <nav className="flex flex-wrap gap-2" aria-label="Pengaturan privasi">
-          <a href="/settings/consents" className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold">{dashboardText(locale, "consent_settings")}</a>
+          <a
+            href="/settings/consents"
+            className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+          >
+            {dashboardText(locale, "consent_settings")}
+          </a>
         </nav>
 
         <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />

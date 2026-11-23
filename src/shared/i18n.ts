@@ -36,7 +36,8 @@ const messages: Record<"id" | "en", Record<DashboardMessage, string>> = {
     account_status: "Status",
     role: "Peran",
     session_active: "Aktif pada perangkat ini",
-    session_description: "Sesi dikelola oleh Supabase Auth. Tombol keluar mengakhiri sesi saat ini.",
+    session_description:
+      "Sesi dikelola oleh Supabase Auth. Tombol keluar mengakhiri sesi saat ini.",
     premium: "Premium",
     collaborations: "Undangan kolaborasi",
     reseller: "Program reseller",

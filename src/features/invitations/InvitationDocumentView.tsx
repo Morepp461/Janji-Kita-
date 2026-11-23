@@ -49,7 +49,12 @@ function safeStyle(style: Record<string, unknown> = {}): CSSProperties {
   return result as CSSProperties;
 }
 
-function renderNode(node: InvitationNode, assetUrls: Record<string, string>, locale: string, timezone: string): ReactNode {
+function renderNode(
+  node: InvitationNode,
+  assetUrls: Record<string, string>,
+  locale: string,
+  timezone: string,
+): ReactNode {
   const props = node.props || {};
   const style = safeStyle(node.style);
   const children = (node.children || []).map((child) => (

@@ -341,8 +341,15 @@ export default function CheckoutPage({
               className="mt-1 h-4 w-4 accent-[#754b3b]"
             />
             <span>
-              Saya secara sukarela mengizinkan desain undangan ini ditinjau untuk kemungkinan digunakan sebagai template marketplace Janji Kita. Persetujuan ini opsional, tidak memengaruhi harga atau pembelian, dan dapat dicabut melalui pengaturan akun. Persetujuan tidak mencakup aset pihak ketiga.
-              {consentSaved && <strong className="mt-1 block text-xs text-green-800">Persetujuan tercatat untuk pesanan ini.</strong>}
+              Saya secara sukarela mengizinkan desain undangan ini ditinjau untuk kemungkinan
+              digunakan sebagai template marketplace Janji Kita. Persetujuan ini opsional, tidak
+              memengaruhi harga atau pembelian, dan dapat dicabut melalui pengaturan akun.
+              Persetujuan tidak mencakup aset pihak ketiga.
+              {consentSaved && (
+                <strong className="mt-1 block text-xs text-green-800">
+                  Persetujuan tercatat untuk pesanan ini.
+                </strong>
+              )}
             </span>
           </label>
           <p className="mt-3 text-xs leading-5 text-[#887970]">
