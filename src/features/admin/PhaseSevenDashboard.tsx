@@ -124,9 +124,6 @@ export default function PhaseSevenDashboard({
   const [settings, setSettings] = useState<SettingRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
   const [timezoneText, setTimezoneText] = useState("Asia/Jakarta, Asia/Makassar, Asia/Jayapura, Asia/Singapore, UTC");
-  const [localeCode, setLocaleCode] = useState("");
-  const [localeName, setLocaleName] = useState("");
-  const [localeNativeName, setLocaleNativeName] = useState("");
   const [settingKey, setSettingKey] = useState("");
   const [settingDescription, setSettingDescription] = useState("");
   const [settingValue, setSettingValue] = useState("{}");
@@ -261,30 +258,6 @@ export default function PhaseSevenDashboard({
         }),
       `Persetujuan marketplace ${decision === "approved" ? "disetujui" : "ditolak"}.`,
     );
-  }
-
-  async function saveLocale(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const code = localeCode.trim();
-    if (!/^[a-z]{2}(-[A-Z]{2})?$/.test(code)) {
-      setError("Kode bahasa harus menggunakan format seperti id-ID atau en.");
-      return;
-    }
-    await runAction(
-      () =>
-        client.from("locales").insert({
-          code,
-          name: localeName.trim(),
-          native_name: localeNativeName.trim(),
-          is_active: true,
-          is_default: false,
-          sort_order: locales.length * 10 + 10,
-        }),
-      "Bahasa berhasil ditambahkan.",
-    );
-    setLocaleCode("");
-    setLocaleName("");
-    setLocaleNativeName("");
   }
 
   async function setDefaultLocale(code: string) {
@@ -612,13 +585,8 @@ export default function PhaseSevenDashboard({
                       </div>
                     ))}
                   </div>
-                  <form onSubmit={(event) => void saveLocale(event)} className="mt-5 grid gap-3 border-t border-[#f0e7e0] pt-4">
-                    <h3 className="text-sm font-semibold">Tambah bahasa</h3>
-                    <label className="text-sm">Kode bahasa<input required value={localeCode} onChange={(event) => setLocaleCode(event.target.value)} placeholder="contoh: en" className={inputClass} /></label>
-                    <label className="text-sm">Nama bahasa<input required value={localeName} onChange={(event) => setLocaleName(event.target.value)} className={inputClass} /></label>
-                    <label className="text-sm">Nama asli<input required value={localeNativeName} onChange={(event) => setLocaleNativeName(event.target.value)} className={inputClass} /></label>
-                    <button className={primaryClass} disabled={saving}>Tambah bahasa</button>
-                  </form>
+                  <p className="mt-5 border-t border-[#f0e7e0] pt-4 text-xs text-[#887970]">Bahasa yang dapat diaktifkan dibatasi pada paket terjemahan yang sudah didukung aplikasi. Bahasa baru memerlukan paket terjemahan sebelum dapat ditambahkan.</p>
+
                 </section>
 
                 <section className={cardClass}>
