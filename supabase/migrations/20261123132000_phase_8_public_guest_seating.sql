@@ -18,6 +18,19 @@ begin
     return;
   end if;
 
+  if not exists (
+    select 1
+    from public.guests g
+    join public.invitations i on i.id = g.invitation_id
+    where g.personalized_token_hash = p_token_hash
+      and i.status = 'active'
+      and i.active_from <= now()
+      and i.active_until > now()
+      and i.published_version_id is not null
+  ) then
+    return;
+  end if;
+
   if not public.consume_guest_rate_limit(p_token_hash, 'seating', 30) then
     return;
   end if;
