@@ -1,5 +1,8 @@
 -- Fase 8: perencana tempat duduk dengan isolasi data dan pemeriksaan kapasitas transaksional.
 
+alter table public.guests
+  add constraint guests_id_invitation_unique unique (id, invitation_id);
+
 create table public.seating_tables (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
@@ -21,7 +24,13 @@ create table public.seating_assignments (
   seat_label text check (seat_label is null or length(trim(seat_label)) between 1 and 40),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  unique (invitation_id, guest_id)
+  unique (invitation_id, guest_id),
+  constraint seating_assignments_guest_invitation_fk
+    foreign key (guest_id, invitation_id)
+    references public.guests(id, invitation_id) on delete cascade,
+  constraint seating_assignments_table_invitation_fk
+    foreign key (seating_table_id, invitation_id)
+    references public.seating_tables(id, invitation_id) on delete cascade
 );
 create index seating_assignments_table_idx
   on public.seating_assignments(invitation_id, seating_table_id);
