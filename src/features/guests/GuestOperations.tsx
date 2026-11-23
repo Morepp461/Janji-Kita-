@@ -394,6 +394,18 @@ export default function GuestOperations({
     URL.revokeObjectURL(url);
   }
 
+  async function exportGuestbookCsv() {
+    const quote = (value: unknown) => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+    const rows = entries.map((entry) => [entry.display_name, entry.message, entry.moderation_status, entry.created_at]
+      .map(quote).join(','));
+    const csv = [['nama', 'ucapan', 'status', 'tanggal'].map(quote).join(','), ...rows].join('\r\n');
+    const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = `ucapan-${invitation?.slug || invitationId}.csv`; anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   async function moderate(entry: GuestbookEntry, status: "approved" | "rejected") {
     const { error: updateError } = await client
       .from("guestbook_entries")
@@ -806,7 +818,7 @@ export default function GuestOperations({
 
         {activeTab === "guestbook" && (
           <section className="rounded-2xl border border-[#eaded5] bg-white p-5">
-            <h2 className="text-lg font-semibold">Moderasi buku tamu</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">Moderasi buku tamu</h2><button onClick={() => void exportGuestbookCsv()} className="rounded-xl border border-[#ddcec3] px-3 py-2 text-xs font-semibold">Ekspor ucapan CSV</button></div>
             <p className="mt-1 text-sm text-[#76675f]">
               Ucapan baru masuk sebagai menunggu persetujuan dan tidak tampil di halaman publik
               sebelum disetujui.
