@@ -291,7 +291,7 @@ returns void
 language plpgsql
 security definer
 set search_path = pg_catalog
-as $
+as $fn$
 declare
   current_user_id uuid := auth.uid();
   old_value jsonb;
@@ -308,7 +308,7 @@ begin
   values (current_user_id, 'update_price', 'commerce_settings', old_value,
     jsonb_build_object('key', 'blank_canvas_price', 'amount', p_price, 'currency', 'IDR'));
 end;
-$;
+$fn$;
 revoke all on function public.admin_set_blank_canvas_price(bigint) from public, anon;
 grant execute on function public.admin_set_blank_canvas_price(bigint) to authenticated;
 
