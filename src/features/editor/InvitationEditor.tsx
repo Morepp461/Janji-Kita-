@@ -645,7 +645,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             Kolaborasi
           </a>
           <a
-            href={`/invitations/${invitationId}/guests`
+            href={`/invitations/${invitationId}/guests`}
             className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
           >
             Tamu & RSVP
