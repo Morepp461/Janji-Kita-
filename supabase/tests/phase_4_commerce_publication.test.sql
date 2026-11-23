@@ -245,7 +245,7 @@ set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 update public.entitlements set valid_until = now() - interval '1 minute'
 where entitlement_key = 'invitation.publish';
-update public.invitations set active_until = now() - interval '1 minute'
+update public.invitations set active_from = now() - interval '2 minutes', active_until = now() - interval '1 minute'
 where title = 'Undangan Commerce Fase 4 Diperbarui';
 select is(public.expire_invitations() >= 1, true, 'job kedaluwarsa memperbarui status undangan');
 reset role;
