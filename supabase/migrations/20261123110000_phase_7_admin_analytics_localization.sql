@@ -160,7 +160,7 @@ begin
   if not exists (select 1 from public.locales where code = p_code and is_active) then
     raise exception 'Bahasa tidak ditemukan atau tidak aktif';
   end if;
-  update public.locales set is_default = false where is_default;
+  update public.locales set is_default = false, updated_at = now() where is_default;
   update public.locales set is_default = true, updated_at = now() where code = p_code;
 end;
 $$;
