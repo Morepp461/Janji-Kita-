@@ -147,6 +147,27 @@ end;
 $$;
 revoke all on function public.consume_guest_rate_limit(text,text,integer) from public, anon, authenticated;
 
+create or replace function public.mark_guest_viewed(p_token_hash text)
+returns boolean
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}$' then
+    return false;
+  end if;
+  update public.guests g
+  set status = 'viewed'
+  from public.invitations i
+  where i.id = g.invitation_id and g.personalized_token_hash = p_token_hash
+    and g.status = 'invited' and i.status = 'active'
+    and i.published_version_id is not null
+    and i.active_from <= now() and i.active_until > now();
+  return found;
+end;
+$$;
+
 create or replace function public.submit_guest_rsvp(
   p_token_hash text,
   p_response text,
@@ -339,12 +360,14 @@ begin
 end;
 $$;
 
+revoke all on function public.mark_guest_viewed(text) from public;
 revoke all on function public.get_public_guestbook(text) from public;
 revoke all on function public.submit_guest_rsvp(text,text,integer,jsonb) from public;
 revoke all on function public.submit_guestbook_entry(text,text) from public;
 revoke all on function public.issue_guest_ticket(uuid,text) from public, anon;
 revoke all on function public.check_in_ticket(text,text) from public, anon;
 revoke all on function public.check_in_guest_manually(uuid,text) from public, anon;
+grant execute on function public.mark_guest_viewed(text) to anon, authenticated;
 grant execute on function public.get_public_guestbook(text) to anon, authenticated;
 grant execute on function public.submit_guest_rsvp(text,text,integer,jsonb) to anon, authenticated;
 grant execute on function public.submit_guestbook_entry(text,text) to anon, authenticated;
