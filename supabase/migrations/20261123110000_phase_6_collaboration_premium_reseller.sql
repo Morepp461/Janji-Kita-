@@ -493,20 +493,20 @@ begin
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id <> subscription_id_value and status = 'active';
 
-  insert into public.entitlements(user_id, entitlement_key, source_type, source_id,
-    valid_from, valid_until, value, status)
-  values (p_user_id, 'collaborator_limit', 'subscription', subscription_id_value,
-    p_period_start, p_period_end,
-    jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
-    case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end)
-  on conflict (id) do nothing;
-
   update public.entitlements set valid_from = p_period_start, valid_until = p_period_end,
     value = jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
     status = case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end,
     updated_at = now()
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id = subscription_id_value;
+  if not found then
+    insert into public.entitlements(user_id, entitlement_key, source_type, source_id,
+      valid_from, valid_until, value, status)
+    values (p_user_id, 'collaborator_limit', 'subscription', subscription_id_value,
+      p_period_start, p_period_end,
+      jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
+      case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end);
+  end if;
 
   insert into public.audit_logs(actor_user_id, action, target_type, target_id, after_data)
   values (current_user_id, 'subscription.admin_updated', 'subscription', subscription_id_value,
@@ -571,12 +571,20 @@ begin
   update public.entitlements set status = 'revoked', updated_at = now()
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id <> subscription_id_value and status = 'active';
-  insert into public.entitlements(user_id, entitlement_key, source_type, source_id,
-    valid_from, valid_until, value, status)
-  values (p_user_id, 'collaborator_limit', 'subscription', subscription_id_value,
-    p_period_start, p_period_end,
-    jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
-    case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end);
+  update public.entitlements set valid_from = p_period_start, valid_until = p_period_end,
+    value = jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
+    status = case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end,
+    updated_at = now()
+  where user_id = p_user_id and entitlement_key = 'collaborator_limit'
+    and source_type = 'subscription' and source_id = subscription_id_value;
+  if not found then
+    insert into public.entitlements(user_id, entitlement_key, source_type, source_id,
+      valid_from, valid_until, value, status)
+    values (p_user_id, 'collaborator_limit', 'subscription', subscription_id_value,
+      p_period_start, p_period_end,
+      jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
+      case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end);
+  end if;
   update public.subscription_events set subscription_id = subscription_id_value, processed_at = now()
   where id = event_id;
   return subscription_id_value;
@@ -739,6 +747,11 @@ with check (
 );
 create policy reseller_clients_admin_read on public.reseller_clients
 for select to authenticated using (app_private.has_permission('reseller.manage'));
+create policy orders_reseller_read on public.orders
+for select to authenticated
+using (reseller_user_id = (select auth.uid()) and exists (
+  select 1 from public.reseller_profiles rp where rp.user_id = (select auth.uid()) and rp.status = 'approved'
+));
 create policy reseller_sales_owner_read on public.reseller_sales
 for select to authenticated
 using (reseller_user_id = (select auth.uid()) or app_private.has_permission('reseller.manage'));
