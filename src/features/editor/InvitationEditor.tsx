@@ -109,6 +109,7 @@ function validateSignature(bytes: Uint8Array, mime: string): boolean {
 
 export default function InvitationEditor({ client, invitationId, userId }: Props) {
   const [title, setTitle] = useState("");
+  const [ownerUserId, setOwnerUserId] = useState("");
   const [document, setDocument] = useState<InvitationDocument | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
@@ -479,7 +480,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       }
       const bucket = "user-uploads-private";
       const objectPath =
-        invitation.owner_user_id +
+        ownerUserId +
         "/" +
         invitationId +
         "/" +
@@ -497,7 +498,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       const { data: asset, error: assetError } = await client
         .from("media_assets")
         .insert({
-          owner_user_id: invitation.owner_user_id,
+          owner_user_id: ownerUserId,
           storage_bucket: bucket,
           object_path: objectPath,
           media_type: mediaType,
