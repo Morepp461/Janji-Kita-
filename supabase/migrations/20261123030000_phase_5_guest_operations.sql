@@ -155,122 +155,17 @@ declare
   invitation_row public.invitations%rowtype;
   saved_rsvp public.rsvps%rowtype;
 begin
-  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}
-     or jsonb_typeof(coalesce(p_answers, '{}'::jsonb)) <> 'object' then
-    raise exception 'Data RSVP tidak valid';
+  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}$' then
+    return jsonb_build_object('status', 'invalid');
   end if;
-  select g.* into guest_row
-  from public.guests g
-  where g.personalized_token_hash = p_token_hash
-  for update;
-  if not found then raise exception 'Tautan tamu tidak valid'; end if;
-  select i.* into invitation_row from public.invitations i
-  where i.id = guest_row.invitation_id and i.status = 'active'
-    and i.published_version_id is not null
-    and i.active_from <= now() and i.active_until > now();
-  if not found then raise exception 'Undangan tidak aktif'; end if;
-  if p_attendee_count > case when guest_row.plus_one_allowed then 2 else 1 end then
-    raise exception 'Jumlah kehadiran melebihi izin tamu';
-  end if;
-  if not public.consume_guest_rate_limit(p_token_hash, 'rsvp', 5) then
-    raise exception 'Terlalu banyak perubahan RSVP. Coba lagi nanti.';
-  end if;
-  insert into public.rsvps(invitation_id, guest_id, response, attendee_count, answers, responded_at)
-  values (guest_row.invitation_id, guest_row.id, p_response, p_attendee_count, coalesce(p_answers, '{}'::jsonb), now())
-  on conflict (guest_id) do update set response = excluded.response,
-    attendee_count = excluded.attendee_count, answers = excluded.answers,
-    responded_at = now(), updated_at = now()
-  returning * into saved_rsvp;
-  update public.guests set status = 'responded' where id = guest_row.id;
-  return jsonb_build_object('id', saved_rsvp.id, 'response', saved_rsvp.response, 'attendee_count', saved_rsvp.attendee_count);
-end;
-$$;
-
-create or replace function public.submit_guestbook_entry(p_token_hash text, p_message text)
-returns uuid
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  guest_row public.guests%rowtype;
-  entry_id uuid;
-begin
-  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}
-    raise exception 'Pesan harus berisi 1 sampai 500 karakter';
-  end if;
-  select g.* into guest_row from public.guests g
-  join public.invitations i on i.id = g.invitation_id
-  where g.personalized_token_hash = p_token_hash and i.status = 'active'
-    and i.published_version_id is not null and i.active_from <= now() and i.active_until > now();
-  if not found then raise exception 'Tautan tamu tidak valid atau undangan tidak aktif'; end if;
-  if not public.consume_guest_rate_limit(p_token_hash, 'guestbook', 3) then
-    raise exception 'Batas pengiriman ucapan tercapai. Coba lagi nanti.';
-  end if;
-  insert into public.guestbook_entries(invitation_id, guest_id, display_name, message, moderation_status)
-  values (guest_row.invitation_id, guest_row.id, guest_row.display_name, trim(p_message), 'pending')
-  returning id into entry_id;
-  return entry_id;
-end;
-$$;
-
-create or replace function public.get_public_guestbook(p_slug text)
-returns table(display_name text, message text, created_at timestamptz)
-language sql
-stable
-security definer
-set search_path = public, pg_temp
-as $
-  select e.display_name, e.message, e.created_at
-  from public.guestbook_entries e
-  join public.invitations i on i.id = e.invitation_id
-  where i.slug = p_slug and i.status = 'active'
-    and i.published_version_id is not null
-    and i.active_from <= now() and i.active_until > now()
-    and e.moderation_status = 'approved'
-  order by e.created_at desc
-  limit 50;
-$;
-
-create or replace function public.issue_guest_ticket(p_guest_id uuid, p_token_hash text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  guest_row public.guests%rowtype;
-  ticket_row public.tickets%rowtype;
-begin
-  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64} and i.owner_user_id = (select auth.uid())
-    and i.status = 'active' and i.active_from <= now() and i.active_until > now();
-  if not found then raise exception 'Tamu atau undangan tidak dapat menerbitkan tiket'; end if;
-  insert into public.tickets(invitation_id, guest_id, token_hash)
-  values (guest_row.invitation_id, guest_row.id, p_token_hash)
-  on conflict (guest_id) do update set token_hash = excluded.token_hash,
-    ticket_code = upper(encode(extensions.gen_random_bytes(6), 'hex')),
-    status = 'valid', issued_at = now(), used_at = null
-  returning * into ticket_row;
-  return jsonb_build_object('id', ticket_row.id, 'ticket_code', ticket_row.ticket_code, 'status', ticket_row.status);
-end;
-$$;
-
-create or replace function public.check_in_ticket(p_token_hash text, p_device_label text default null)
-returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  ticket_row public.tickets%rowtype;
-  guest_name text;
-begin
-  if p_token_hash is null or p_token_hash !~ '^[a-f0-9]{64}
-  from public.tickets t join public.guests g on g.id = t.guest_id
+  select t.*, g.display_name into ticket_row, guest_name
+  from public.tickets t
+  join public.guests g on g.id = t.guest_id
   join public.invitations i on i.id = t.invitation_id
   where t.token_hash = p_token_hash and i.owner_user_id = (select auth.uid())
     and i.status = 'active' and i.active_from <= now() and i.active_until > now()
   for update of t;
+
   if not found then return jsonb_build_object('status', 'invalid'); end if;
   if ticket_row.status <> 'valid' then
     return jsonb_build_object('status', 'duplicate', 'guest_name', guest_name);
