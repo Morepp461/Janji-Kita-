@@ -93,7 +93,10 @@ grant select on public.system_settings to authenticated;
 revoke insert, update, delete on public.locales, public.system_settings from authenticated;
 revoke insert, update, delete on public.templates, public.template_versions from authenticated;
 grant select on public.templates, public.template_versions to authenticated;
-grant select on public.consent_records, public.analytics_events to authenticated;
+grant select on public.analytics_events to authenticated;
+revoke select on public.consent_records from authenticated;
+grant select (id, user_id, invitation_id, order_id, consent_type, granted, consent_text_version, granted_at, withdrawn_at, created_at)
+  on public.consent_records to authenticated;
 
 create policy locales_read_active on public.locales
   for select to anon, authenticated using (is_active);
@@ -836,3 +839,37 @@ create trigger profiles_validate_localization
 create trigger invitations_validate_localization
   before insert or update of locale, timezone on public.invitations
   for each row execute function public.validate_localization_preferences();
+
+
+create or replace function public.admin_list_marketplace_consents()
+returns table (
+  id uuid,
+  user_id uuid,
+  invitation_id uuid,
+  order_id uuid,
+  granted boolean,
+  granted_at timestamptz,
+  withdrawn_at timestamptz,
+  consent_text_version text,
+  metadata jsonb
+)
+language plpgsql
+stable
+security definer
+set search_path = public, app_private, pg_temp
+as $$
+begin
+  if not app_private.has_permission('consent.read') then
+    raise exception 'Tidak memiliki izin membaca persetujuan marketplace';
+  end if;
+  return query
+  select c.id, c.user_id, c.invitation_id, c.order_id, c.granted,
+    c.granted_at, c.withdrawn_at, c.consent_text_version, c.metadata
+  from public.consent_records c
+  where c.consent_type = 'marketplace_template'
+  order by c.created_at desc
+  limit 100;
+end;
+$$;
+revoke all on function public.admin_list_marketplace_consents() from public, anon;
+grant execute on function public.admin_list_marketplace_consents() to authenticated;
