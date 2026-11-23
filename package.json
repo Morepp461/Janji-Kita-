@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
-    "format:check": "prettier --write \"src/**/*.{ts,tsx,css}\" && node scripts/emit-formatted.mjs",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "typecheck": "tsc -b --pretty",
     "test": "vitest",
     "test:run": "vitest run",
