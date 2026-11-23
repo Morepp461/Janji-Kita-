@@ -29,7 +29,7 @@ select lives_ok($q$select public.create_invitation_draft('Undangan Operasi Tamu'
 reset role;
 update public.invitation_versions set state='published'
 where id=(select draft_version_id from public.invitations where title='Undangan Operasi Tamu');
-update public.invitations set status='active',active_from=now()-interval '1 hour',active_until=now()+interval '1 day',published_version_id=draft_version_id
+update public.invitations set status='active',slug='fase5-operasi-tamu',active_from=now()-interval '1 hour',active_until=now()+interval '1 day',published_version_id=draft_version_id
 where title='Undangan Operasi Tamu';
 
 set local role authenticated;
