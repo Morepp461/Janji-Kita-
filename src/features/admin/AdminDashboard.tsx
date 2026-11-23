@@ -189,6 +189,9 @@ export default function AdminDashboard({ client, isSuperAdmin }: AdminDashboardP
           <a href="/admin/commerce" className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]">
             Kelola commerce
           </a>
+          <a href="/finance/orders" className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]">
+            Audit pembayaran
+          </a>
           <button
             className="rounded-xl border border-[#ddcec3] px-4 py-2 text-sm font-semibold hover:bg-[#f8f1eb]"
             onClick={() => void refresh()}
