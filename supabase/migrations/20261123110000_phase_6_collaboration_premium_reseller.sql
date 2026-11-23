@@ -822,7 +822,24 @@ create policy private_upload_collaborator_insert on storage.objects
 for insert to authenticated
 with check (
   bucket_id = 'user-uploads-private'
-  and (storage.foldername(name))[2] ~* '^[0-9a-f-]{36}
+  and exists (
+    select 1 from public.invitations i
+    where i.id::text = (storage.foldername(name))[2]
+      and i.owner_user_id::text = (storage.foldername(name))[1]
+      and app_private.can_edit_invitation(i.id)
+  )
+);
+create policy private_upload_collaborator_read on storage.objects
+for select to authenticated
+using (
+  bucket_id = 'user-uploads-private'
+  and exists (
+    select 1 from public.invitations i
+    where i.id::text = (storage.foldername(name))[2]
+      and i.owner_user_id::text = (storage.foldername(name))[1]
+      and app_private.can_view_invitation(i.id)
+  )
+);
 
 grant select on public.invitation_collaborators, public.collaborator_invites,
   public.subscription_plans, public.subscriptions, public.reseller_profiles,
