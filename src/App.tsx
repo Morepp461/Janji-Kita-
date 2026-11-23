@@ -250,11 +250,14 @@ export default function App() {
   const isSuperAdmin = roles.includes("super_admin");
   const checkoutMatch = pathname.match(/^\/checkout\/([0-9a-f-]+)\/?$/i);
   if (checkoutMatch) {
-    return <CheckoutPage client={client} userId={session.user.id} invitationId={checkoutMatch[1]} />;
+    return (
+      <CheckoutPage client={client} userId={session.user.id} invitationId={checkoutMatch[1]} />
+    );
   }
   if (pathname === "/orders") return <OrdersPage client={client} />;
   if (pathname === "/admin/commerce" && isAdmin) return <CommerceAdmin client={client} />;
-  if (pathname === "/finance/orders" && (isAdmin || isFinance)) return <FinanceDashboard client={client} />;
+  if (pathname === "/finance/orders" && (isAdmin || isFinance))
+    return <FinanceDashboard client={client} />;
   if (pathname === "/templates" || templateSlug) {
     return (
       <Marketplace
