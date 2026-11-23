@@ -916,11 +916,3 @@ grant execute on function public.expire_invitations() to service_role;
 -- RLS tetap menjadi batas baca; seluruh penulisan commerce dilakukan melalui RPC tepercaya.
 comment on table public.payment_events is 'Riwayat webhook yang sudah direduksi; jangan simpan signature atau data pembayaran sensitif.';
 comment on function public.publish_invitation(uuid,uuid) is 'Menerbitkan snapshot immutable secara atomik setelah entitlement berbayar aktif.';
-),
-  value jsonb not null check (jsonb_typeof(value) = 'object'),
-  updated_by uuid references public.profiles(id) on delete set null,
-  updated_at timestamptz not null default now()
-);
-insert into public.commerce_settings(key, value)
-values ('blank_canvas_price', '{"amount":0,"currency":"IDR"}'::jsonb)
-on conflict (key) do nothing;
