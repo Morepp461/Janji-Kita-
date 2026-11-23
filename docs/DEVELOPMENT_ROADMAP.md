@@ -170,7 +170,7 @@
 - Migrasi diterapkan dan diverifikasi pada Supabase staging serta production.
 - PR #23 telah digabung dan Vercel production berstatus READY pada commit rilis.
 
-**Checkpoint fase:** implementasi, QA, CI, migrasi staging/production, verifikasi keamanan, dan deployment production selesai sepenuhnya. Fase 7 menjadi checkpoint terbaru proyek.
+**Checkpoint fase:** implementasi, QA, CI, enam migrasi staging/production, verifikasi keamanan, dan deployment production selesai sepenuhnya. Fase 8 menjadi checkpoint terbaru proyek.
 
 ## 10. Fase 8 — Impor dan Pengalaman Lanjutan (Selesai Sepenuhnya)
 **Dependensi:** editor visual dan pipeline aset stabil.
