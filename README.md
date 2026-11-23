@@ -12,8 +12,9 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 | Fase 3 — Editor visual | **Selesai sepenuhnya di staging dan production** |
 | Fase 4 — Commerce dan publikasi | **Selesai sepenuhnya di staging dan production** |
 | Fase 5 — Operasi tamu | **Selesai sepenuhnya di staging dan production** |
+| Fase 6 — Kolaborasi, Premium, dan Reseller | **Selesai sepenuhnya di staging dan production** |
 
-**Checkpoint dokumentasi:** 23 November 2026. Fase 5 telah diterapkan dan diverifikasi pada kedua lingkungan.
+**Checkpoint dokumentasi:** 23 November 2026. Fase 6 telah diterapkan dan diverifikasi pada Supabase staging, Supabase production, serta Vercel production.
 
 ### Fase 1 — Identitas dan administrasi
 
@@ -77,6 +78,22 @@ Ruang lingkup implementasi:
 - RLS membatasi data tamu, RSVP, tiket, check-in, serta moderasi buku tamu kepada pemilik undangan. Pengiriman publik dilakukan melalui RPC terkontrol.
 
 **Fase 5 selesai sepenuhnya pada 23 November 2026.** Migrasi `phase_5_guest_operations` berhasil diterapkan pada Supabase staging dan production. Pemeriksaan kedua lingkungan mengonfirmasi enam tabel operasi tamu memiliki RLS aktif, peran anon tidak dapat membaca daftar tamu/tiket atau melakukan check-in, RPC publik yang diperlukan tersedia, dan seluruh tabel baru masih kosong sehingga data lama tidak tersentuh. CI lulus seluruh pemeriksaan web, build, migrasi lokal, database lint, serta 222 pengujian pgTAP: [CI cabang fitur](https://github.com/Morepp461/Janji-Kita-/actions/runs/45098327492) dan [CI cabang utama](https://github.com/Morepp461/Janji-Kita-/actions/runs/45098909054). Deployment Vercel production berstatus READY pada commit `951041f793357e182ac5902bcb24707a885d9653`: [janji-kita.vercel.app](https://janji-kita-jh7m58l5p-morepp.vercel.app).
+
+### Fase 6 — Kolaborasi, Premium, dan Reseller
+
+- Kolaborasi undangan mendukung peran editor dan pembaca, undangan melalui email, kotak masuk undangan, penerimaan/pencabutan akses, serta mode baca-saja untuk pembaca.
+- Batas editor akun reguler ditegakkan secara transaksional. Paket Premium menyediakan batas kolaborator yang dapat dikonfigurasi admin, entitlement, sinkronisasi status langganan, dan masa tenggang pembayaran.
+- Pengelolaan langganan memakai adapter provider yang idempoten. Paket premium_monthly tetap nonaktif dan belum memiliki harga/provider sampai konfigurasi merchant disetujui admin. Fitur Premium sudah tersedia secara teknis, tetapi penjualan langganan otomatis belum dibuka.
+- Reseller mendukung pendaftaran, persetujuan admin, tingkat harga, kode referral, aturan harga wholesale, data klien, pengarsipan klien, serta pencatatan penjualan dan margin.
+- Reseller dapat membuat dan mengelola undangan atas nama klien yang memiliki akun terverifikasi. Pemilik, pembuat, pembayar, dan reseller disimpan sebagai identitas terpisah.
+- Checkout memakai harga wholesale ketika reseller menjadi pembayar. Pembayaran langsung oleh klien tetap memakai harga retail dan menyimpan atribusi referral. Laporan margin merupakan catatan penjualan, bukan klaim payout.
+- RLS membatasi tabel kolaborasi, langganan, klien, aturan harga, dan penjualan. Peran anon tidak memiliki hak baca pada tabel privat fase ini. Autosave tetap berjalan sebagai SECURITY INVOKER.
+- Tiga migrasi Fase 6 diterapkan pada Supabase staging dan production. RLS, fungsi inti, dan hak akses anonim diverifikasi pada kedua lingkungan.
+- CI lulus seluruh pemeriksaan format, lint, TypeScript, unit test, build production, migrasi lokal, database lint, dan pengujian pgTAP: [run #45112026551](https://github.com/Morepp461/Janji-Kita-/actions/runs/45112026551).
+- [PR #19](https://github.com/Morepp461/Janji-Kita-/pull/19) digabung ke main pada commit `32c8b69e82bd6e9b55c1542071a8ff899bbdd123`.
+- Deployment Vercel production berstatus READY pada commit yang sama: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+
+**Fase 6 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi staging/production, pengujian akses, dan deployment production telah selesai. Konfigurasi harga dan provider Premium sengaja tetap nonaktif sampai admin menyelesaikan persetujuan komersial.
 
 ## Keputusan dan catatan operasional
 
