@@ -111,7 +111,6 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
   const [title, setTitle] = useState("");
   const [ownerUserId, setOwnerUserId] = useState("");
   const [readOnly, setReadOnly] = useState(false);
-  const [canEdit, setCanEdit] = useState(false);
   const [document, setDocument] = useState<InvitationDocument | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
@@ -170,8 +169,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         return;
       }
       setOwnerUserId(invitation.owner_user_id);
+      let canEditCurrent = invitation.owner_user_id === userId;
+      let readOnlyCurrent = false;
       if (invitation.owner_user_id === userId) {
-        setCanEdit(true);
         setReadOnly(false);
       } else {
         const { data: membership, error: membershipError } = await client
@@ -186,8 +186,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           setLoading(false);
           return;
         }
-        setReadOnly(membership.role === "viewer");
-        setCanEdit(membership.role === "editor");
+        readOnlyCurrent = membership.role === "viewer";
+        canEditCurrent = membership.role === "editor";
+        setReadOnly(readOnlyCurrent);
       }
       if (!["draft", "active", "expired"].includes(invitation.status)) {
         setMessage("Status undangan ini tidak dapat disunting.");
@@ -196,7 +197,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       }
       let nextDraftVersionId = invitation.draft_version_id as string | null;
       let invitationUpdatedAt = invitation.updated_at as string;
-      if (!nextDraftVersionId && invitation.status !== "draft" && canEdit) {
+      if (!nextDraftVersionId && invitation.status !== "draft" && canEditCurrent) {
         const { data: revisionId, error: revisionError } = await client.rpc(
           "create_invitation_revision",
           { p_invitation_id: invitationId },
@@ -215,7 +216,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           .maybeSingle();
         if (refreshedInvitation?.updated_at) invitationUpdatedAt = refreshedInvitation.updated_at;
       }
-      if (!nextDraftVersionId && readOnly) {
+      if (!nextDraftVersionId && readOnlyCurrent) {
         nextDraftVersionId = invitation.published_version_id as string | null;
       }
       if (!nextDraftVersionId) {
@@ -259,7 +260,7 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     return () => {
       active = false;
     };
-  }, [client, invitationId, userId, canEdit, readOnly]);
+  }, [client, invitationId, userId]);
 
   const sections = useMemo(() => (document ? getSections(document) : []), [document]);
   const layers = useMemo(() => flattenNodes(sections), [sections]);
