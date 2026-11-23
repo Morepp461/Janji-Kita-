@@ -75,7 +75,7 @@ as $$
 declare
   current_user_id uuid := auth.uid();
   client_row public.reseller_clients%rowtype;
-  client_user_id uuid;
+  client_user_id_value uuid;
   invitation_id_value uuid;
 begin
   if current_user_id is null then
@@ -92,28 +92,28 @@ begin
   for update;
   if not found then raise exception 'Klien aktif tidak ditemukan' using errcode = 'P0002'; end if;
 
-  select u.id into client_user_id from auth.users u
+  select u.id into client_user_id_value from auth.users u
   where lower(u.email) = lower(client_row.email) and u.email_confirmed_at is not null;
-  if client_user_id is null then
+  if client_user_id_value is null then
     raise exception 'Klien harus memiliki akun Janji Kita terverifikasi dengan email yang tercatat' using errcode = '22023';
   end if;
 
-  update public.reseller_clients set client_user_id = client_user_id, updated_at = now()
-  where id = p_client_id;
+  update public.reseller_clients rc set client_user_id = client_user_id_value, updated_at = now()
+  where rc.id = p_client_id;
 
   invitation_id_value := public.create_invitation_draft(
     p_title, p_event_category_id, p_template_id
   );
 
   update public.invitations set
-    owner_user_id = client_user_id,
+    owner_user_id = client_user_id_value,
     reseller_user_id = current_user_id,
     updated_at = now()
   where id = invitation_id_value and created_by = current_user_id;
 
   insert into public.audit_logs(actor_user_id, action, target_type, target_id, after_data)
   values (current_user_id, 'reseller.invitation_created_for_client', 'invitation', invitation_id_value,
-    jsonb_build_object('owner_user_id', client_user_id, 'created_by', current_user_id,
+    jsonb_build_object('owner_user_id', client_user_id_value, 'created_by', current_user_id,
       'reseller_user_id', current_user_id, 'reseller_client_id', p_client_id));
   return invitation_id_value;
 end;
