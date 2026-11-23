@@ -260,7 +260,8 @@ Partition/retention policy as volume grows; avoid collecting guest PII.
 ### `system_settings`
 - `key text PK`, `value jsonb NOT NULL`, `updated_by uuid NULL FK profiles`
 - `updated_at timestamptz`, `description text`.
-- Keys resembling secrets, tokens, passwords, or credentials are rejected. Reads are admin-only; writes use the permission-checked timezone configuration RPC and are audited. Generic direct REST mutations are revoked.
+- Keys resembling secrets, tokens, passwords, or credentials are rejected. Reads are admin-only except the timezone catalog row; writes use the permission-checked timezone configuration RPC and are audited. Generic direct REST mutations are revoked.
+- Public RPC wrappers run as `SECURITY INVOKER`; privileged implementations live in the non-exposed `app_private` schema and enforce owner/permission checks.
 Sensitive settings should be stored in secret manager, not this table.
 
 ## 6. RLS and Authorization Matrix
