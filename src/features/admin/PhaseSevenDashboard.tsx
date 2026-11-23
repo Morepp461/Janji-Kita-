@@ -43,7 +43,6 @@ type MediaAsset = {
   id: string;
   owner_user_id: string | null;
   storage_bucket: string;
-  object_path: string;
   media_type: string;
   mime_type: string;
   byte_size: number;
@@ -155,7 +154,7 @@ export default function PhaseSevenDashboard({
           .limit(100),
         client
           .from("media_assets")
-          .select("id,owner_user_id,storage_bucket,object_path,media_type,mime_type,byte_size,visibility,processing_status,created_at")
+          .select("id,owner_user_id,storage_bucket,media_type,mime_type,byte_size,visibility,processing_status,created_at")
           .order("created_at", { ascending: false })
           .limit(100),
         client.from("locales").select("*").order("sort_order"),
