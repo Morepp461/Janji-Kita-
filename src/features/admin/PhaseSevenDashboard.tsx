@@ -196,7 +196,7 @@ export default function PhaseSevenDashboard({
     void refresh();
   }, [refresh]);
 
-  async function runAction(action: () => Promise<{ error: { message: string } | null }>, success: string) {
+  async function runAction(action: () => PromiseLike<{ error: { message: string } | null }>, success: string) {
     setSaving(true);
     setError("");
     setNotice("");
