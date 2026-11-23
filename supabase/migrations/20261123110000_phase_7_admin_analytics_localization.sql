@@ -293,7 +293,7 @@ begin
       updated_at = now()
   where source_consent_id = p_consent_id and status = 'published';
 end;
-$;
+$$;
 revoke all on function public.withdraw_marketplace_consent(uuid) from public, anon;
 grant execute on function public.withdraw_marketplace_consent(uuid) to authenticated;
 
@@ -336,7 +336,7 @@ begin
     where source_consent_id = p_consent_id and status = 'published';
   end if;
 end;
-$;
+$$;
 revoke all on function public.admin_review_marketplace_consent(uuid,text,text) from public, anon;
 grant execute on function public.admin_review_marketplace_consent(uuid,text,text) to authenticated;
 
@@ -607,12 +607,12 @@ create or replace function public.admin_create_template(
 returns uuid
 language sql
 set search_path = public, app_private, pg_temp
-as $
+as $$
   select public.admin_create_template(
     p_slug, p_title, p_description, p_category_id, p_style_id,
     p_base_price, p_document, p_thumbnail_asset_id, 'first_party'
   );
-$;
+$$;
 revoke all on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) from public, anon;
 grant execute on function public.admin_create_template(text,text,text,uuid,uuid,bigint,jsonb,uuid) to authenticated;
 
