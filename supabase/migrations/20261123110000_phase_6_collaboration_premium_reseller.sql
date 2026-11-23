@@ -472,6 +472,10 @@ begin
   end if;
   select * into plan_row from public.subscription_plans where code = p_plan_code and is_active;
   if not found then raise exception 'Paket Premium belum aktif atau tidak ditemukan' using errcode = 'P0002'; end if;
+  if p_status in ('active', 'trialing', 'past_due') and
+    (plan_row.monthly_price is null or plan_row.billing_provider is null or plan_row.billing_provider <> trim(p_provider)) then
+    raise exception 'Harga dan provider penagihan paket belum dikonfigurasi dengan benar' using errcode = '22023';
+  end if;
   select * into old_row from public.subscriptions
   where user_id = p_user_id and plan_code = p_plan_code
   order by created_at desc limit 1 for update;
@@ -493,9 +497,11 @@ begin
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id <> subscription_id_value and status = 'active';
 
-  update public.entitlements set valid_from = p_period_start, valid_until = p_period_end,
+  update public.entitlements set valid_from = p_period_start,
+    valid_until = case when p_status = 'past_due' then p_period_end + make_interval(days => plan_row.grace_period_days) else p_period_end end,
     value = jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
-    status = case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end,
+    status = case when (p_status in ('active', 'trialing') and p_period_end > now())
+      or (p_status = 'past_due' and p_period_end + make_interval(days => plan_row.grace_period_days) > now()) then 'active' else 'expired' end,
     updated_at = now()
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id = subscription_id_value;
@@ -503,9 +509,10 @@ begin
     insert into public.entitlements(user_id, entitlement_key, source_type, source_id,
       valid_from, valid_until, value, status)
     values (p_user_id, 'collaborator_limit', 'subscription', subscription_id_value,
-      p_period_start, p_period_end,
+      p_period_start, case when p_status = 'past_due' then p_period_end + make_interval(days => plan_row.grace_period_days) else p_period_end end,
       jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
-      case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end);
+      case when (p_status in ('active', 'trialing') and p_period_end > now())
+        or (p_status = 'past_due' and p_period_end + make_interval(days => plan_row.grace_period_days) > now()) then 'active' else 'expired' end);
   end if;
 
   insert into public.audit_logs(actor_user_id, action, target_type, target_id, after_data)
@@ -560,6 +567,10 @@ begin
   end if;
   select * into plan_row from public.subscription_plans where code = p_plan_code and is_active;
   if not found then raise exception 'Paket provider tidak aktif atau tidak ditemukan' using errcode = 'P0002'; end if;
+  if p_status in ('active', 'trialing', 'past_due') and
+    (plan_row.monthly_price is null or plan_row.billing_provider is distinct from p_provider) then
+    raise exception 'Konfigurasi provider dan harga paket belum lengkap' using errcode = '22023';
+  end if;
   insert into public.subscriptions(user_id, provider, provider_subscription_id, plan_code,
     status, period_start, period_end)
   values (p_user_id, p_provider, p_provider_subscription_id, p_plan_code,
@@ -571,9 +582,11 @@ begin
   update public.entitlements set status = 'revoked', updated_at = now()
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id <> subscription_id_value and status = 'active';
-  update public.entitlements set valid_from = p_period_start, valid_until = p_period_end,
+  update public.entitlements set valid_from = p_period_start,
+    valid_until = case when p_status = 'past_due' then p_period_end + make_interval(days => plan_row.grace_period_days) else p_period_end end,
     value = jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
-    status = case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end,
+    status = case when (p_status in ('active', 'trialing') and p_period_end > now())
+      or (p_status = 'past_due' and p_period_end + make_interval(days => plan_row.grace_period_days) > now()) then 'active' else 'expired' end,
     updated_at = now()
   where user_id = p_user_id and entitlement_key = 'collaborator_limit'
     and source_type = 'subscription' and source_id = subscription_id_value;
@@ -581,9 +594,10 @@ begin
     insert into public.entitlements(user_id, entitlement_key, source_type, source_id,
       valid_from, valid_until, value, status)
     values (p_user_id, 'collaborator_limit', 'subscription', subscription_id_value,
-      p_period_start, p_period_end,
+      p_period_start, case when p_status = 'past_due' then p_period_end + make_interval(days => plan_row.grace_period_days) else p_period_end end,
       jsonb_build_object('collaborator_limit', plan_row.collaborator_limit, 'plan_code', plan_row.code),
-      case when p_status in ('active', 'trialing') and p_period_end > now() then 'active' else 'expired' end);
+      case when (p_status in ('active', 'trialing') and p_period_end > now())
+        or (p_status = 'past_due' and p_period_end + make_interval(days => plan_row.grace_period_days) > now()) then 'active' else 'expired' end);
   end if;
   update public.subscription_events set subscription_id = subscription_id_value, processed_at = now()
   where id = event_id;
