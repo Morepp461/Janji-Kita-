@@ -209,7 +209,8 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         setLoading(false);
         return;
       }
-      const draftTitle = (version.document as unknown as { metadata?: { title?: string } }).metadata?.title;
+      const draftTitle = (version.document as unknown as { metadata?: { title?: string } }).metadata
+        ?.title;
       const snapshot = { document: version.document, title: draftTitle || invitation.title };
       setTitle(snapshot.title);
       titleRef.current = snapshot.title;
@@ -404,7 +405,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
       setBaseUpdatedAt(refreshedInvitation.updated_at);
       updatedAtRef.current = refreshedInvitation.updated_at;
     }
-    setMessage(`Undangan berhasil diterbitkan. Masa aktif sampai ${new Date(result.active_until).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}.`);
+    setMessage(
+      `Undangan berhasil diterbitkan. Masa aktif sampai ${new Date(result.active_until).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}.`,
+    );
     setPublishing(false);
   }
 
@@ -635,7 +638,12 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             {publishing ? "Menerbitkan..." : "Terbitkan / perbarui"}
           </button>
           {publishedUrl && (
-            <a href={publishedUrl} target="_blank" rel="noreferrer" className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold text-[#754b3b]">
+            <a
+              href={publishedUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold text-[#754b3b]"
+            >
               Lihat undangan
             </a>
           )}
