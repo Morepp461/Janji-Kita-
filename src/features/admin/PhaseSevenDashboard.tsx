@@ -38,6 +38,18 @@ type SettingRow = {
   updated_by: string | null;
   updated_at: string;
 };
+type MediaAsset = {
+  id: string;
+  owner_user_id: string | null;
+  storage_bucket: string;
+  object_path: string;
+  media_type: string;
+  mime_type: string;
+  byte_size: number;
+  visibility: string;
+  processing_status: string;
+  created_at: string;
+};
 type AuditRow = {
   id: string;
   action: string;
@@ -65,7 +77,7 @@ type Summary = {
   events_by_name: Record<string, number>;
   period_days: number;
 };
-type Tab = "analytics" | "templates" | "consents" | "locales" | "settings" | "audit";
+type Tab = "analytics" | "templates" | "consents" | "media" | "locales" | "settings" | "audit";
 
 const emptySummary: Summary = {
   users_total: 0,
@@ -106,6 +118,7 @@ export default function PhaseSevenDashboard({
   const [summary, setSummary] = useState<Summary>(emptySummary);
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
   const [consents, setConsents] = useState<ConsentRow[]>([]);
+  const [mediaAssets, setMediaAssets] = useState<MediaAsset[]>([]);
   const [locales, setLocales] = useState<LocaleRow[]>([]);
   const [settings, setSettings] = useState<SettingRow[]>([]);
   const [audit, setAudit] = useState<AuditRow[]>([]);
@@ -125,7 +138,7 @@ export default function PhaseSevenDashboard({
   const refresh = useCallback(async () => {
     setLoading(true);
     setError("");
-    const [summaryResult, templateResult, consentResult, localeResult, settingResult, auditResult] =
+    const [summaryResult, templateResult, consentResult, mediaResult, localeResult, settingResult, auditResult] =
       await Promise.all([
         client.rpc("admin_get_analytics_summary", { p_days: 30 }),
         client
@@ -142,6 +155,11 @@ export default function PhaseSevenDashboard({
           .eq("consent_type", "marketplace_template")
           .order("created_at", { ascending: false })
           .limit(100),
+        client
+          .from("media_assets")
+          .select("id,owner_user_id,storage_bucket,object_path,media_type,mime_type,byte_size,visibility,processing_status,created_at")
+          .order("created_at", { ascending: false })
+          .limit(100),
         client.from("locales").select("*").order("sort_order"),
         client.from("system_settings").select("*").order("key"),
         client
@@ -154,6 +172,7 @@ export default function PhaseSevenDashboard({
       summaryResult.error ||
       templateResult.error ||
       consentResult.error ||
+      mediaResult.error ||
       localeResult.error ||
       settingResult.error ||
       auditResult.error;
@@ -161,6 +180,7 @@ export default function PhaseSevenDashboard({
     if (summaryResult.data) setSummary(summaryResult.data as Summary);
     setTemplates((templateResult.data || []) as TemplateRow[]);
     setConsents((consentResult.data || []) as ConsentRow[]);
+    setMediaAssets((mediaResult.data || []) as MediaAsset[]);
     setLocales((localeResult.data || []) as LocaleRow[]);
     const nextSettings = (settingResult.data || []) as SettingRow[];
     setSettings(nextSettings);
@@ -200,6 +220,15 @@ export default function PhaseSevenDashboard({
           p_note: status === "published" ? "Lolos peninjauan admin." : null,
         }),
       `Status template “${item.title}” diperbarui.`,
+    );
+  }
+
+  async function setMediaStatus(item: MediaAsset, status: "ready" | "quarantined") {
+    const action = status === "quarantined" ? "memasukkan aset ke karantina" : "memulihkan aset";
+    if (!window.confirm(`Yakin ${action} ini?`)) return;
+    await runAction(
+      () => client.from("media_assets").update({ processing_status: status, updated_at: new Date().toISOString() }).eq("id", item.id),
+      status === "quarantined" ? "Aset berhasil dikarantina." : "Status aset berhasil dipulihkan.",
     );
   }
 
@@ -353,6 +382,7 @@ export default function PhaseSevenDashboard({
     ["analytics", "Analitik"],
     ["templates", "Moderasi template"],
     ["consents", "Persetujuan marketplace"],
+    ["media", "Media"],
     ["locales", "Bahasa & zona waktu"],
     ["settings", "Pengaturan sistem"],
     ["audit", "Audit log"],
@@ -506,6 +536,34 @@ export default function PhaseSevenDashboard({
                     );
                   })}
                   {!consents.length && <p className="py-8 text-center text-sm text-[#887970]">Belum ada persetujuan marketplace.</p>}
+                </div>
+              </section>
+            )}
+
+            {tab === "media" && (
+              <section className={cardClass}>
+                <div className="mb-4">
+                  <h2 className="font-semibold">Inventaris media</h2>
+                  <p className="mt-1 text-sm text-[#76675f]">Tinjau metadata aset dan karantina berkas yang bermasalah. Berkas privat tidak dibuka atau ditampilkan melalui panel ini.</p>
+                  <p className="mt-1 text-xs text-[#887970]">Menampilkan maksimal 100 aset terbaru.</p>
+                </div>
+                <div className="divide-y divide-[#f0e7e0]">
+                  {mediaAssets.map((item) => (
+                    <article key={item.id} className="flex flex-col gap-3 py-4 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0">
+                        <p className="font-semibold">{item.media_type} · {item.mime_type}</p>
+                        <p className="mt-1 break-all text-xs text-[#887970]">{item.storage_bucket} · {item.visibility} · {item.processing_status}</p>
+                        <p className="break-all text-xs text-[#887970]">Aset: {item.id} · Pemilik: {item.owner_user_id || "Sistem"}</p>
+                        <p className="text-xs text-[#887970]">{(item.byte_size / 1024 / 1024).toFixed(2)} MB · {dateTime(item.created_at)}</p>
+                      </div>
+                      {item.processing_status === "quarantined" ? (
+                        <button type="button" className={buttonClass} disabled={saving} onClick={() => void setMediaStatus(item, "ready")}>Pulihkan status</button>
+                      ) : (
+                        <button type="button" className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 disabled:opacity-50" disabled={saving} onClick={() => void setMediaStatus(item, "quarantined")}>Karantina</button>
+                      )}
+                    </article>
+                  ))}
+                  {!mediaAssets.length && <p className="py-8 text-center text-sm text-[#887970]">Belum ada aset media.</p>}
                 </div>
               </section>
             )}
