@@ -401,6 +401,7 @@ as $$
 declare
   saved_id uuid;
   safe_properties jsonb;
+  safe_route text;
 begin
   if auth.uid() is null then raise exception 'Autentikasi diperlukan'; end if;
   if p_event_name not in ('dashboard_view', 'marketplace_view', 'editor_view', 'checkout_view', 'admin_view', 'consent_settings_view', 'invitation_view') then
@@ -412,9 +413,12 @@ begin
   if jsonb_typeof(coalesce(p_properties, '{}'::jsonb)) <> 'object' then
     raise exception 'Properti analitik tidak valid';
   end if;
-  safe_properties := jsonb_strip_nulls(jsonb_build_object(
-    'route', left(coalesce(p_properties ->> 'route', ''), 120)
-  ));
+  safe_route := case
+    when p_properties ->> 'route' in ('/', '/admin', '/editor/:id', '/checkout/:id', '/i/:slug', '/settings/consents', '/templates', '/other')
+      then p_properties ->> 'route'
+    else '/other'
+  end;
+  safe_properties := jsonb_build_object('route', safe_route);
   insert into public.analytics_events(event_name, user_id, invitation_id, properties)
   values (p_event_name, auth.uid(), p_invitation_id, safe_properties)
   returning id into saved_id;
