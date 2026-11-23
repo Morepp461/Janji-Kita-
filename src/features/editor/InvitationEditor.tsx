@@ -112,6 +112,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
   const [document, setDocument] = useState<InvitationDocument | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [baseUpdatedAt, setBaseUpdatedAt] = useState("");
+  const [draftVersionId, setDraftVersionId] = useState("");
+  const [publishing, setPublishing] = useState(false);
+  const [publishedUrl, setPublishedUrl] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("saved");
   const [history, setHistory] = useState<Snapshot[]>([]);
   const [future, setFuture] = useState<Snapshot[]>([]);
@@ -164,15 +167,41 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         setLoading(false);
         return;
       }
-      if (invitation.status !== "draft" || !invitation.draft_version_id) {
-        setMessage("Hanya draft yang belum diterbitkan yang dapat dibuka di editor.");
+      if (!["draft", "active", "expired"].includes(invitation.status)) {
+        setMessage("Status undangan ini tidak dapat disunting.");
+        setLoading(false);
+        return;
+      }
+      let nextDraftVersionId = invitation.draft_version_id as string | null;
+      let invitationUpdatedAt = invitation.updated_at as string;
+      if (!nextDraftVersionId && invitation.status !== "draft") {
+        const { data: revisionId, error: revisionError } = await client.rpc(
+          "create_invitation_revision",
+          { p_invitation_id: invitationId },
+        );
+        if (!active) return;
+        if (revisionError || !revisionId) {
+          setMessage(revisionError?.message || "Revisi undangan belum dapat dibuat.");
+          setLoading(false);
+          return;
+        }
+        nextDraftVersionId = String(revisionId);
+        const { data: refreshedInvitation } = await client
+          .from("invitations")
+          .select("updated_at")
+          .eq("id", invitationId)
+          .maybeSingle();
+        if (refreshedInvitation?.updated_at) invitationUpdatedAt = refreshedInvitation.updated_at;
+      }
+      if (!nextDraftVersionId) {
+        setMessage("Versi draft tidak ditemukan.");
         setLoading(false);
         return;
       }
       const { data: version, error: versionError } = await client
         .from("invitation_versions")
         .select("document")
-        .eq("id", invitation.draft_version_id)
+        .eq("id", nextDraftVersionId)
         .maybeSingle();
       if (!active) return;
       if (versionError || !version || !isInvitationDocument(version.document)) {
@@ -180,13 +209,16 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
         setLoading(false);
         return;
       }
-      const snapshot = { document: version.document, title: invitation.title };
+      const draftTitle = (version.document as unknown as { metadata?: { title?: string } }).metadata
+        ?.title;
+      const snapshot = { document: version.document, title: draftTitle || invitation.title };
       setTitle(snapshot.title);
       titleRef.current = snapshot.title;
       setDocument(snapshot.document);
       docRef.current = snapshot.document;
-      setBaseUpdatedAt(invitation.updated_at);
-      updatedAtRef.current = invitation.updated_at;
+      setDraftVersionId(nextDraftVersionId);
+      setBaseUpdatedAt(invitationUpdatedAt);
+      updatedAtRef.current = invitationUpdatedAt;
       const rawRecovery = localStorage.getItem(RECOVERY_PREFIX + invitationId);
       if (rawRecovery) {
         try {
@@ -337,6 +369,47 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
     }, 850);
     return () => window.clearTimeout(timer);
   }, [client, document, title, baseUpdatedAt, invitationId, userId, saveState, online]);
+
+  async function publishInvitation() {
+    if (!draftVersionId || !docRef.current) return;
+    if (saveState !== "saved") {
+      setMessage("Tunggu sampai perubahan tersimpan sebelum menerbitkan.");
+      return;
+    }
+    const issues = validateDocument(docRef.current, titleRef.current);
+    if (issues.length) {
+      setErrors(issues);
+      setMessage("Perbaiki validasi dokumen sebelum menerbitkan.");
+      return;
+    }
+    setPublishing(true);
+    setMessage("");
+    setErrors([]);
+    const { data, error: publishError } = await client.rpc("publish_invitation", {
+      p_invitation_id: invitationId,
+      p_expected_draft_version_id: draftVersionId,
+    });
+    if (publishError || !data) {
+      setMessage(publishError?.message || "Publikasi belum berhasil.");
+      setPublishing(false);
+      return;
+    }
+    const result = data as { slug: string; active_until: string };
+    setPublishedUrl(`/i/${result.slug}`);
+    const { data: refreshedInvitation } = await client
+      .from("invitations")
+      .select("updated_at")
+      .eq("id", invitationId)
+      .maybeSingle();
+    if (refreshedInvitation?.updated_at) {
+      setBaseUpdatedAt(refreshedInvitation.updated_at);
+      updatedAtRef.current = refreshedInvitation.updated_at;
+    }
+    setMessage(
+      `Undangan berhasil diterbitkan. Masa aktif sampai ${new Date(result.active_until).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })}.`,
+    );
+    setPublishing(false);
+  }
 
   const restoreRecovery = () => {
     if (!recovery) return;
@@ -550,6 +623,30 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           >
             {statusLabel[saveState]}
           </span>
+          <a
+            href={`/checkout/${invitationId}`}
+            className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+          >
+            Bayar / perpanjang
+          </a>
+          <button
+            type="button"
+            disabled={publishing || saveState !== "saved" || !draftVersionId}
+            onClick={() => void publishInvitation()}
+            className="rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+          >
+            {publishing ? "Menerbitkan..." : "Terbitkan / perbarui"}
+          </button>
+          {publishedUrl && (
+            <a
+              href={publishedUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold text-[#754b3b]"
+            >
+              Lihat undangan
+            </a>
+          )}
           <button
             disabled={!history.length}
             onClick={undo}

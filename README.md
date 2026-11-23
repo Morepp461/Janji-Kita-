@@ -53,6 +53,25 @@ Platform SaaS untuk membuat, mengedit, menerbitkan, mengelola, dan membagikan un
 
 **Rilis production:** [PR #15](https://github.com/Morepp461/Janji-Kita-/pull/15) telah digabung ke `main` pada commit `5a2a003436cce8a5fb31064985255f23148ab068`. Deployment Vercel production berstatus **READY**: [janji-kita-nine.vercel.app](https://janji-kita-nine.vercel.app). Persetujuan pemilik pada 23 November 2026 menetapkan pengecualian backup/restore berlaku untuk seluruh fase proyek, bukan hanya satu rilis. Pemilik menerima risiko kehilangan data karena jalur backup tidak tersedia melalui paket/akses Supabase yang digunakan. Restore tidak diklaim telah diuji; pemulihan mengandalkan corrective/forward migration. Satu peringatan Security Advisor production yang sudah ada, `Leaked Password Protection Disabled`, tetap tercatat dan tidak diubah dalam cakupan Fase 3.
 
+**Fase 4 — Commerce dan Publication: SELESAI SEPENUHNYA PADA STAGING DAN PRODUCTION — 23 November 2026.**
+
+**Checkpoint:** implementasi, pengujian, migrasi, dan Edge Functions telah diterapkan pada kedua project Supabase.
+
+- Admin dapat mengatur harga template, harga kanvas kosong, add-on, serta kupon persentase/nominal dengan masa berlaku dan batas penggunaan.
+- Checkout membuat snapshot harga di server. Perubahan harga setelah pesanan dibuat tidak mengubah nilai pesanan lama. Kupon dihitung dan dibatasi secara transaksional, termasuk batas penggunaan per akun.
+- Midtrans sandbox adapter membuat sesi pembayaran di server. Webhook memverifikasi signature dan status transaksi langsung ke gateway sebelum mengubah status pesanan.
+- Pemrosesan pembayaran idempoten, memeriksa nominal, menyimpan event webhook teredaksi, menangani settlement terlambat, dan mencatat refund.
+- Pembayaran sukses membuat entitlement publikasi 30 hari. Perpanjangan menambah masa aktif; renderer menolak undangan kedaluwarsa. Refund penuh mencabut entitlement; refund sebagian dicatat tanpa otomatis mematikan entitlement.
+- Publikasi dan pembaruan membuat versi immutable lalu memindahkan pointer publik dalam satu transaksi. Perubahan draft tidak mengganti versi publik sebelum publikasi berhasil.
+- Dashboard finance bersifat baca-saja untuk peran finance/admin. Job `pg_cron` memperbarui status undangan dan entitlement kedaluwarsa setiap 15 menit.
+- **15 migrasi Fase 4 diterapkan pada Supabase staging dan production.** Pemeriksaan production memastikan tabel commerce tersedia, RLS aktif pada seluruh tabel commerce, akses baca anon ditolak untuk order/payment attempts, dan job expiry aktif.
+- Tiga Edge Functions aktif pada kedua project: `create-midtrans-payment`, `midtrans-webhook`, dan `reconcile-midtrans-pending`. Pembayaran sandbox dibatasi ke project staging; project production ditolak oleh guard di sisi server.
+- **74 pengujian pgTAP Fase 4 lulus pada staging.** CI [run #45090335232](https://github.com/Morepp461/Janji-Kita-/actions/runs/45090335232) lulus seluruh pemeriksaan web dan database: format, lint, typecheck, unit test, build, reset migrasi, lint skema, dan 169 pengujian pgTAP lintas fase.
+- Regresi editor Fase 3: 18 pengujian lulus pada staging setelah kontrak autosave dipertahankan menggunakan SECURITY INVOKER.
+- Konfigurasi Vercel production tetap menunjuk ke Supabase production; deployment preview tetap nonaktif dan deployment aplikasi mengikuti cabang `main`.
+
+**Gerbang sebelum menerima pembayaran nyata:** transaksi sandbox end-to-end melalui akun merchant belum diverifikasi karena kredensial `MIDTRANS_SERVER_KEY` belum dapat diverifikasi melalui akses yang tersedia. Pembayaran production tetap dinonaktifkan dan fungsi production menolak seluruh transaksi. Sebelum menerima uang sungguhan, lakukan transaksi sandbox, verifikasi callback/webhook dan rekonsiliasi, serta penuhi persetujuan merchant production sesuai spesifikasi monetisasi. Simpan kunci hanya pada Supabase Function Secrets, bukan pada variabel `VITE_` atau chat.
+
 **Checkpoint: 22 November 2026**
 
 - PR fondasi #1 telah digabungkan ke `main`: [lihat perubahan](https://github.com/Morepp461/Janji-Kita-/pull/1).
