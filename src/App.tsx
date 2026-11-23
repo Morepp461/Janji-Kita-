@@ -10,6 +10,9 @@ import CheckoutPage from "./features/commerce/CheckoutPage";
 import OrdersPage from "./features/commerce/OrdersPage";
 import InvitationEditor from "./features/editor/InvitationEditor";
 import GuestOperations from "./features/guests/GuestOperations";
+import CollaborationPage from "./features/collaboration/CollaborationPage";
+import PremiumPage from "./features/premium/PremiumPage";
+import ResellerWorkspace from "./features/reseller/ResellerWorkspace";
 import { getSupabaseClient } from "./lib/supabase";
 
 type Profile = {
@@ -259,6 +262,8 @@ export default function App() {
     );
   }
   if (pathname === "/orders") return <OrdersPage client={client} />;
+  if (pathname === "/premium" || pathname === "/admin/subscriptions") return <PremiumPage client={client} userId={session.user.id} isAdmin={isAdmin} />;
+  if (pathname === "/reseller" || pathname === "/admin/resellers") return <ResellerWorkspace client={client} userId={session.user.id} isAdmin={isAdmin} />;
   if (pathname === "/admin/commerce" && isAdmin) return <CommerceAdmin client={client} />;
   if (pathname === "/finance/orders" && (isAdmin || isFinance))
     return <FinanceDashboard client={client} />;
@@ -382,6 +387,12 @@ export default function App() {
             </p>
           </aside>
         </section>
+
+        <nav className="flex flex-wrap gap-2" aria-label="Fitur akun">
+          <a href="/premium" className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold">Premium & kolaborasi</a>
+          <a href="/reseller" className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold">Program reseller</a>
+          {isAdmin && <><a href="/admin/subscriptions" className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold">Kelola Premium</a><a href="/admin/resellers" className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold">Kelola reseller</a></>}
+        </nav>
 
         <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />
 
