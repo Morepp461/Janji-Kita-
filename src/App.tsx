@@ -249,6 +249,9 @@ export default function App() {
     );
   }
 
+  const collaborationMatch = pathname.match(/^\/invitations\/([0-9a-f-]+)\/collaborators\/?$/i);
+  if (collaborationMatch) return <CollaborationPage client={client} invitationId={collaborationMatch[1]} userId={session.user.id} email={session.user.email || ""} />;
+
   const guestMatch = pathname.match(/^\/invitations\/([0-9a-f-]+)\/guests\/?$/i);
   if (guestMatch) return <GuestOperations client={client} invitationId={guestMatch[1]} />;
 
