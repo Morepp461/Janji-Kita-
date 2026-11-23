@@ -55,14 +55,12 @@ $phase8$;
 create or replace function public.get_public_guest_seating(p_token_hash text)
 returns table(table_label text, seat_label text)
 language sql
-security invoker
+security definer
 set search_path = pg_catalog, public, app_private
 as $phase8$
   select * from app_private.get_public_guest_seating_internal(p_token_hash);
 $phase8$;
 
-grant usage on schema app_private to anon, authenticated;
 revoke all on function app_private.get_public_guest_seating_internal(text) from public, anon, authenticated;
-grant execute on function app_private.get_public_guest_seating_internal(text) to anon, authenticated;
 revoke all on function public.get_public_guest_seating(text) from public, anon, authenticated;
 grant execute on function public.get_public_guest_seating(text) to anon, authenticated;
