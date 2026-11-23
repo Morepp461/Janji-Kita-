@@ -10,6 +10,9 @@ select has_table('public', 'coupons', 'kupon tersedia');
 select has_table('public', 'coupon_redemptions', 'reservasi kupon tersedia');
 select has_table('public', 'add_ons', 'katalog add-on tersedia');
 select has_table('public', 'invitation_add_ons', 'snapshot add-on undangan tersedia');
+select ok(exists (
+  select 1 from cron.job where jobname = 'janji-kita-expire-invitations'
+), 'job expiry berjalan otomatis setiap 15 menit');
 
 select ok((select relrowsecurity from pg_class where oid = 'public.orders'::regclass), 'RLS pesanan aktif');
 select ok((select relrowsecurity from pg_class where oid = 'public.payment_attempts'::regclass), 'RLS percobaan pembayaran aktif');
@@ -397,6 +400,37 @@ select ok((select count(*) from public.orders) >= 2,
 select ok((select count(*) from public.payment_events) >= 3,
   'finance dapat membaca riwayat webhook teredaksi');
 reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000401","role":"authenticated"}', true);
+select lives_ok(
+  $phase4$select public.create_invitation_draft(
+    'Undangan Order Kedaluwarsa',
+    (select id from public.categories order by sort_order limit 1),
+    '00000000-0000-0000-0000-000000000402'
+  )$phase4$,
+  'draft tersedia untuk uji expiry pesanan'
+);
+select lives_ok(
+  $phase4$select public.create_order(
+    (select id from public.invitations where title = 'Undangan Order Kedaluwarsa'),
+    '[]'::jsonb,
+    null,
+    'phase4-expiring-order-key'
+  )$phase4$,
+  'pesanan pending tersedia untuk uji expiry'
+);
+reset role;
+insert into public.payment_attempts(order_id, provider, provider_order_id, status,
+  amount, currency, idempotency_key)
+select id, 'midtrans', order_number, 'pending', grand_total, currency,
+  'midtrans:' || id::text
+from public.orders where idempotency_key = 'phase4-expiring-order-key';
+update public.orders set expires_at = now() - interval '1 minute'
+where idempotency_key = 'phase4-expiring-order-key';
+
+reset role;
 set local role service_role;
 select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 update public.entitlements set valid_until = now() - interval '1 minute'
@@ -404,6 +438,17 @@ where entitlement_key = 'invitation.publish';
 update public.invitations set active_from = now() - interval '2 minutes', active_until = now() - interval '1 minute'
 where title = 'Undangan Commerce Fase 4 Diperbarui';
 select is(public.expire_invitations() >= 1, true, 'job kedaluwarsa memperbarui status undangan');
+select is(
+  (select status from public.orders where idempotency_key = 'phase4-expiring-order-key'),
+  'expired',
+  'job expiry menutup pesanan pending yang melewati batas waktu'
+);
+select is(
+  (select status from public.payment_attempts where order_id =
+    (select id from public.orders where idempotency_key = 'phase4-expiring-order-key')),
+  'expired',
+  'job expiry menutup payment attempt yang belum dibayar'
+);
 reset role;
 
 set local role anon;
