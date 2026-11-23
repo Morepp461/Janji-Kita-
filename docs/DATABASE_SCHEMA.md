@@ -215,6 +215,12 @@ Unique `(invitation_id,guest_id)`.
 
 ## 5. Reseller, Consent, Admin, Analytics
 
+### `locales`
+- `code text PK`, `name text`, `native_name text`
+- `is_active bool`, `is_default bool`, `sort_order int`, timestamps
+- Exactly one active locale is the default. Only locales with shipped translation bundles may be enabled.
+- Mutations use permission-checked RPCs; a locale cannot be disabled while referenced by an account or invitation.
+
 ### `reseller_profiles`
 - `id uuid PK`, `user_id uuid UNIQUE FK profiles`
 - `status text CHECK(applied,approved,rejected,suspended)`
@@ -233,7 +239,9 @@ Rules must resolve deterministically and be snapshotted into order.
 - `order_id uuid NULL FK orders`, `consent_type text`
 - `granted bool`, `consent_text_version text`, `granted_at timestamptz NULL`
 - `withdrawn_at timestamptz NULL`, `metadata jsonb`
-Index `(invitation_id,consent_type,granted)`.
+Index `(invitation_id,consent_type,granted)` and `(user_id,created_at)`.
+- Consent records include the text version, user, invitation, optional order, grant timestamp, and withdrawal timestamp. Marketplace consent is optional and separate from purchase terms. Withdrawal archives linked customer-source templates.
+- Owners receive column-level read access to their consent history; moderation metadata is returned only by the admin-only review RPC.
 
 ### `audit_logs`
 - `id uuid PK`, `actor_user_id uuid NULL FK profiles`
@@ -246,11 +254,13 @@ Append-only; redact secrets and unnecessary PII.
 - `id uuid PK`, `event_name text`, `user_id uuid NULL FK profiles`
 - `invitation_id uuid NULL FK invitations`, `session_id text NULL`
 - `properties jsonb`, `occurred_at timestamptz`
+- Browser writes are accepted only through a validated RPC and an allowlist of event names and route labels. Dynamic invitation IDs/slugs and guest PII are not stored. Admin reads require `analytics.read`.
 Partition/retention policy as volume grows; avoid collecting guest PII.
 
 ### `system_settings`
-- `key text PK`, `value jsonb NOT NULL`, `updated_by uuid FK profiles`
+- `key text PK`, `value jsonb NOT NULL`, `updated_by uuid NULL FK profiles`
 - `updated_at timestamptz`, `description text`.
+- Keys resembling secrets, tokens, passwords, or credentials are rejected. Reads are admin-only; writes use the permission-checked timezone configuration RPC and are audited. Generic direct REST mutations are revoked.
 Sensitive settings should be stored in secret manager, not this table.
 
 ## 6. RLS and Authorization Matrix
@@ -267,7 +277,10 @@ Default-deny RLS. Enable RLS on all user-facing tables.
 | Payment attempts | own safe status | none | none | finance |
 | Templates | read published | read published | read published | template role CRUD |
 | Media | own/private or authorized invitation | scoped | only public published assets | authorized moderation |
-| System settings | none | none | none | role-specific |
+| System settings | none | none | none | `settings.manage` |
+| Consent records | read own; withdraw through RPC | none | none | `consent.read` |
+| Analytics events | none | none | none | `analytics.read` |
+| Locale catalog | read active | read active | read active | `locales.manage` (RPC-only mutations) |
 
 ### RLS policy requirements
 - Invitation owner: `owner_user_id = auth.uid()`.
@@ -286,7 +299,7 @@ Default-deny RLS. Enable RLS on all user-facing tables.
 5. One successful payment event grants entitlement once.
 6. Check-in unique per ticket.
 7. Collaborator editor count enforced in serializable/locked transaction.
-8. Consent record separate from purchase terms.
+8. Consent record separate from purchase terms; customer-source templates require an approved, active consent and are archived on withdrawal.
 9. Reseller, payer, owner, creator are separate references.
 10. Currency and amount snapshot immutable after order creation.
 

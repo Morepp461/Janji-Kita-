@@ -52,6 +52,8 @@ export default function CheckoutPage({
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [coupon, setCoupon] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [marketplaceConsent, setMarketplaceConsent] = useState(false);
+  const [consentSaved, setConsentSaved] = useState(false);
   const [attributing, setAttributing] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [idempotencyKey] = useState(() => crypto.randomUUID());
@@ -161,9 +163,22 @@ export default function CheckoutPage({
   }
 
   async function pay() {
-    if (!order) return;
+    if (!order || !invitation) return;
     setPaying(true);
     setError("");
+    if (marketplaceConsent && !consentSaved) {
+      const { error: consentError } = await client.rpc("record_marketplace_consent", {
+        p_invitation_id: invitation.id,
+        p_order_id: order.order_id,
+        p_consent_text_version: "2026-11-23-v1",
+      });
+      if (consentError) {
+        setError(consentError.message);
+        setPaying(false);
+        return;
+      }
+      setConsentSaved(true);
+    }
     const { data, error: paymentError } = await client.functions.invoke("create-midtrans-payment", {
       body: { order_id: order.order_id, return_url: window.location.origin },
     });
@@ -316,6 +331,26 @@ export default function CheckoutPage({
               className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
               placeholder="MASUKKAN KODE KUPON"
             />
+          </label>
+          <label className="mt-5 flex items-start gap-3 rounded-xl border border-[#eaded5] bg-[#fffaf6] p-4 text-sm">
+            <input
+              type="checkbox"
+              checked={marketplaceConsent}
+              disabled={consentSaved || paying}
+              onChange={(event) => setMarketplaceConsent(event.target.checked)}
+              className="mt-1 h-4 w-4 accent-[#754b3b]"
+            />
+            <span>
+              Saya secara sukarela mengizinkan desain undangan ini ditinjau untuk kemungkinan
+              digunakan sebagai template marketplace Janji Kita. Persetujuan ini opsional, tidak
+              memengaruhi harga atau pembelian, dan dapat dicabut melalui pengaturan akun.
+              Persetujuan tidak mencakup aset pihak ketiga.
+              {consentSaved && (
+                <strong className="mt-1 block text-xs text-green-800">
+                  Persetujuan tercatat untuk pesanan ini.
+                </strong>
+              )}
+            </span>
           </label>
           <p className="mt-3 text-xs leading-5 text-[#887970]">
             Total final dihitung dan disimpan di server. Draft tetap gratis untuk dibuat dan diedit,

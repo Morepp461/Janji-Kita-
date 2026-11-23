@@ -1,6 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import AdminDashboard from "./features/admin/AdminDashboard";
+import PhaseSevenDashboard from "./features/admin/PhaseSevenDashboard";
+import ConsentSettings from "./features/consent/ConsentSettings";
+import { dashboardText } from "./shared/i18n";
 import CommerceAdmin from "./features/admin/CommerceAdmin";
 import FinanceDashboard from "./features/admin/FinanceDashboard";
 import AuthPage from "./features/auth/AuthPage";
@@ -26,7 +29,9 @@ type Profile = {
 
 export default function App() {
   const client = getSupabaseClient();
+  const pathname = window.location.pathname;
   const [session, setSession] = useState<Session | null>(null);
+  const currentUserId = session?.user?.id;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +40,16 @@ export default function App() {
   const [phone, setPhone] = useState("");
   const [locale, setLocale] = useState("id-ID");
   const [timezone, setTimezone] = useState("Asia/Jakarta");
+  const [localeOptions, setLocaleOptions] = useState<Array<{ code: string; native_name: string }>>([
+    { code: "id-ID", native_name: "Bahasa Indonesia" },
+    { code: "en", native_name: "English" },
+  ]);
+  const [timezoneOptions, setTimezoneOptions] = useState([
+    "Asia/Jakarta",
+    "Asia/Makassar",
+    "Asia/Jayapura",
+    "UTC",
+  ]);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -64,6 +79,24 @@ export default function App() {
     return () => {
       active = false;
       data.subscription.unsubscribe();
+    };
+  }, [client]);
+
+  useEffect(() => {
+    if (!client) return;
+    let active = true;
+    client.rpc("get_public_localization_config").then(({ data }) => {
+      if (!active || !data || typeof data !== "object") return;
+      const config = data as {
+        locales?: Array<{ code: string; native_name: string }>;
+        timezones?: string[];
+      };
+      if (Array.isArray(config.locales) && config.locales.length) setLocaleOptions(config.locales);
+      if (Array.isArray(config.timezones) && config.timezones.length)
+        setTimezoneOptions(config.timezones);
+    });
+    return () => {
+      active = false;
     };
   }, [client]);
 
@@ -101,6 +134,43 @@ export default function App() {
       active = false;
     };
   }, [client, session]);
+
+  useEffect(() => {
+    if (!client || !currentUserId) return;
+    const eventName = pathname.startsWith("/i/")
+      ? "invitation_view"
+      : pathname.startsWith("/admin")
+        ? "admin_view"
+        : pathname.startsWith("/editor/")
+          ? "editor_view"
+          : pathname.startsWith("/checkout/")
+            ? "checkout_view"
+            : pathname === "/templates" || pathname.startsWith("/templates/")
+              ? "marketplace_view"
+              : pathname === "/settings/consents"
+                ? "consent_settings_view"
+                : "dashboard_view";
+    const analyticsRoute = pathname.startsWith("/editor/")
+      ? "/editor/:id"
+      : pathname.startsWith("/checkout/")
+        ? "/checkout/:id"
+        : pathname.startsWith("/i/")
+          ? "/i/:slug"
+          : pathname.startsWith("/admin")
+            ? "/admin"
+            : pathname.startsWith("/settings/consents")
+              ? "/settings/consents"
+              : pathname.startsWith("/templates")
+                ? "/templates"
+                : pathname === "/"
+                  ? "/"
+                  : "/other";
+    void client.rpc("track_analytics_event", {
+      p_event_name: eventName,
+      p_invitation_id: null,
+      p_properties: { route: analyticsRoute },
+    });
+  }, [client, currentUserId, pathname]);
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -167,7 +237,6 @@ export default function App() {
     );
   }
 
-  const pathname = window.location.pathname;
   if (pathname.startsWith("/i/")) {
     const slug = decodeURIComponent(pathname.slice(4).split("/")[0] || "");
     return <PublicInvitation client={client} slug={slug} />;
@@ -273,6 +342,8 @@ export default function App() {
   if (guestMatch) return <GuestOperations client={client} invitationId={guestMatch[1]} />;
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
+  if (pathname === "/settings/consents") return <ConsentSettings client={client} />;
+  if (pathname === "/admin/operations" && isAdmin) return <PhaseSevenDashboard client={client} />;
   const isFinance = roles.includes("finance");
   const isSuperAdmin = roles.includes("super_admin");
   const checkoutMatch = pathname.match(/^\/checkout\/([0-9a-f-]+)\/?$/i);
@@ -312,7 +383,9 @@ export default function App() {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a36d55]">
               Janji Kita
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Ruang kerja</h1>
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+              {dashboardText(locale, "workspace")}
+            </h1>
             <p className="mt-1 text-sm text-[#76675f]">{session.user.email}</p>
           </div>
           <button
@@ -320,7 +393,7 @@ export default function App() {
             onClick={() => void client.auth.signOut()}
             type="button"
           >
-            Keluar
+            {dashboardText(locale, "logout")}
           </button>
         </header>
 
@@ -334,13 +407,13 @@ export default function App() {
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="rounded-3xl border border-[#eaded5] bg-white p-5 sm:p-7">
-            <h2 className="text-xl font-semibold">Profil akun</h2>
+            <h2 className="text-xl font-semibold">{dashboardText(locale, "profile")}</h2>
             <p className="mt-1 text-sm text-[#76675f]">
-              Informasi dasar akun dan preferensi tampilan.
+              {dashboardText(locale, "profile_description")}
             </p>
             <form className="mt-6 grid gap-4 sm:grid-cols-2" onSubmit={saveProfile}>
               <label className="text-sm font-medium sm:col-span-2">
-                Nama tampilan
+                {dashboardText(locale, "display_name")}
                 <input
                   className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
                   maxLength={80}
@@ -350,7 +423,7 @@ export default function App() {
                 />
               </label>
               <label className="text-sm font-medium">
-                Nomor telepon
+                {dashboardText(locale, "phone")}
                 <input
                   className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
                   onChange={(event) => setPhone(event.target.value)}
@@ -358,26 +431,37 @@ export default function App() {
                 />
               </label>
               <label className="text-sm font-medium">
-                Bahasa dashboard
+                {dashboardText(locale, "dashboard_language")}
                 <select
                   className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
                   onChange={(event) => setLocale(event.target.value)}
                   value={locale}
                 >
-                  <option value="id-ID">Bahasa Indonesia</option>
-                  <option value="en">English</option>
+                  {localeOptions.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.native_name}
+                    </option>
+                  ))}
+                  {!localeOptions.some((item) => item.code === locale) && (
+                    <option value={locale}>{locale}</option>
+                  )}
                 </select>
               </label>
               <label className="text-sm font-medium sm:col-span-2">
-                Zona waktu
+                {dashboardText(locale, "timezone")}
                 <select
                   className="mt-2 w-full rounded-xl border border-[#ddcec3] px-4 py-3"
                   onChange={(event) => setTimezone(event.target.value)}
                   value={timezone}
                 >
-                  <option value="Asia/Jakarta">WIB · Asia/Jakarta</option>
-                  <option value="Asia/Makassar">WITA · Asia/Makassar</option>
-                  <option value="Asia/Jayapura">WIT · Asia/Jayapura</option>
+                  {timezoneOptions.map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                  {!timezoneOptions.includes(timezone) && (
+                    <option value={timezone}>{timezone}</option>
+                  )}
                 </select>
               </label>
               <div className="sm:col-span-2">
@@ -386,30 +470,30 @@ export default function App() {
                   disabled={saving}
                   type="submit"
                 >
-                  {saving ? "Menyimpan..." : "Simpan profil"}
+                  {saving ? dashboardText(locale, "saving") : dashboardText(locale, "save_profile")}
                 </button>
               </div>
             </form>
           </div>
 
           <aside className="rounded-3xl border border-[#eaded5] bg-white p-5 sm:p-7">
-            <h2 className="text-xl font-semibold">Akun & sesi</h2>
+            <h2 className="text-xl font-semibold">{dashboardText(locale, "account_session")}</h2>
             <dl className="mt-5 space-y-4 text-sm">
               <div>
-                <dt className="text-[#887970]">Status</dt>
+                <dt className="text-[#887970]">{dashboardText(locale, "account_status")}</dt>
                 <dd className="mt-1 font-semibold">{profile?.account_status || "Memuat"}</dd>
               </div>
               <div>
-                <dt className="text-[#887970]">Peran</dt>
+                <dt className="text-[#887970]">{dashboardText(locale, "role")}</dt>
                 <dd className="mt-1 font-semibold">{roles.join(", ") || "user"}</dd>
               </div>
               <div>
                 <dt className="text-[#887970]">Sesi</dt>
-                <dd className="mt-1 font-semibold">Aktif pada perangkat ini</dd>
+                <dd className="mt-1 font-semibold">{dashboardText(locale, "session_active")}</dd>
               </div>
             </dl>
             <p className="mt-5 text-xs leading-5 text-[#887970]">
-              Sesi dikelola oleh Supabase Auth. Tombol keluar mengakhiri sesi saat ini.
+              {dashboardText(locale, "session_description")}
             </p>
           </aside>
         </section>
@@ -419,19 +503,19 @@ export default function App() {
             href="/premium"
             className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
           >
-            Premium
+            {dashboardText(locale, "premium")}
           </a>
           <a
             href="/collaborations"
             className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
           >
-            Undangan kolaborasi
+            {dashboardText(locale, "collaborations")}
           </a>
           <a
             href="/reseller"
             className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
           >
-            Program reseller
+            {dashboardText(locale, "reseller")}
           </a>
           {isAdmin && (
             <>
@@ -439,16 +523,31 @@ export default function App() {
                 href="/admin/subscriptions"
                 className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
               >
-                Kelola Premium
+                {dashboardText(locale, "manage_premium")}
               </a>
               <a
                 href="/admin/resellers"
                 className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
               >
-                Kelola reseller
+                {dashboardText(locale, "manage_reseller")}
+              </a>
+              <a
+                href="/admin/operations"
+                className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+              >
+                Operasional & analitik
               </a>
             </>
           )}
+        </nav>
+
+        <nav className="flex flex-wrap gap-2" aria-label="Pengaturan privasi">
+          <a
+            href="/settings/consents"
+            className="rounded-xl border border-[#ddcec3] bg-white px-4 py-2 text-sm font-semibold"
+          >
+            {dashboardText(locale, "consent_settings")}
+          </a>
         </nav>
 
         <Marketplace client={client} userId={session.user.id} isAdmin={isAdmin} />

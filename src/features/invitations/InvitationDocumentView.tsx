@@ -49,7 +49,12 @@ function safeStyle(style: Record<string, unknown> = {}): CSSProperties {
   return result as CSSProperties;
 }
 
-function renderNode(node: InvitationNode, assetUrls: Record<string, string>): ReactNode {
+function renderNode(
+  node: InvitationNode,
+  assetUrls: Record<string, string>,
+  locale: string,
+  timezone: string,
+): ReactNode {
   const props = node.props || {};
   const style = safeStyle(node.style);
   const children = (node.children || []).map((child) => (
@@ -65,7 +70,7 @@ function renderNode(node: InvitationNode, assetUrls: Record<string, string>): Re
               : ""
       }
     >
-      {renderNode(child, assetUrls)}
+      {renderNode(child, assetUrls, locale, timezone)}
     </div>
   ));
   const text = typeof props.text === "string" ? props.text : "";
@@ -202,7 +207,7 @@ function renderNode(node: InvitationNode, assetUrls: Record<string, string>): Re
           <p className="text-xs uppercase tracking-widest text-[#887970]">Menuju hari bahagia</p>
           <p className="mt-2 text-xl font-semibold">
             {typeof props.date === "string" && props.date
-              ? new Date(props.date).toLocaleString("id-ID")
+              ? new Date(props.date).toLocaleString(locale, { timeZone: timezone })
               : "Atur tanggal acara di editor"}
           </p>
         </div>
@@ -335,10 +340,16 @@ function renderNode(node: InvitationNode, assetUrls: Record<string, string>): Re
 export default function InvitationDocumentView({
   document,
   client,
+  locale,
+  timezone,
 }: {
   document: InvitationDocument;
   client: SupabaseClient | null;
+  locale?: string;
+  timezone?: string;
 }) {
+  const displayLocale = locale || document.locale || "id-ID";
+  const displayTimezone = timezone || document.timezone || "Asia/Jakarta";
   const sections = useMemo(
     () => document.pages?.flatMap((page) => page.sections || []) || document.sections || [],
     [document],
@@ -395,7 +406,7 @@ export default function InvitationDocumentView({
                   : ""
           }
         >
-          {renderNode(node, assetUrls)}
+          {renderNode(node, assetUrls, displayLocale, displayTimezone)}
         </div>
       ))}
     </div>
