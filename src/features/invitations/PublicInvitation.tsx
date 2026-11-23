@@ -81,6 +81,7 @@ export default function PublicInvitation({
           document={invitation.document as InvitationDocument}
           client={client}
         />
+        <GuestPublicForms client={client} guestToken={guestToken} slug={slug} />
       </div>
     </main>
   );
