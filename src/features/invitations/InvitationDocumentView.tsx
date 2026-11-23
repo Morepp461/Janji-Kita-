@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { InvitationDocument, InvitationNode } from "./document";
 
+type GuestSeating = { table_label: string; seat_label: string | null };
+
 function collectAssetIds(nodes: InvitationNode[]): string[] {
   const ids = new Set<string>();
   const visit = (node: InvitationNode) => {
@@ -71,6 +73,8 @@ function renderNode(
   assetUrls: Record<string, string>,
   locale: string,
   timezone: string,
+  guestSeating: GuestSeating | null,
+  hasGuestToken: boolean,
 ): ReactNode {
   const props = node.props || {};
   const style = safeStyle(node.style);
@@ -87,7 +91,7 @@ function renderNode(
               : ""
       }
     >
-      {renderNode(child, assetUrls, locale, timezone)}
+      {renderNode(child, assetUrls, locale, timezone, guestSeating, hasGuestToken)}
     </div>
   ));
   const text = typeof props.text === "string" ? props.text : "";
@@ -287,7 +291,11 @@ function renderNode(
           </h3>
           <p className="mt-1 text-xs text-[#887970]">
             {node.type === "SeatingInfo"
-              ? "Informasi meja dan tempat duduk dikelola oleh penyelenggara. Hubungi penyelenggara untuk detail penempatan."
+              ? guestSeating
+                ? `Meja: ${guestSeating.table_label}${guestSeating.seat_label ? ` · Kursi: ${guestSeating.seat_label}` : ""}`
+                : hasGuestToken
+                  ? "Penempatan tempat duduk belum ditentukan oleh penyelenggara."
+                  : "Buka tautan undangan personal untuk melihat informasi tempat duduk."
               : "Komponen ini akan menampilkan data tamu sesuai pengaturan undangan."}
           </p>
         </section>
@@ -362,11 +370,13 @@ export default function InvitationDocumentView({
   client,
   locale,
   timezone,
+  guestToken,
 }: {
   document: InvitationDocument;
   client: SupabaseClient | null;
   locale?: string;
   timezone?: string;
+  guestToken?: string | null;
 }) {
   const displayLocale = locale || document.locale || "id-ID";
   const displayTimezone = timezone || document.timezone || "Asia/Jakarta";
@@ -376,7 +386,42 @@ export default function InvitationDocumentView({
   );
   const assetIds = useMemo(() => collectAssetIds(sections), [sections]);
   const [assetUrls, setAssetUrls] = useState<Record<string, string>>({});
+  const [guestSeating, setGuestSeating] = useState<GuestSeating | null>(null);
 
+  useEffect(() => {
+    let active = true;
+    async function loadGuestSeating() {
+      if (!client || !guestToken) {
+        setGuestSeating(null);
+        return;
+      }
+      try {
+        const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(guestToken));
+        const tokenHash = Array.from(new Uint8Array(digest))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("");
+        const { data, error } = await client.rpc("get_public_guest_seating", {
+          p_token_hash: tokenHash,
+        });
+        if (!active) return;
+        const row = Array.isArray(data) ? data[0] : data;
+        if (!error && row && typeof row.table_label === "string") {
+          setGuestSeating({
+            table_label: row.table_label,
+            seat_label: typeof row.seat_label === "string" ? row.seat_label : null,
+          });
+        } else {
+          setGuestSeating(null);
+        }
+      } catch {
+        if (active) setGuestSeating(null);
+      }
+    }
+    void loadGuestSeating();
+    return () => {
+      active = false;
+    };
+  }, [client, guestToken]);
   useEffect(() => {
     let active = true;
     async function loadAssets() {
@@ -426,7 +471,7 @@ export default function InvitationDocumentView({
                   : ""
           }
         >
-          {renderNode(node, assetUrls, displayLocale, displayTimezone)}
+          {renderNode(node, assetUrls, displayLocale, displayTimezone, guestSeating, Boolean(guestToken))}
         </div>
       ))}
     </div>
