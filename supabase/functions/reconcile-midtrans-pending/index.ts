@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.119.2";
+import { isStagingSupabaseUrl } from "../_shared/payment-environment.ts";
 import { extractBearerToken } from "../_shared/bearer-token.ts";
 
 const corsHeaders = {
@@ -34,6 +35,9 @@ Deno.serve(async (request: Request) => {
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
     if (!supabaseUrl || !publishableKey || !serviceRoleKey || !serverKey) {
       return json({ error: "Rekonsiliasi sandbox belum dikonfigurasi." }, 503);
+    }
+    if (!isStagingSupabaseUrl(supabaseUrl)) {
+      return json({ error: "Integrasi pembayaran hanya diaktifkan pada project staging." }, 503);
     }
     if (Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true") {
       return json({ error: "Rekonsiliasi production dinonaktifkan pada fase ini." }, 503);
