@@ -136,9 +136,9 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
   const [history, setHistory] = useState<Snapshot[]>([]);
   const [future, setFuture] = useState<Snapshot[]>([]);
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
-  const [activeTab, setActiveTab] = useState<"content" | "style" | "layout" | "responsive" | "motion">(
-    "content",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "content" | "style" | "layout" | "responsive" | "motion"
+  >("content");
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -752,7 +752,10 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
             {statusLabel[saveState]}
           </span>
           {ownerUserId === userId && (
-            <a href="#phase-eight" className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold">
+            <a
+              href="#phase-eight"
+              className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+            >
               Fitur lanjutan
             </a>
           )}
@@ -1184,7 +1187,10 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                       value={String(selected.style?.animationPreset || "none")}
                       onChange={(event) =>
                         updateSelected(
-                          { animationPreset: event.target.value === "none" ? null : event.target.value },
+                          {
+                            animationPreset:
+                              event.target.value === "none" ? null : event.target.value,
+                          },
                           "style",
                         )
                       }
@@ -1207,7 +1213,12 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                       value={Number(selected.style?.animationDurationMs || 650)}
                       onChange={(event) =>
                         updateSelected(
-                          { animationDurationMs: Math.min(1800, Math.max(300, Number(event.target.value))) },
+                          {
+                            animationDurationMs: Math.min(
+                              1800,
+                              Math.max(300, Number(event.target.value)),
+                            ),
+                          },
                           "style",
                         )
                       }
@@ -1215,7 +1226,8 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                     />
                   </label>
                   <p className="text-[11px] leading-5 text-[#887970]">
-                    Preset aman tanpa skrip. Animasi otomatis dinonaktifkan ketika perangkat meminta pengurangan gerakan.
+                    Preset aman tanpa skrip. Animasi otomatis dinonaktifkan ketika perangkat meminta
+                    pengurangan gerakan.
                   </p>
                 </div>
               )}
