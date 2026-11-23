@@ -74,6 +74,11 @@ type Summary = {
   consents_active: number;
   consents_withdrawn: number;
   events_total: number;
+  events_last_hour: number;
+  last_event_at: string | null;
+  media_pending: number;
+  media_quarantined: number;
+  consents_pending_review: number;
   events_by_name: Record<string, number>;
   period_days: number;
 };
@@ -93,6 +98,11 @@ const emptySummary: Summary = {
   consents_active: 0,
   consents_withdrawn: 0,
   events_total: 0,
+  events_last_hour: 0,
+  last_event_at: null,
+  media_pending: 0,
+  media_quarantined: 0,
+  consents_pending_review: 0,
   events_by_name: {},
   period_days: 30,
 };
@@ -432,6 +442,10 @@ export default function PhaseSevenDashboard({
                     ["Persetujuan aktif", summary.consents_active],
                     ["Persetujuan dicabut", summary.consents_withdrawn],
                     ["Peristiwa 30 hari", summary.events_total],
+                    ["Aktivitas 1 jam", summary.events_last_hour],
+                    ["Consent menunggu", summary.consents_pending_review],
+                    ["Media diproses", summary.media_pending],
+                    ["Media karantina", summary.media_quarantined],
                     ["Total pesanan", summary.orders_total],
                   ].map(([label, value]) => (
                     <article key={label} className={cardClass}>
@@ -440,6 +454,14 @@ export default function PhaseSevenDashboard({
                     </article>
                   ))}
                 </div>
+                <section className={cardClass}>
+                  <h2 className="font-semibold">Kesehatan operasional</h2>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div><p className="text-xs text-[#887970]">Aktivitas terakhir</p><p className="mt-1 text-sm font-semibold">{dateTime(summary.last_event_at)}</p></div>
+                    <div><p className="text-xs text-[#887970]">Moderasi template</p><p className="mt-1 text-sm font-semibold">{summary.templates_pending} menunggu</p></div>
+                    <div><p className="text-xs text-[#887970]">Media bermasalah</p><p className="mt-1 text-sm font-semibold">{summary.media_pending + summary.media_quarantined} aset</p></div>
+                  </div>
+                </section>
                 <section className={cardClass}>
                   <h2 className="font-semibold">Aktivitas 30 hari terakhir</h2>
                   <p className="mt-1 text-xs text-[#887970]">Data berasal dari peristiwa aplikasi tanpa nama, email, nomor telepon, atau isi undangan.</p>
