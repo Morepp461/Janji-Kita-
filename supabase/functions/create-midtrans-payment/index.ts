@@ -51,7 +51,7 @@ Deno.serve(async (request: Request) => {
   if (request.method !== "POST") return json({ error: "Metode tidak diizinkan." }, 405);
 
   try {
-    const token = request.headers.get("Authorization")?.replace(/^Bearer\\s+/i, "");
+    const token = extractBearerToken(request.headers.get("Authorization"));
     if (!token) return json({ error: "Sesi masuk diperlukan." }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
