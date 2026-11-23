@@ -894,7 +894,7 @@ as $$
 declare
   affected integer;
 begin
-  if current_user is not null and current_user <> 'service_role' then
+  if coalesce(auth.jwt() ->> 'role', current_setting('request.jwt.claim.role', true)) <> 'service_role' then
     raise exception 'Hanya service role yang dapat menjalankan proses kedaluwarsa' using errcode = '42501';
   end if;
   update public.invitations set status = 'expired'
