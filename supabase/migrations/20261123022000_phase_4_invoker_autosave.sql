@@ -1,6 +1,6 @@
 -- Pertahankan kontrak fase 3: autosave berjalan dengan hak pemanggil dan RLS.
 revoke update on public.invitations, public.invitation_versions from authenticated;
-grant update (title, updated_at) on public.invitations to authenticated;
+grant update (title, updated_at, draft_version_id) on public.invitations to authenticated;
 grant update (document) on public.invitation_versions to authenticated;
 
 create policy invitations_owner_update_editor on public.invitations
