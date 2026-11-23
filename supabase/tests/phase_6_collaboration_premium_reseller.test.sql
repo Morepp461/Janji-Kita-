@@ -152,6 +152,8 @@ select lives_ok(
   )$q$,
   'reseller membuat undangan atas nama klien'
 );
+select is((select count(*) from public.invitations where title='Undangan Klien Reseller'),1::bigint,
+  'reseller dapat membaca undangan yang dikelolanya');
 reset role;
 
 select is((select owner_user_id from public.invitations where title='Undangan Klien Reseller'),
