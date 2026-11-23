@@ -46,9 +46,9 @@ export default function CollaborationPage({
     setLoading(true);
     setError("");
     const [invitationResult, inviteResult, collaboratorResult, incomingResult] = await Promise.all([
-      client.from("invitations").select("id,title,owner_user_id").eq("id", invitationId).maybeSingle(),
-      client.from("collaborator_invites").select("*").eq("invitation_id", invitationId).order("created_at", { ascending: false }),
-      client.from("invitation_collaborators").select("id,user_id,role,status,created_at").eq("invitation_id", invitationId).order("created_at"),
+      invitationId ? client.from("invitations").select("id,title,owner_user_id").eq("id", invitationId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+      invitationId ? client.from("collaborator_invites").select("*").eq("invitation_id", invitationId).order("created_at", { ascending: false }) : Promise.resolve({ data: [], error: null }),
+      invitationId ? client.from("invitation_collaborators").select("id,user_id,role,status,created_at").eq("invitation_id", invitationId).order("created_at") : Promise.resolve({ data: [], error: null }),
       client.from("collaborator_invites").select("*").eq("invited_email", email.toLowerCase()).eq("status", "pending").order("created_at", { ascending: false }),
     ]);
     const firstError = invitationResult.error || inviteResult.error || collaboratorResult.error || incomingResult.error;
@@ -96,7 +96,12 @@ export default function CollaborationPage({
     if (rpcError) setError(rpcError.message);
     else {
       setNotice("Undangan kolaborasi berhasil diterima.");
-      await refresh();
+      if (!invitationId) {
+        const acceptedInvite = incoming.find((item) => item.id === inviteId);
+        if (acceptedInvite) window.location.assign(`/editor/${acceptedInvite.invitation_id}`);
+      } else {
+        await refresh();
+      }
     }
     setSaving(false);
   }
@@ -145,8 +150,10 @@ export default function CollaborationPage({
           </section>
         )}
 
-        {loading ? <p className="py-10 text-center text-sm text-[#76675f]">Memuat kolaborasi...</p> : !invitation ? (
+        {loading ? <p className="py-10 text-center text-sm text-[#76675f]">Memuat kolaborasi...</p> : invitationId && !invitation ? (
           <p className="rounded-2xl border border-[#eaded5] bg-white p-5 text-sm">Undangan tidak ditemukan atau akun ini tidak memiliki akses.</p>
+        ) : !invitationId ? (
+          <section className="rounded-2xl border border-[#eaded5] bg-white p-5"><h2 className="font-semibold">Kotak masuk kolaborasi</h2><p className="mt-2 text-sm text-[#76675f]">{incoming.length ? "Pilih undangan untuk menerima akses." : "Belum ada undangan kolaborasi untuk akun ini."}</p></section>
         ) : (
           <>
             <section className="grid gap-3 sm:grid-cols-3">
