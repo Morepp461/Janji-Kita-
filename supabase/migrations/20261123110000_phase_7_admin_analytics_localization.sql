@@ -719,3 +719,123 @@ end;
 $$;
 revoke all on function public.admin_link_template_consent(uuid,uuid,uuid) from public, anon;
 grant execute on function public.admin_link_template_consent(uuid,uuid,uuid) to authenticated;
+
+
+create or replace function public.admin_set_locale_active(p_code text, p_is_active boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public, app_private, pg_temp
+as $$
+begin
+  if not app_private.has_permission('locales.manage') then
+    raise exception 'Tidak memiliki izin mengelola bahasa';
+  end if;
+  if not exists (select 1 from public.locales where code = p_code) then
+    raise exception 'Bahasa tidak ditemukan';
+  end if;
+  if not p_is_active and exists (
+    select 1 from public.locales where code = p_code and is_default
+  ) then
+    raise exception 'Pilih bahasa bawaan lain sebelum menonaktifkan bahasa ini';
+  end if;
+  if not p_is_active and (
+    exists (select 1 from public.profiles where preferred_locale = p_code)
+    or exists (select 1 from public.invitations where locale = p_code)
+  ) then
+    raise exception 'Bahasa masih digunakan oleh akun atau undangan';
+  end if;
+  update public.locales
+  set is_active = p_is_active, updated_at = now()
+  where code = p_code;
+end;
+$$;
+revoke all on function public.admin_set_locale_active(text,boolean) from public, anon;
+grant execute on function public.admin_set_locale_active(text,boolean) to authenticated;
+
+create or replace function public.admin_update_timezone_options(p_timezones jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public, app_private, pg_temp
+as $$
+declare
+  timezone_count integer;
+begin
+  if not app_private.has_permission('settings.manage') then
+    raise exception 'Tidak memiliki izin mengelola pengaturan sistem';
+  end if;
+  if jsonb_typeof(p_timezones) <> 'array' then
+    raise exception 'Daftar zona waktu harus berupa array';
+  end if;
+  timezone_count := jsonb_array_length(p_timezones);
+  if timezone_count < 1 or timezone_count > 40
+    or exists (select 1 from jsonb_array_elements(p_timezones) item where jsonb_typeof(item) <> 'string')
+    or (select count(distinct value) from jsonb_array_elements_text(p_timezones) values(value)) <> timezone_count then
+    raise exception 'Daftar zona waktu tidak valid';
+  end if;
+  if exists (
+    select 1 from public.profiles p
+    where not exists (select 1 from jsonb_array_elements_text(p_timezones) z(value) where z.value = p.timezone)
+  ) or exists (
+    select 1 from public.invitations i
+    where not exists (select 1 from jsonb_array_elements_text(p_timezones) z(value) where z.value = i.timezone)
+  ) then
+    raise exception 'Zona waktu yang masih digunakan tidak dapat dihapus';
+  end if;
+  insert into public.system_settings(key, value, updated_by, description, updated_at)
+  values (
+    'localization.timezones',
+    p_timezones,
+    auth.uid(),
+    'Daftar zona waktu yang dapat dipilih pengguna dan undangan.',
+    now()
+  )
+  on conflict (key) do update set
+    value = excluded.value,
+    updated_by = excluded.updated_by,
+    description = excluded.description,
+    updated_at = excluded.updated_at;
+end;
+$$;
+revoke all on function public.admin_update_timezone_options(jsonb) from public, anon;
+grant execute on function public.admin_update_timezone_options(jsonb) to authenticated;
+
+create or replace function public.validate_localization_preferences()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  locale_code text;
+  timezone_value text;
+  allowed_timezones jsonb;
+begin
+  if tg_table_name = 'profiles' then
+    locale_code := new.preferred_locale;
+    timezone_value := new.timezone;
+  else
+    locale_code := new.locale;
+    timezone_value := new.timezone;
+  end if;
+  if not exists (select 1 from public.locales where code = locale_code and is_active) then
+    raise exception 'Bahasa tidak tersedia';
+  end if;
+  select value into allowed_timezones from public.system_settings where key = 'localization.timezones';
+  if not exists (
+    select 1
+    from jsonb_array_elements_text(coalesce(allowed_timezones, '["Asia/Jakarta","Asia/Makassar","Asia/Jayapura","UTC"]'::jsonb)) as zones(value)
+    where zones.value = timezone_value
+  ) then
+    raise exception 'Zona waktu tidak tersedia';
+  end if;
+  return new;
+end;
+$$;
+create trigger profiles_validate_localization
+  before insert or update of preferred_locale, timezone on public.profiles
+  for each row execute function public.validate_localization_preferences();
+create trigger invitations_validate_localization
+  before insert or update of locale, timezone on public.invitations
+  for each row execute function public.validate_localization_preferences();
