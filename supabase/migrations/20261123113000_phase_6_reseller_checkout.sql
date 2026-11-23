@@ -27,7 +27,10 @@ begin
   if reseller_id is null then raise exception 'Kode reseller tidak valid atau tidak aktif' using errcode = '22023'; end if;
   update public.invitations
   set reseller_user_id = reseller_id, updated_at = now()
-  where id = p_invitation_id and owner_user_id = current_user_id
+  where id = p_invitation_id
+    and (owner_user_id = current_user_id or (reseller_user_id = current_user_id and exists (
+      select 1 from public.reseller_profiles rp where rp.user_id = current_user_id and rp.status = 'approved'
+    )))
     and deleted_at is null and status in ('draft', 'active', 'expired');
   if not found then raise exception 'Undangan tidak ditemukan atau bukan milik akun ini' using errcode = '42501'; end if;
   insert into public.audit_logs(actor_user_id, action, target_type, target_id, after_data)
