@@ -1,6 +1,7 @@
 -- Phase 7 security boundary: public RPCs are invoker wrappers; privileged implementations stay in app_private.
 
--- Cover the new foreign keys with indexes.
+-- Cover the new foreign keys with indexes and remove an unused per-user analytics index.
+drop index if exists public.analytics_events_user_time_idx;
 create index if not exists analytics_events_invitation_occurred_idx
   on public.analytics_events(invitation_id, occurred_at desc)
   where invitation_id is not null;
