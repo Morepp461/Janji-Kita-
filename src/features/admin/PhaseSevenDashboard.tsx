@@ -119,13 +119,7 @@ const dateTime = (value: string | null) =>
     ? new Date(value).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" })
     : "—";
 
-export default function PhaseSevenDashboard({
-  client,
-  userId,
-}: {
-  client: SupabaseClient;
-  userId: string;
-}) {
+export default function PhaseSevenDashboard({ client }: { client: SupabaseClient }) {
   const [tab, setTab] = useState<Tab>("analytics");
   const [summary, setSummary] = useState<Summary>(emptySummary);
   const [templates, setTemplates] = useState<TemplateRow[]>([]);
