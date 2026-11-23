@@ -246,7 +246,7 @@ export default function App() {
     );
   }
 
-  const guestMatch = pathname.match(/^\\/invitations\\/([0-9a-f-]+)\\/guests\\/?$/i);
+  const guestMatch = pathname.match(/^\/invitations\/([0-9a-f-]+)\/guests\/?$/i);
   if (guestMatch) return <GuestOperations client={client} invitationId={guestMatch[1]} />;
 
   const isAdmin = roles.includes("admin") || roles.includes("super_admin");
