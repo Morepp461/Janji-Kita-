@@ -122,9 +122,9 @@ Ruang lingkup implementasi:
 - Livestream memakai tautan HTTPS eksternal. Penyematan provider dan integrasi API tidak diaktifkan tanpa persetujuan resmi.
 - Editor menyediakan preset animasi fade-in, rise-in, soft-zoom, dan float, termasuk durasi, pemicu, jeda, serta dukungan reduced-motion.
 - Tidak ada dependency baru. Berkas impor tidak dijalankan sebagai kode dan format yang belum didukung tidak diunggah.
-- QA/CI lulus: format, lint, TypeScript, 33 unit test, build production, migrasi lokal, database lint, dan **346 pengujian pgTAP lintas fase**: [CI run #45121512808](https://github.com/Morepp461/Janji-Kita-/actions/runs/45121512808). Performance Advisor tidak lagi melaporkan foreign key seating tanpa indeks pendukung.
-- [PR #24](https://github.com/Morepp461/Janji-Kita-/pull/24) dan tindak lanjut indeks [PR #26](https://github.com/Morepp461/Janji-Kita-/pull/26) telah digabung ke `main`. Commit rilis terakhir: `9d34283e92f62564dd987459e03c9675bfe050c3`.
-- Enam migrasi Fase 8 diterapkan dan diverifikasi pada Supabase staging serta production. Vercel production berstatus **SIAP** pada commit terakhir: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
+- QA/CI lulus: format, lint, TypeScript, 33 unit test, build production, migrasi lokal, database lint, dan **347 pengujian pgTAP lintas fase**: [CI run #45122168040](https://github.com/Morepp461/Janji-Kita-/actions/runs/45122168040). Performance Advisor tidak lagi melaporkan foreign key seating tanpa indeks pendukung.
+- [PR #24](https://github.com/Morepp461/Janji-Kita-/pull/24), tindak lanjut indeks [PR #26](https://github.com/Morepp461/Janji-Kita-/pull/26), dan rekonsiliasi constraint lintas environment [PR #27](https://github.com/Morepp461/Janji-Kita-/pull/27) telah digabung ke `main`. Commit implementasi terakhir: `7b92bb4433d050a05f1ba981fe154b565b28b82a`.
+- Tujuh migrasi Fase 8 diterapkan dan diverifikasi pada Supabase staging serta production. Constraint unique gabungan tamu dan kedua foreign key gabungan telah diverifikasi aktif di kedua environment; tidak ada penempatan dengan relasi undangan yang tidak valid. Vercel production berstatus **SIAP** pada commit terakhir: [janji-kita-morepp.vercel.app](https://janji-kita-morepp.vercel.app).
 
 **Fase 8 selesai sepenuhnya pada 23 November 2026.** Implementasi, QA, CI, migrasi dan verifikasi Supabase staging/production, serta deployment Vercel production telah selesai. Fase 8 menjadi checkpoint terbaru proyek.
 
