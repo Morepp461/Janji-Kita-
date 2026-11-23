@@ -305,6 +305,10 @@ begin
   where g.id = p_guest_id and i.owner_user_id = (select auth.uid())
     and i.status = 'active' and i.active_from <= now() and i.active_until > now();
   if not found then raise exception 'Tamu atau undangan tidak dapat menerbitkan tiket'; end if;
+  select * into ticket_row from public.tickets where guest_id = guest_row.id for update;
+  if found and ticket_row.status = 'used' then
+    raise exception 'Tiket sudah digunakan dan tidak dapat diterbitkan ulang';
+  end if;
   insert into public.tickets(invitation_id, guest_id, token_hash)
   values (guest_row.invitation_id, guest_row.id, p_token_hash)
   on conflict (guest_id) do update set token_hash = excluded.token_hash,
@@ -336,8 +340,10 @@ begin
   for update of t;
   if not found then return jsonb_build_object('status', 'invalid'); end if;
   select g.display_name into guest_name from public.guests g where g.id = ticket_row.guest_id;
-  if ticket_row.status <> 'valid' then
+  if ticket_row.status = 'used' then
     return jsonb_build_object('status', 'duplicate', 'guest_name', guest_name);
+  elsif ticket_row.status = 'revoked' then
+    return jsonb_build_object('status', 'invalid');
   end if;
   insert into public.checkins(ticket_id, invitation_id, checked_in_by, method, device_label)
   values (ticket_row.id, ticket_row.invitation_id, (select auth.uid()), 'qr', left(p_device_label, 80))
@@ -368,8 +374,10 @@ begin
   values (guest_row.invitation_id, guest_row.id, encode(extensions.gen_random_bytes(32), 'hex'))
   on conflict (guest_id) do nothing;
   select * into ticket_row from public.tickets where guest_id = guest_row.id for update;
-  if ticket_row.status <> 'valid' then
+  if ticket_row.status = 'used' then
     return jsonb_build_object('status', 'duplicate', 'guest_name', guest_row.display_name);
+  elsif ticket_row.status = 'revoked' then
+    return jsonb_build_object('status', 'invalid');
   end if;
   insert into public.checkins(ticket_id, invitation_id, checked_in_by, method, device_label)
   values (ticket_row.id, ticket_row.invitation_id, (select auth.uid()), 'manual', left(p_device_label, 80))
