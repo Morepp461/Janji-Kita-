@@ -13,22 +13,48 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function getSupabaseKeys() {
+  const publishableKeys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}") as Record<string, string>;
+  const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}") as Record<string, string>;
+  return {
+    publishableKey: Deno.env.get("SUPABASE_ANON_KEY")
+      ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")
+      ?? publishableKeys.default,
+    serviceRoleKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? secretKeys.default,
+  };
+}
+
+function safeReturnUrl(value: string | undefined, orderId: string): string {
+  const fallback = "https://janji-kita-nine.vercel.app/orders";
+  if (!value) return fallback;
+  try {
+    const parsed = new URL(value);
+    const allowedHosts = new Set([
+      "janji-kita-nine.vercel.app",
+      "janji-kita-morepp.vercel.app",
+      "janji-kita-git-main-morepp.vercel.app",
+      "localhost",
+    ]);
+    if (!allowedHosts.has(parsed.hostname) || !["https:", "http:"].includes(parsed.protocol)) return fallback;
+    parsed.pathname = "/orders";
+    parsed.search = new URLSearchParams({ order_id: orderId }).toString();
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return fallback;
+  }
+}
+
 Deno.serve(async (request: Request) => {
   if (request.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (request.method !== "POST") return json({ error: "Metode tidak diizinkan." }, 405);
 
   try {
-    const authorization = request.headers.get("Authorization");
-    const token = authorization?.replace(/^Bearer\s+/i, "");
+    const token = request.headers.get("Authorization")?.replace(/^Bearer\\s+/i, "");
     if (!token) return json({ error: "Sesi masuk diperlukan." }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const publishableKeys = JSON.parse(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS") ?? "{}") as Record<string, string>;
-    const secretKeys = JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS") ?? "{}") as Record<string, string>;
-    const publishableKey = Deno.env.get("SUPABASE_ANON_KEY")
-      ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")
-      ?? publishableKeys.default;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? secretKeys.default;
+    const { publishableKey, serviceRoleKey } = getSupabaseKeys();
     const serverKey = Deno.env.get("MIDTRANS_SERVER_KEY");
     if (!supabaseUrl || !publishableKey || !serviceRoleKey || !serverKey) {
       console.error("Konfigurasi Supabase atau MIDTRANS_SERVER_KEY belum lengkap.");
@@ -44,7 +70,10 @@ Deno.serve(async (request: Request) => {
     const { data: userData, error: authError } = await authClient.auth.getUser(token);
     if (authError || !userData.user) return json({ error: "Sesi masuk tidak valid." }, 401);
 
-    const body = await request.json().catch(() => null) as { order_id?: string } | null;
+    const body = await request.json().catch(() => null) as {
+      order_id?: string;
+      return_url?: string;
+    } | null;
     if (!body?.order_id || !/^[0-9a-f-]{36}$/i.test(body.order_id)) {
       return json({ error: "Identitas pesanan tidak valid." }, 400);
     }
@@ -83,10 +112,26 @@ Deno.serve(async (request: Request) => {
       });
     }
 
-    const { data: items } = await admin
+    const { data: items, error: itemError } = await admin
       .from("order_items")
       .select("description_snapshot,quantity,unit_price,line_total")
       .eq("order_id", order.id);
+    if (itemError) return json({ error: "Rincian pesanan tidak dapat dibaca." }, 500);
+
+    const itemDetails = (items ?? []).map((item) => ({
+      id: item.description_snapshot.slice(0, 50),
+      name: item.description_snapshot.slice(0, 50),
+      quantity: item.quantity,
+      price: item.unit_price,
+    }));
+    if (Number(order.discount_total) > 0) {
+      itemDetails.push({
+        id: "discount",
+        name: "Diskon kupon",
+        quantity: 1,
+        price: -Number(order.discount_total),
+      });
+    }
 
     const credentials = btoa(`${serverKey}:`);
     const snapResponse = await fetch("https://app.sandbox.midtrans.com/snap/v1/transactions", {
@@ -102,35 +147,8 @@ Deno.serve(async (request: Request) => {
           order_id: order.order_number,
           gross_amount: Number(order.grand_total),
         },
-        item_details: [
-          ...(items ?? []).map((item) => ({
-          id: item.description_snapshot.slice(0, 50),
-          name: item.description_snapshot.slice(0, 50),
-          quantity: item.quantity,
-          price: item.unit_price,
-        })),
-        callbacks: {
-          finish: (() => {
-            const requested = String(body.return_url ?? "");
-            try {
-              const parsed = new URL(requested);
-              const allowedHosts = new Set([
-                "janji-kita-nine.vercel.app",
-                "janji-kita-morepp.vercel.app",
-                "janji-kita-git-main-morepp.vercel.app",
-                "localhost",
-              ]);
-              if (!allowedHosts.has(parsed.hostname) || !["https:", "http:"].includes(parsed.protocol)) {
-                return "https://janji-kita-nine.vercel.app/orders";
-              }
-              parsed.pathname = "/orders";
-              parsed.search = new URLSearchParams({ order_id: order.id }).toString();
-              return parsed.toString();
-            } catch {
-              return "https://janji-kita-nine.vercel.app/orders";
-            }
-          })(),
-        },
+        item_details: itemDetails,
+        callbacks: { finish: safeReturnUrl(body.return_url, order.id) },
         customer_details: {
           first_name: (userData.user.user_metadata?.display_name as string | undefined)?.slice(0, 50)
             ?? "Pelanggan Janji Kita",
