@@ -51,6 +51,25 @@ create table public.guestbook_entries (
 );
 create index guestbook_moderation_idx on public.guestbook_entries(invitation_id, moderation_status, created_at desc);
 
+create or replace function public.set_guestbook_moderation_metadata()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $
+begin
+  if new.moderation_status is distinct from old.moderation_status then
+    new.moderated_by := (select auth.uid());
+    new.moderated_at := now();
+  end if;
+  return new;
+end;
+$;
+create trigger guestbook_moderation_metadata
+  before update on public.guestbook_entries
+  for each row execute function public.set_guestbook_moderation_metadata();
+
+
+
 create table public.tickets (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
