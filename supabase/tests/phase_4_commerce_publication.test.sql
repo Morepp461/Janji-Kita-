@@ -15,12 +15,12 @@ select ok((select relrowsecurity from pg_class where oid = 'public.orders'::regc
 select ok((select relrowsecurity from pg_class where oid = 'public.payment_attempts'::regclass), 'RLS percobaan pembayaran aktif');
 select ok((select relrowsecurity from pg_class where oid = 'public.payment_events'::regclass), 'RLS event pembayaran aktif');
 select ok(not has_table_privilege('anon', 'public.orders', 'select'), 'anon tidak dapat membaca pesanan');
-select ok(not has_table_privilege('authenticated', 'public.payment_events', 'select'), 'pengguna tidak dapat membaca payload webhook');
+select ok(not has_table_privilege('anon', 'public.payment_events', 'select'), 'pengguna tidak dapat membaca payload webhook');
 select ok(has_function_privilege('authenticated', 'public.create_order(uuid,jsonb,text,text)', 'execute'), 'checkout RPC tersedia untuk pengguna');
 select ok(not has_function_privilege('anon', 'public.create_order(uuid,jsonb,text,text)', 'execute'), 'anon tidak dapat membuat pesanan');
 select ok(has_function_privilege('authenticated', 'public.publish_invitation(uuid,uuid)', 'execute'), 'RPC publikasi tersedia untuk pengguna');
 select ok(not has_function_privilege('anon', 'public.publish_invitation(uuid,uuid)', 'execute'), 'anon tidak dapat menerbitkan undangan');
-select ok(has_function_privilege('service_role', 'public.process_midtrans_notification(text,text,text,text,text,text,bigint,text,jsonb,boolean,timestamp with time zone)', 'execute'), 'webhook hanya dapat diproses service role');
+select ok(has_function_privilege('service_role', 'public.process_midtrans_notification(text,text,text,text,text,text,bigint,bigint,text,jsonb,boolean,timestamp with time zone)', 'execute'), 'webhook hanya dapat diproses service role');
 select ok(not has_function_privilege('authenticated', 'public.process_midtrans_notification(text,text,text,text,text,text,bigint,text,jsonb,boolean,timestamp with time zone)', 'execute'), 'pengguna tidak dapat memalsukan webhook');
 select ok(not has_function_privilege('anon', 'public.expire_invitations()', 'execute'), 'anon tidak dapat menjalankan job kedaluwarsa');
 
@@ -139,7 +139,7 @@ select set_config('request.jwt.claims', '{"role":"service_role"}', true);
 select lives_ok(
   $phase4$select public.process_midtrans_notification(
     (select order_number from public.orders where idempotency_key = 'phase4-idempotency-key-0001'),
-    'midtrans-transaction-401', 'settlement', '', 'qris', '200', 13500,
+    'midtrans-transaction-401', 'settlement', '', 'qris', '200', 13500, null,
     'midtrans-transaction-401:200:settlement:2026-11-23T00:00:00Z',
     '{"order_id":"redacted","transaction_status":"settlement"}'::jsonb,
     true, now()
@@ -169,7 +169,7 @@ select is(
 select is(
   public.process_midtrans_notification(
     (select order_number from public.orders where idempotency_key = 'phase4-idempotency-key-0001'),
-    'midtrans-transaction-401', 'settlement', '', 'qris', '200', 13500,
+    'midtrans-transaction-401', 'settlement', '', 'qris', '200', 13500, null,
     'midtrans-transaction-401:200:settlement:2026-11-23T00:00:00Z',
     '{"order_id":"redacted","transaction_status":"settlement"}'::jsonb,
     true, now()
@@ -182,6 +182,33 @@ select is(
     and value ->> 'invitation_id' = (select id::text from public.invitations where title = 'Undangan Commerce Fase 4')),
   1::bigint,
   'webhook duplikat tidak menggandakan entitlement'
+);
+select is(
+  public.process_midtrans_notification(
+    (select order_number from public.orders where idempotency_key = 'phase4-idempotency-key-0001'),
+    'midtrans-transaction-401', 'pending', '', 'qris', '201', 13500, null,
+    'midtrans-transaction-401:201:pending:2026-11-23T00:05:00Z',
+    '{"order_id":"redacted","transaction_status":"pending"}'::jsonb,
+    true, now()
+  ) ->> 'order_status',
+  'paid',
+  'webhook pending yang datang terlambat tidak menurunkan status paid'
+);
+select is(
+  public.process_midtrans_notification(
+    (select order_number from public.orders where idempotency_key = 'phase4-idempotency-key-0001'),
+    'midtrans-transaction-401', 'partial_refund', '', 'qris', '202', 13500, 5000,
+    'midtrans-transaction-401:202:partial_refund:2026-11-23T00:06:00Z',
+    '{"order_id":"redacted","transaction_status":"partial_refund","refund_amount":"5000.00"}'::jsonb,
+    true, now()
+  ) ->> 'order_status',
+  'partially_refunded',
+  'refund sebagian dicatat tanpa mematikan entitlement aktif'
+);
+select is(
+  (select refund_total from public.orders where idempotency_key = 'phase4-idempotency-key-0001'),
+  5000::bigint,
+  'nominal refund sebagian tercatat untuk laporan finance'
 );
 
 reset role;
@@ -238,6 +265,85 @@ select is(
   public.get_public_invitation((select slug from public.invitations where title = 'Undangan Commerce Fase 4 Diperbarui'))->>'title',
   'Undangan Commerce Fase 4 Diperbarui',
   'renderer beralih ke versi baru setelah publikasi berhasil'
+);
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000401","role":"authenticated"}', true);
+select lives_ok(
+  $phase4$select public.create_invitation_draft(
+    'Undangan Refund Penuh',
+    (select id from public.categories order by sort_order limit 1),
+    '00000000-0000-0000-0000-000000000402'
+  )$phase4$,
+  'draft kedua tersedia untuk uji refund penuh'
+);
+select lives_ok(
+  $phase4$select public.create_order(
+    (select id from public.invitations where title = 'Undangan Refund Penuh'),
+    '[]'::jsonb,
+    null,
+    'phase4-refund-order-key-0001'
+  )$phase4$,
+  'pesanan kedua dapat dibuat tanpa kupon'
+);
+reset role;
+insert into public.payment_attempts(order_id, provider, provider_order_id, status,
+  amount, currency, idempotency_key)
+select id, 'midtrans', order_number, 'pending', grand_total, currency,
+  'midtrans:' || id::text
+from public.orders where idempotency_key = 'phase4-refund-order-key-0001';
+set local role service_role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+select lives_ok(
+  $phase4$select public.process_midtrans_notification(
+    (select order_number from public.orders where idempotency_key = 'phase4-refund-order-key-0001'),
+    'midtrans-refund-transaction', 'settlement', '', 'qris', '200', 10000, null,
+    'midtrans-refund-transaction:200:settlement:2026-11-23T00:07:00Z',
+    '{"order_id":"redacted","transaction_status":"settlement"}'::jsonb,
+    true, now()
+  )$phase4$,
+  'pembayaran pesanan kedua diverifikasi'
+);
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000401', true);
+select set_config('request.jwt.claims',
+  '{"sub":"00000000-0000-0000-0000-000000000401","role":"authenticated"}', true);
+select lives_ok(
+  $phase4$select public.publish_invitation(
+    (select id from public.invitations where title = 'Undangan Refund Penuh'),
+    (select draft_version_id from public.invitations where title = 'Undangan Refund Penuh')
+  )$phase4$,
+  'undangan kedua dapat diterbitkan sebelum refund'
+);
+reset role;
+set local role service_role;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true);
+select is(
+  public.process_midtrans_notification(
+    (select order_number from public.orders where idempotency_key = 'phase4-refund-order-key-0001'),
+    'midtrans-refund-transaction', 'refund', '', 'qris', '200', 10000, 10000,
+    'midtrans-refund-transaction:200:refund:2026-11-23T00:08:00Z',
+    '{"order_id":"redacted","transaction_status":"refund","refund_amount":"10000.00"}'::jsonb,
+    true, now()
+  ) ->> 'order_status',
+  'refunded',
+  'refund penuh mengubah status pesanan menjadi refunded'
+);
+select is(
+  (select status from public.entitlements
+    where entitlement_key = 'invitation.publish'
+      and value ->> 'invitation_id' = (select id::text from public.invitations where title = 'Undangan Refund Penuh')),
+  'revoked',
+  'refund penuh mencabut entitlement publikasi'
+);
+select is(
+  (select status from public.invitations where title = 'Undangan Refund Penuh'),
+  'suspended',
+  'refund penuh menangguhkan undangan yang sudah terbit'
 );
 
 reset role;
