@@ -644,26 +644,30 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
           >
             Kolaborasi
           </a>
-          <a
-            href={`/invitations/${invitationId}/guests`}
-            className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
-          >
-            Tamu & RSVP
-          </a>
-          <a
-            href={`/checkout/${invitationId}`}
-            className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
-          >
-            Bayar / perpanjang
-          </a>
-          <button
-            type="button"
-            disabled={publishing || saveState !== "saved" || !draftVersionId}
-            onClick={() => void publishInvitation()}
-            className="rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
-          >
-            {publishing ? "Menerbitkan..." : "Terbitkan / perbarui"}
-          </button>
+          {ownerUserId === userId && (
+            <>
+              <a
+                href={`/invitations/${invitationId}/guests`}
+                className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+              >
+                Tamu & RSVP
+              </a>
+              <a
+                href={`/checkout/${invitationId}`}
+                className="rounded-lg border border-[#ddcec3] px-3 py-2 text-xs font-semibold"
+              >
+                Bayar / perpanjang
+              </a>
+              <button
+                type="button"
+                disabled={publishing || saveState !== "saved" || !draftVersionId}
+                onClick={() => void publishInvitation()}
+                className="rounded-lg bg-[#754b3b] px-3 py-2 text-xs font-semibold text-white disabled:opacity-40"
+              >
+                {publishing ? "Menerbitkan..." : "Terbitkan / perbarui"}
+              </button>
+            </>
+          )}
           {publishedUrl && (
             <a
               href={publishedUrl}
