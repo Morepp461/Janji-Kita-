@@ -29,3 +29,12 @@ file_size_limit = "50MiB"
 
 [analytics]
 enabled = false
+
+[functions.create-midtrans-payment]
+verify_jwt = true
+
+[functions.midtrans-webhook]
+verify_jwt = false
+
+[functions.reconcile-midtrans-pending]
+verify_jwt = true
