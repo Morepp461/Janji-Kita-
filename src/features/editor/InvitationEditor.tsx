@@ -1225,6 +1225,43 @@ export default function InvitationEditor({ client, invitationId, userId }: Props
                       className="mt-2 w-full"
                     />
                   </label>
+                  <label className="block text-xs font-medium">
+                    Pemicu animasi
+                    <select
+                      value={String(selected.style?.animationTrigger || "on-load")}
+                      onChange={(event) =>
+                        updateSelected({ animationTrigger: event.target.value }, "style")
+                      }
+                      className="mt-1 w-full rounded-lg border border-[#ddcec3] bg-white p-2"
+                    >
+                      <option value="on-load">Saat elemen tampil</option>
+                      <option value="after-delay">Setelah jeda</option>
+                    </select>
+                  </label>
+                  {selected.style?.animationTrigger === "after-delay" && (
+                    <label className="block text-xs font-medium">
+                      Jeda ({Number(selected.style?.animationDelayMs || 0)} ms)
+                      <input
+                        type="range"
+                        min="0"
+                        max="5000"
+                        step="100"
+                        value={Number(selected.style?.animationDelayMs || 0)}
+                        onChange={(event) =>
+                          updateSelected(
+                            {
+                              animationDelayMs: Math.min(
+                                5000,
+                                Math.max(0, Number(event.target.value)),
+                              ),
+                            },
+                            "style",
+                          )
+                        }
+                        className="mt-2 w-full"
+                      />
+                    </label>
+                  )}
                   <p className="text-[11px] leading-5 text-[#887970]">
                     Preset aman tanpa skrip. Animasi otomatis dinonaktifkan ketika perangkat meminta
                     pengurangan gerakan.
