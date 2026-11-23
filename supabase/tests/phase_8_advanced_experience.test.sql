@@ -19,6 +19,10 @@ select has_trigger('public', 'seating_tables', 'seating_tables_set_updated_at', 
 select has_trigger('public', 'seating_assignments', 'seating_assignments_set_updated_at', 'waktu perubahan penempatan diperbarui');
 select ok(not has_function_privilege('anon', 'app_private.validate_seating_assignment()', 'execute'), 'anon tidak dapat menjalankan helper validasi');
 select ok(not has_function_privilege('anon', 'app_private.validate_seating_table_capacity()', 'execute'), 'anon tidak dapat menjalankan helper kapasitas');
+select ok(has_function_privilege('anon', 'public.get_public_guest_seating(text)', 'execute'), 'tamu dapat meminta informasi meja melalui token personal');
+select ok(not (select prosecdef from pg_proc where oid = 'public.get_public_guest_seating(text)'::regprocedure), 'RPC publik memakai security invoker');
+select ok((select prosecdef from pg_proc where oid = 'app_private.get_public_guest_seating_internal(text)'::regprocedure), 'helper privat memeriksa token dengan security definer');
+select is(pg_get_function_result('public.get_public_guest_seating(text)'::regprocedure), 'TABLE(table_label text, seat_label text)', 'RPC hanya mengembalikan label meja dan kursi');
 
 select * from finish();
 rollback;
