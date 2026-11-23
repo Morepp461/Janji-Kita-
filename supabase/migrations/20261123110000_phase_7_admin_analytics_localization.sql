@@ -263,9 +263,19 @@ begin
     user_id = excluded.user_id,
     granted = true,
     consent_text_version = excluded.consent_text_version,
-    granted_at = now(),
+    granted_at = case
+      when consent_records.granted and consent_records.withdrawn_at is null
+        and consent_records.consent_text_version = excluded.consent_text_version
+      then consent_records.granted_at
+      else now()
+    end,
     withdrawn_at = null,
-    metadata = jsonb_build_object('scope', 'marketplace_template', 'moderation_status', 'pending')
+    metadata = case
+      when consent_records.granted and consent_records.withdrawn_at is null
+        and consent_records.consent_text_version = excluded.consent_text_version
+      then consent_records.metadata
+      else jsonb_build_object('scope', 'marketplace_template', 'moderation_status', 'pending')
+    end
   returning id into saved_id;
   return saved_id;
 end;
