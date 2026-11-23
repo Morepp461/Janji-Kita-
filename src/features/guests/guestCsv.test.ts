@@ -3,12 +3,19 @@ import { parseGuestCsv, exportGuestsCsv } from "./guestCsv";
 
 describe("guest CSV", () => {
   it("membaca kolom Indonesia dan menangani koma di dalam tanda kutip", () => {
-    const result = parseGuestCsv('nama,email,kelompok,plus_one\n"Dina, Putri",dina@example.com,"Keluarga, inti",ya');
+    const result = parseGuestCsv(
+      'nama,email,kelompok,plus_one\n"Dina, Putri",dina@example.com,"Keluarga, inti",ya',
+    );
     expect(result.issues).toEqual([]);
-    expect(result.rows).toEqual([{
-      display_name: "Dina, Putri", email: "dina@example.com", phone: null,
-      guest_group: "Keluarga, inti", plus_one_allowed: true,
-    }]);
+    expect(result.rows).toEqual([
+      {
+        display_name: "Dina, Putri",
+        email: "dina@example.com",
+        phone: null,
+        guest_group: "Keluarga, inti",
+        plus_one_allowed: true,
+      },
+    ]);
   });
 
   it("melaporkan nama kosong dan email tidak valid per baris", () => {

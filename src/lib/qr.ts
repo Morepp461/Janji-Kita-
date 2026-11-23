@@ -26,7 +26,8 @@ function reedSolomon(data: number[], degree: number): number[] {
   const remainder = [...data, ...Array(degree).fill(0)] as number[];
   for (let i = 0; i < data.length; i += 1) {
     const factor = remainder[i];
-    if (factor !== 0) generator.forEach((coefficient, j) => (remainder[i + j] ^= multiply(coefficient, factor)));
+    if (factor !== 0)
+      generator.forEach((coefficient, j) => (remainder[i + j] ^= multiply(coefficient, factor)));
   }
   return remainder.slice(data.length);
 }
@@ -54,7 +55,9 @@ function encodeData(text: string): number[] {
 export function createQrSvg(value: string, quietZone = 4): string {
   const codewords = encodeData(value);
   const size = 21;
-  const matrix: Array<Array<boolean | null>> = Array.from({ length: size }, () => Array(size).fill(null));
+  const matrix: Array<Array<boolean | null>> = Array.from({ length: size }, () =>
+    Array(size).fill(null),
+  );
 
   const finder = (top: number, left: number) => {
     for (let row = -1; row <= 7; row += 1) {
@@ -62,8 +65,16 @@ export function createQrSvg(value: string, quietZone = 4): string {
         const y = top + row;
         const x = left + col;
         if (y < 0 || y >= size || x < 0 || x >= size) continue;
-        matrix[y][x] = row >= 0 && row <= 6 && col >= 0 && col <= 6 &&
-          (row === 0 || row === 6 || col === 0 || col === 6 || (row >= 2 && row <= 4 && col >= 2 && col <= 4));
+        matrix[y][x] =
+          row >= 0 &&
+          row <= 6 &&
+          col >= 0 &&
+          col <= 6 &&
+          (row === 0 ||
+            row === 6 ||
+            col === 0 ||
+            col === 6 ||
+            (row >= 2 && row <= 4 && col >= 2 && col <= 4));
       }
     }
   };
@@ -90,7 +101,9 @@ export function createQrSvg(value: string, quietZone = 4): string {
   for (let i = 8; i < 15; i += 1) matrix[size - 15 + i][8] = bit(i);
   matrix[13][8] = true;
 
-  const dataBits = codewords.flatMap((word) => Array.from({ length: 8 }, (_, i) => (word >>> (7 - i)) & 1));
+  const dataBits = codewords.flatMap((word) =>
+    Array.from({ length: 8 }, (_, i) => (word >>> (7 - i)) & 1),
+  );
   let bitIndex = 0;
   let upward = true;
   for (let right = size - 1; right >= 1; right -= 2) {
@@ -108,8 +121,12 @@ export function createQrSvg(value: string, quietZone = 4): string {
   }
 
   const scale = size + quietZone * 2;
-  const modules = matrix.flatMap((row, y) =>
-    row.flatMap((dark, x) => dark ? [`<rect x="${x + quietZone}" y="${y + quietZone}" width="1" height="1"/>`] : []),
-  ).join("");
+  const modules = matrix
+    .flatMap((row, y) =>
+      row.flatMap((dark, x) =>
+        dark ? [`<rect x="${x + quietZone}" y="${y + quietZone}" width="1" height="1"/>`] : [],
+      ),
+    )
+    .join("");
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${scale} ${scale}" role="img" aria-label="Kode QR tiket"><rect width="${scale}" height="${scale}" fill="#fff"/><g fill="#211b18">${modules}</g></svg>`;
 }

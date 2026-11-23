@@ -10,6 +10,8 @@ describe("QR tiket", () => {
   });
 
   it("menolak token yang melebihi kapasitas QR yang didukung", () => {
-    expect(() => createQrSvg("token-terlalu-panjang-untuk-qr-versi-satu")).toThrow("terlalu panjang");
+    expect(() => createQrSvg("token-terlalu-panjang-untuk-qr-versi-satu")).toThrow(
+      "terlalu panjang",
+    );
   });
 });
