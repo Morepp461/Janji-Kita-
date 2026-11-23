@@ -12,6 +12,7 @@ select ok(has_table_privilege('authenticated', 'public.seating_assignments', 'in
 select has_index('public', 'seating_tables', 'seating_tables_invitation_order_idx', 'indeks daftar meja tersedia');
 select has_index('public', 'seating_assignments', 'seating_assignments_table_idx', 'indeks penempatan per meja tersedia');
 select has_index('public', 'seating_assignments', 'seating_assignments_guest_idx', 'indeks penempatan per tamu tersedia');
+select has_index('public', 'seating_assignments', 'seating_assignments_seating_table_fk_idx', 'indeks foreign key meja tersedia');
 select has_trigger('public', 'seating_assignments', 'seating_assignments_validate_capacity', 'kapasitas meja divalidasi saat penempatan');
 select has_trigger('public', 'seating_tables', 'seating_tables_validate_capacity', 'kapasitas tidak dapat diturunkan di bawah jumlah tamu');
 select has_trigger('public', 'seating_tables', 'seating_tables_set_updated_at', 'waktu perubahan meja diperbarui');
