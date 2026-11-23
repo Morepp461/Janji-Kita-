@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import InvitationDocumentView from "./InvitationDocumentView";
+import GuestPublicForms from "../guests/GuestPublicForms";
 import { isInvitationDocument, type InvitationDocument } from "./document";
 
 type PublicInvitationData = {
@@ -18,6 +19,7 @@ export default function PublicInvitation({
   client: SupabaseClient | null;
   slug: string;
 }) {
+  const guestToken = new URLSearchParams(window.location.search).get("guest");
   const [invitation, setInvitation] = useState<PublicInvitationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
