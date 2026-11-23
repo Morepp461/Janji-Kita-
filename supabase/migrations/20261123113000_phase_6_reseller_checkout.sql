@@ -276,4 +276,6 @@ end;
 $$;
 
 grant insert, update, delete on public.reseller_price_rules to authenticated;
+grant insert, update, delete on public.reseller_clients to authenticated;
+grant insert on public.reseller_sales to authenticated;
 grant execute on function public.create_order(uuid, jsonb, text, text) to authenticated;
