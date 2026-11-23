@@ -163,7 +163,7 @@ export default function CheckoutPage({
   }
 
   async function pay() {
-    if (!order) return;
+    if (!order || !invitation) return;
     setPaying(true);
     setError("");
     if (marketplaceConsent && !consentSaved) {
